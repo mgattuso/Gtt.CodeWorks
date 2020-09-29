@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks", "Gtt.CodeWorks\Gtt.CodeWorks.csproj", "{FC733458-D6F9-4577-AC82-FBD2256E3449}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.EasyNetQ", "Gtt.CodeWorks.EasyNetQ\Gtt.CodeWorks.EasyNetQ.csproj", "{A38FD8B7-04CD-4204-9B56-3EBFE6FA7B72}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FC733458-D6F9-4577-AC82-FBD2256E3449}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC733458-D6F9-4577-AC82-FBD2256E3449}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC733458-D6F9-4577-AC82-FBD2256E3449}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC733458-D6F9-4577-AC82-FBD2256E3449}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A38FD8B7-04CD-4204-9B56-3EBFE6FA7B72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A38FD8B7-04CD-4204-9B56-3EBFE6FA7B72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A38FD8B7-04CD-4204-9B56-3EBFE6FA7B72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A38FD8B7-04CD-4204-9B56-3EBFE6FA7B72}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AFE85099-AE5F-4C27-8750-56E5A26AE1B6}
+	EndGlobalSection
+EndGlobal
