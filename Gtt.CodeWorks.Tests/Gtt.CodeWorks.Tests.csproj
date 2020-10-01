@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gtt.CodeWorks.EasyNetQ\Gtt.CodeWorks.EasyNetQ.csproj" />
+    <ProjectReference Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
   </ItemGroup>
 
 </Project>
