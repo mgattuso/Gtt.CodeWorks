@@ -6,6 +6,15 @@ namespace Gtt.CodeWorks
 {
     public class ResponseMetaData
     {
-        public ServiceResult Result { get; set; }
+        public ResponseMetaData(ServiceResult result)
+        {
+            Result = result;
+            ResponseCreated = DateTimeOffset.UtcNow;
+        }
+
+        public ServiceResult Result { get; }
+        public ResultCategory Category => Result.Category();
+        public ResultOutcome Outcome => Result.Outcome();
+        public DateTimeOffset ResponseCreated { get; }
     }
 }
