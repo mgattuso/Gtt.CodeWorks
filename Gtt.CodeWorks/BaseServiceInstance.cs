@@ -26,6 +26,11 @@ namespace Gtt.CodeWorks
             _startTime = DateTimeOffset.UtcNow;
 
             // TOKENIZE THE REQUEST OBJECT
+            if (_coreDependencies.Environment == CodeWorksEnvironment.Production &&
+                !_coreDependencies.Tokenizer.IsEnabled)
+            {
+                throw new Exception($"Tokenizer {_coreDependencies.Tokenizer.GetType()} must be enabled in production");
+            }
             await _coreDependencies.Tokenizer.Tokenize(request, _correlationId);
 
             // LOG THE REQUEST AFTER TOKENIZATION HAS OCCURRED

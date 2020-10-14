@@ -10,7 +10,7 @@ namespace Gtt.CodeWorks.Tokenizer
 
         public CodeWorksTokenizer(ITokenizeClient tokenizeClient)
         {
-            _tokenizeClient = tokenizeClient;
+            _tokenizeClient = tokenizeClient ?? throw new ArgumentNullException(nameof(tokenizeClient));
         }
         public Task Tokenize<T>(T obj, Guid correlationId) where T : class
         {

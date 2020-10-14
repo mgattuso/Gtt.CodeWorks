@@ -39,7 +39,8 @@ namespace Gtt.CodeWorks.Tests.Core
             var coreDependencies = new CoreDependencies(
                 NullLogger.Instance,
                 new EasyNetQServiceLogger(new JsonLogObjectSerializer(), bus),
-                NullTokenizer.SkipTokenization);
+                NullTokenizer.SkipTokenization,
+                CodeWorksEnvironment.NonProduction);
 
             Parallel.For(0, 1000, new ParallelOptions { MaxDegreeOfParallelism = 8 }, async i =>
             {
