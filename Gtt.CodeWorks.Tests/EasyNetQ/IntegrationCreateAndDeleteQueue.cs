@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using EasyNetQ;
 using Gtt.CodeWorks.EasyNetQ;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Gtt.CodeWorks.Tests.EastNetQ
+namespace Gtt.CodeWorks.Tests.EasyNetQ
 {
     [TestClass]
     public class IntegrationCreateAndDeleteQueueTests
@@ -27,7 +25,6 @@ namespace Gtt.CodeWorks.Tests.EastNetQ
                 bus.CleanUpQueuesAndExchanges<TestMessage>("a", 1, DeleteMode.OnlyHoldingQueues);
             }
         }
-
 
         public class TestMessage
         {

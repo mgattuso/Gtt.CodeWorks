@@ -1,24 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace Gtt.CodeWorks
 {
     public class ResponseMetaData
     {
-        public ResponseMetaData(ServiceResult result, Guid correlationId, int durationMs)
+        private readonly DateTimeOffset _startTime;
+
+        public ResponseMetaData(ServiceResult result, Guid correlationId, DateTimeOffset startTime)
         {
+            _startTime = startTime;
             Result = result;
             CorrelationId = correlationId;
-            DurationMs = durationMs;
             ResponseCreated = DateTimeOffset.UtcNow;
         }
 
         public Guid CorrelationId { get; }
         public ServiceResult Result { get; }
-        public int DurationMs { get; }
-        public ResultCategory Category => Result.Category();
-        public ResultOutcome Outcome => Result.Outcome();
+
+        public long DurationMs => (long)(ServiceClock.CurrentTime() - _startTime).TotalMilliseconds;
+
         public DateTimeOffset ResponseCreated { get; }
     }
 }

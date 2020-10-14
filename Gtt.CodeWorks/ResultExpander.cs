@@ -9,7 +9,8 @@ namespace Gtt.CodeWorks
 {
     public static class ResultExpander
     {
-        private static readonly IDictionary<ServiceResult, Tuple<ResultOutcome, ResultCategory, int>> Cache = new Dictionary<ServiceResult, Tuple<ResultOutcome, ResultCategory, int>>();
+        private static readonly IDictionary<ServiceResult, Tuple<ResultOutcome, ResultCategory, int>> Cache = 
+            new Dictionary<ServiceResult, Tuple<ResultOutcome, ResultCategory, int>>();
         static ResultExpander()
         {
             // CACHE THE RESULTS

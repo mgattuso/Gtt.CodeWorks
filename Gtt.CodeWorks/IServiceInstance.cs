@@ -6,9 +6,15 @@ using System.Threading.Tasks;
 
 namespace Gtt.CodeWorks
 {
-    public interface IServiceInstance<in TRequest, TResponse> where TRequest : new() where TResponse : new()
+    public interface IServiceInstance<in TRequest, TResponse>
+        : IServiceInstance
+        where TRequest : new() where TResponse : new()
     {
-        Task<TResponse> Execute(TRequest request, CancellationToken cancellationToken);
+        Task<ServiceResponse<TResponse>> Execute(TRequest request, CancellationToken cancellationToken);
+    }
+
+    public interface IServiceInstance
+    {
         string Name { get; }
     }
 }

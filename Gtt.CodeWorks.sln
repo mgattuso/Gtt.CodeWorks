@@ -3,11 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks", "Gtt.CodeWorks\Gtt.CodeWorks.csproj", "{FC733458-D6F9-4577-AC82-FBD2256E3449}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks", "Gtt.CodeWorks\Gtt.CodeWorks.csproj", "{FC733458-D6F9-4577-AC82-FBD2256E3449}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.EasyNetQ", "Gtt.CodeWorks.EasyNetQ\Gtt.CodeWorks.EasyNetQ.csproj", "{A38FD8B7-04CD-4204-9B56-3EBFE6FA7B72}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.EasyNetQ", "Gtt.CodeWorks.EasyNetQ\Gtt.CodeWorks.EasyNetQ.csproj", "{A38FD8B7-04CD-4204-9B56-3EBFE6FA7B72}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.Tests", "Gtt.CodeWorks.Tests\Gtt.CodeWorks.Tests.csproj", "{B776AF14-8315-4A81-AF84-CA599EB2ED59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.Tests", "Gtt.CodeWorks.Tests\Gtt.CodeWorks.Tests.csproj", "{B776AF14-8315-4A81-AF84-CA599EB2ED59}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.Serializers.TextJson", "Gtt.CodeWorks.Serializers.TextJson\Gtt.CodeWorks.Serializers.TextJson.csproj", "{7B75FC89-1E6C-4AB9-936B-6CF896AAB2E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.Tokenizer", "Gtt.CodeWorks.Tokenizer\Gtt.CodeWorks.Tokenizer.csproj", "{9743F254-A478-420A-BECE-19231C5F3352}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +31,14 @@ Global
 		{B776AF14-8315-4A81-AF84-CA599EB2ED59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B776AF14-8315-4A81-AF84-CA599EB2ED59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B776AF14-8315-4A81-AF84-CA599EB2ED59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B75FC89-1E6C-4AB9-936B-6CF896AAB2E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B75FC89-1E6C-4AB9-936B-6CF896AAB2E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B75FC89-1E6C-4AB9-936B-6CF896AAB2E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B75FC89-1E6C-4AB9-936B-6CF896AAB2E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9743F254-A478-420A-BECE-19231C5F3352}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9743F254-A478-420A-BECE-19231C5F3352}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9743F254-A478-420A-BECE-19231C5F3352}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9743F254-A478-420A-BECE-19231C5F3352}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

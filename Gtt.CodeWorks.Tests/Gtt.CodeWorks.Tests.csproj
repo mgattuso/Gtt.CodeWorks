@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gtt.CodeWorks.EasyNetQ\Gtt.CodeWorks.EasyNetQ.csproj" />
+    <ProjectReference Include="..\Gtt.CodeWorks.Serializers.TextJson\Gtt.CodeWorks.Serializers.TextJson.csproj" />
     <ProjectReference Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
   </ItemGroup>
 
