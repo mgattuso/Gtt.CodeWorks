@@ -16,7 +16,7 @@ namespace Gtt.CodeWorks
         {
             return Task.CompletedTask;
         }
-        public bool IsEnabled => false;
+        public bool IsProductionReady => false;
         public static NullTokenizer SkipTokenization => new NullTokenizer();
     }
 }

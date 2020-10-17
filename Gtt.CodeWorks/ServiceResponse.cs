@@ -8,7 +8,6 @@
         }
 
         public TResponse Data { get; }
-
     }
 
     public class ServiceResponse

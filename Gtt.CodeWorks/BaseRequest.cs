@@ -4,8 +4,9 @@ using System.Text;
 
 namespace Gtt.CodeWorks
 {
-    public abstract class BaseRequest
+    public abstract class BaseRequest : ITraceable
     {
-        public Guid CorrelationId { get; set; }
+        public Guid CorrelationId { get; set; } = Guid.NewGuid();
+        public Guid? SessionId { get; set; }
     }
 }

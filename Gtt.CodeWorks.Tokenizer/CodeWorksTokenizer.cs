@@ -16,6 +16,6 @@ namespace Gtt.CodeWorks.Tokenizer
         {
             return _tokenizeClient.TokenizeObject(obj, correlationId);
         }
-        public bool IsEnabled => true;
+        public bool IsProductionReady => true;
     }
 }

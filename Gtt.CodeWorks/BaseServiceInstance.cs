@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Gtt.CodeWorks.Middleware;
 using Microsoft.Extensions.Logging;
 
 namespace Gtt.CodeWorks
@@ -9,11 +12,14 @@ namespace Gtt.CodeWorks
         : IServiceInstance<TRequest, TResponse>
         where TRequest : BaseRequest, new() where TResponse : new()
     {
-        private readonly CoreDependencies _coreDependencies;
+        private readonly IList<IServiceMiddleware> _pipeline = new List<IServiceMiddleware>();
 
         protected BaseServiceInstance(CoreDependencies coreDependencies)
         {
-            _coreDependencies = coreDependencies;
+            _pipeline.Add(new RateLimiterMiddleware(coreDependencies.RateLimiter));
+            _pipeline.Add(new TokenizationMiddleware(coreDependencies.Tokenizer, coreDependencies.Environment));
+            _pipeline.Add(new LoggingMiddleware(coreDependencies.ServiceLogger));
+            _pipeline.Add(new DistributedLockMiddleware<TRequest>(CreateDistributedLockKey));
         }
 
         private Guid _correlationId;
@@ -22,32 +28,82 @@ namespace Gtt.CodeWorks
         public async Task<ServiceResponse<TResponse>> Execute(TRequest request, CancellationToken cancellationToken)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
-            _correlationId = request.CorrelationId;
             _startTime = DateTimeOffset.UtcNow;
+            _correlationId = request.CorrelationId;
+            request.SyncCorrelationIds();
+            ServiceResponse<TResponse> response = null;
 
-            // TOKENIZE THE REQUEST OBJECT
-            if (_coreDependencies.Environment == CodeWorksEnvironment.Production &&
-                !_coreDependencies.Tokenizer.IsEnabled)
+            // ON REQUEST PIPELINE
+
+            foreach (var middleware in _pipeline)
             {
-                throw new Exception($"Tokenizer {_coreDependencies.Tokenizer.GetType()} must be enabled in production");
+                try
+                {
+                   var middlewareResult = await middleware.OnRequest(this, request, cancellationToken);
+                   if (middlewareResult != null)
+                   {
+                       response = new ServiceResponse<TResponse>(default(TResponse), middlewareResult.MetaData);
+                       break;
+                   }
+                }
+                catch (Exception ex)
+                {
+                    if (!middleware.IgnoreExceptions)
+                    {
+                        return PermanentError(ex);
+                    }
+                }
             }
-            await _coreDependencies.Tokenizer.Tokenize(request, _correlationId);
-
-            // LOG THE REQUEST AFTER TOKENIZATION HAS OCCURRED
-            await LogRequest(request, cancellationToken);
 
             // EXECUTE THE SERVICE
-            var response = await Implementation(request, cancellationToken);
+            try
+            {
+                response ??= await Implementation(request, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                response = PermanentError(ex);
+            }
 
-            // LOG THE RESPONSE BEING RETURNED
-            await LogResponse(response, request.CorrelationId, cancellationToken);
+            // ON RESPONSE PIPELINE
+            for (var i = _pipeline.Count - 1; i >= 0; i--)
+            {
+                var middleware = _pipeline[i];
+                try
+                {
+                    await middleware.OnResponse(this, request, response);
+                } catch (Exception ex)
+                {
+                    if (!middleware.IgnoreExceptions)
+                    {
+                        return PermanentError(ex);
+                    }
+                }
+            }
+
             return response;
+        }
+
+        protected ServiceResponse<TResponse> PermanentError(Exception ex)
+        {
+            return new ServiceResponse<TResponse>(default(TResponse),
+                new ResponseMetaData(
+                    ServiceResult.PermanentError,
+                    _correlationId,
+                    _startTime,
+                    ex.ToString()
+                )
+            );
         }
 
 #pragma warning disable IDE0060 // Remove unused parameter
         protected ServiceResponse<TResponse> Successful(TResponse response, ServiceResult result = ServiceResult.Successful)
 #pragma warning restore IDE0060 // Remove unused parameter
         {
+            if (result.Category() != ResultCategory.Successful)
+            {
+                throw new Exception("Cannot return a non-successful result through the success response");
+            }
             return new ServiceResponse<TResponse>(response, new ResponseMetaData(ServiceResult.Successful, _correlationId, _startTime));
         }
         protected ServiceResponse<TResponse> Created(TResponse response)
@@ -59,47 +115,11 @@ namespace Gtt.CodeWorks
             return Successful(response, ServiceResult.Queued);
         }
 
-
         protected abstract Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken);
+        protected abstract Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken);
 
         public string Name => GetType().Name;
-
-        protected Task LogRequest(TRequest request, CancellationToken cancellationToken)
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                _coreDependencies.Logger.LogWarning($"Request: {request.CorrelationId} has been cancelled. Phase:LogRequest");
-                return Task.CompletedTask;
-            }
-
-            try
-            {
-                return _coreDependencies.ServiceLogger.LogRequest(request.CorrelationId, Name, request);
-            }
-            catch (Exception ex)
-            {
-                _coreDependencies.Logger.LogWarning($"Error logging request {request.CorrelationId}", ex);
-                return Task.CompletedTask;
-            }
-        }
-
-        protected Task LogResponse(ServiceResponse<TResponse> response, Guid correlationId,
-            CancellationToken cancellationToken)
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                _coreDependencies.Logger.LogWarning($"Request: {correlationId} has been cancelled. Phase:LogResponse");
-                return Task.CompletedTask;
-            }
-            try
-            {
-                return _coreDependencies.ServiceLogger.LogResponse(correlationId, Name, response);
-            }
-            catch (Exception ex)
-            {
-                _coreDependencies.Logger.LogWarning($"Error logging request {correlationId}", ex);
-                return Task.CompletedTask;
-            }
-        }
+        public DateTimeOffset StartTime => _startTime;
+        public Guid CorrelationId => _correlationId;
     }
 }

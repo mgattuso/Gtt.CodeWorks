@@ -8,7 +8,7 @@ namespace Gtt.CodeWorks
 {
     public interface IServiceInstance<in TRequest, TResponse>
         : IServiceInstance
-        where TRequest : new() where TResponse : new()
+        where TRequest : BaseRequest, new() where TResponse : new()
     {
         Task<ServiceResponse<TResponse>> Execute(TRequest request, CancellationToken cancellationToken);
     }
@@ -16,5 +16,7 @@ namespace Gtt.CodeWorks
     public interface IServiceInstance
     {
         string Name { get; }
+        DateTimeOffset StartTime { get; }
+        Guid CorrelationId { get; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Gtt.CodeWorks.Serializers.TextJson
@@ -19,13 +20,29 @@ namespace Gtt.CodeWorks.Serializers.TextJson
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <returns>
+        ///  JSON serialized object.
+        ///  A null input type return the string "null".
+        ///  A string literal returns the quoted string "message"
+        /// </returns>
         public async Task<string> Serialize<T>(T obj)
         {
-            await using var stream = new MemoryStream();
-            await JsonSerializer.SerializeAsync(stream, obj, new JsonSerializerOptions
+            var opts = new JsonSerializerOptions
             {
-                WriteIndented = _debugMode
-            });
+                WriteIndented = _debugMode,
+                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+            opts.Converters.Add(new JsonStringEnumConverter());
+
+            await using var stream = new MemoryStream();
+            await JsonSerializer.SerializeAsync(stream, obj, opts);
+
             stream.Position = 0;
             using var reader = new StreamReader(stream);
             var result = await reader.ReadToEndAsync();

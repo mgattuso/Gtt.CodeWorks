@@ -40,6 +40,7 @@ namespace Gtt.CodeWorks.Tests.Core
                 NullLogger.Instance,
                 new EasyNetQServiceLogger(new JsonLogObjectSerializer(), bus),
                 NullTokenizer.SkipTokenization,
+                new InMemoryRateLimiter(), 
                 CodeWorksEnvironment.NonProduction);
 
             Parallel.For(0, 1000, new ParallelOptions { MaxDegreeOfParallelism = 8 }, async i =>
@@ -52,7 +53,7 @@ namespace Gtt.CodeWorks.Tests.Core
             Console.WriteLine($"Duration: {sw.ElapsedMilliseconds}");
         }
 
-        public class TimeService : BaseServiceInstance<TimeService.Request, TimeService.Response>
+        public class TimeService : BaseReadService<TimeService.Request, TimeService.Response>
         {
             public class Response
             {

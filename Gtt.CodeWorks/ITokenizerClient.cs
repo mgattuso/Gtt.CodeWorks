@@ -8,6 +8,6 @@ namespace Gtt.CodeWorks
     public interface ICodeWorksTokenizer
     {
         Task Tokenize<T>(T obj, Guid correlationId) where T : class;
-        bool IsEnabled { get; }
+        bool IsProductionReady { get; }
     }
 }
