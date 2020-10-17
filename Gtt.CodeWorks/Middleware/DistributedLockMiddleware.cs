@@ -10,12 +10,15 @@ namespace Gtt.CodeWorks.Middleware
     public class DistributedLockMiddleware<TRequest> : IServiceMiddleware
         where TRequest : BaseRequest, new()
     {
+        private readonly IDistributedLockService _distributedLockService;
         private readonly Func<TRequest, CancellationToken, Task<string>> _createLockDelegate;
         private string _key = string.Empty;
-        private static readonly HashSet<string> HashSet = new HashSet<string>();
-        private readonly object _lock = new object();
-        public DistributedLockMiddleware(Func<TRequest, CancellationToken, Task<string>> createLockDelegate)
+
+        public DistributedLockMiddleware(
+            IDistributedLockService distributedLockService,
+            Func<TRequest, CancellationToken, Task<string>> createLockDelegate)
         {
+            _distributedLockService = distributedLockService;
             _createLockDelegate = createLockDelegate;
         }
 
@@ -30,18 +33,9 @@ namespace Gtt.CodeWorks.Middleware
                 return this.ContinuePipeline();
             }
 
-            bool locked;
+            var locked = await _distributedLockService.CreateLock(_key, cancellationToken);
 
-            lock (_lock)
-            {
-                locked = HashSet.Contains(_key);
-                if (!locked)
-                {
-                    HashSet.Add(_key);
-                }
-            }
-
-            if (locked)
+            if (locked == DistributedLockStatus.Locked)
             {
                 return new ServiceResponse(new ResponseMetaData(ServiceResult.TransientError,
                     service.CorrelationId,
@@ -54,12 +48,9 @@ namespace Gtt.CodeWorks.Middleware
 
         public Task OnResponse<TReq, TRes>(IServiceInstance service, TReq request, ServiceResponse<TRes> response) where TReq : BaseRequest, new() where TRes : new()
         {
-            lock (_lock)
-            {
-                HashSet.Remove(_key);
-            }
-
-            return Task.CompletedTask;
+            return Task.FromResult(
+                _distributedLockService.ReleaseLock(_key, CancellationToken.None)
+                );
         }
 
         public bool IgnoreExceptions => false;

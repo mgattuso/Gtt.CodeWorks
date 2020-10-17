@@ -12,6 +12,7 @@ namespace Gtt.CodeWorks
             IServiceLogger serviceLogger, 
             ICodeWorksTokenizer tokenizer, 
             IRateLimiter rateLimiter,
+            IDistributedLockService distributedLockService,
             CodeWorksEnvironment environment)
         {
             Logger = logger;
@@ -19,6 +20,7 @@ namespace Gtt.CodeWorks
             Tokenizer = tokenizer;
             Environment = environment;
             RateLimiter = rateLimiter;
+            DistributedLockService = distributedLockService;
         }
 
         public CoreDependencies()
@@ -28,6 +30,7 @@ namespace Gtt.CodeWorks
             ServiceLogger = NullServiceLogger.Instance;
             Tokenizer = NullTokenizer.SkipTokenization;
             RateLimiter = new InMemoryRateLimiter();
+            DistributedLockService = new InMemoryDistributedLock();
         }
 
         public IServiceLogger ServiceLogger { get; }
@@ -35,5 +38,6 @@ namespace Gtt.CodeWorks
         public ILogger Logger { get; }
         public CodeWorksEnvironment Environment { get; }
         public IRateLimiter RateLimiter { get; }
+        public IDistributedLockService DistributedLockService { get; }
     }
 }
