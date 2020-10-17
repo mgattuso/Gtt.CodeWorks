@@ -41,6 +41,7 @@ namespace Gtt.CodeWorks.Tests.Core
                 new EasyNetQServiceLogger(new JsonLogObjectSerializer(), bus),
                 NullTokenizer.SkipTokenization,
                 new InMemoryRateLimiter(), 
+                new InMemoryDistributedLock(), 
                 CodeWorksEnvironment.NonProduction);
 
             Parallel.For(0, 1000, new ParallelOptions { MaxDegreeOfParallelism = 8 }, async i =>

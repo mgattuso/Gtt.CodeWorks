@@ -19,7 +19,7 @@ namespace Gtt.CodeWorks
             _pipeline.Add(new RateLimiterMiddleware(coreDependencies.RateLimiter));
             _pipeline.Add(new TokenizationMiddleware(coreDependencies.Tokenizer, coreDependencies.Environment));
             _pipeline.Add(new LoggingMiddleware(coreDependencies.ServiceLogger));
-            _pipeline.Add(new DistributedLockMiddleware<TRequest>(CreateDistributedLockKey));
+            _pipeline.Add(new DistributedLockMiddleware<TRequest>(coreDependencies.DistributedLockService, CreateDistributedLockKey));
         }
 
         private Guid _correlationId;
