@@ -13,31 +13,31 @@ namespace Gtt.CodeWorks
             ICodeWorksTokenizer tokenizer, 
             IRateLimiter rateLimiter,
             IDistributedLockService distributedLockService,
-            CodeWorksEnvironment environment)
+            IServiceEnvironmentResolver environmentResolver)
         {
             Logger = logger;
             ServiceLogger = serviceLogger;
             Tokenizer = tokenizer;
-            Environment = environment;
             RateLimiter = rateLimiter;
             DistributedLockService = distributedLockService;
+            EnvironmentResolver = environmentResolver;
         }
 
         public CoreDependencies()
         {
-            Environment = CodeWorksEnvironment.NonProduction;
             Logger = NullLogger.Instance;
             ServiceLogger = NullServiceLogger.Instance;
             Tokenizer = NullTokenizer.SkipTokenization;
             RateLimiter = new InMemoryRateLimiter();
             DistributedLockService = new InMemoryDistributedLock();
+            EnvironmentResolver = new NonProductionEnvironmentResolver();
         }
 
         public IServiceLogger ServiceLogger { get; }
         public ICodeWorksTokenizer Tokenizer { get; }
         public ILogger Logger { get; }
-        public CodeWorksEnvironment Environment { get; }
         public IRateLimiter RateLimiter { get; }
         public IDistributedLockService DistributedLockService { get; }
+        public IServiceEnvironmentResolver EnvironmentResolver { get; }
     }
 }

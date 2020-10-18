@@ -1,15 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Gtt.CodeWorks.AspNet;
-using Gtt.CodeWorks.SampleWeb.Services;
 using Gtt.CodeWorks.Serializers.TextJson;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -23,11 +18,17 @@ namespace Gtt.CodeWorks.SampleWeb
         {
             services.AddTransient<IHttpDataSerializer, HttpJsonDataSerializer>();
             services.AddTransient<HttpRequestConverter>();
+            services.AddTransient<HttpRequestRunner>();
             services.AddTransient(x => new CoreDependencies());
+
             foreach (var svc in GetConcreteInstancesOf<IServiceInstance>())
             {
                 services.AddTransient(svc);
+                services.AddTransient(cfg => (IServiceInstance)cfg.GetService(svc));
             }
+
+            services.AddTransient<IServiceResolver>(config =>
+                new ServiceResolver(config.GetServices<IServiceInstance>()));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -40,19 +41,7 @@ namespace Gtt.CodeWorks.SampleWeb
 
             app.UseRouting();
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapGet("/", async context =>
-                {
-
-                    var converter = context.RequestServices.GetService<HttpRequestConverter>();
-                    var input = await converter.ConvertRequest<HelloWorldService.Request>(context.Request);
-                    input.SessionId = Guid.Empty;
-                    var svc = context.RequestServices.GetService<HelloWorldService>();
-                    var output = await svc.Execute(input, CancellationToken.None);
-                    await converter.ConvertResponse(output, context.Response);
-                });
-            });
+            app.UseAutoWiredServicesAsPosts();
         }
 
         private IEnumerable<Type> GetConcreteInstancesOf<T>()

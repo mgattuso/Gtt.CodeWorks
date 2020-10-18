@@ -19,7 +19,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
 
         public string ContentType => "application/json";
         public Encoding Encoding => Encoding.UTF8;
-        public async Task<string> SerializeResponse<T>(ServiceResponse<T> response) where T : new()
+        public async Task<string> SerializeResponse(ServiceResponse response)
         {
             var opts = new JsonSerializerOptions
             {
@@ -55,6 +55,25 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             catch (JsonException)
             {
                 return new T();
+            }
+        }
+
+        public async Task<BaseRequest> DeserializeRequest(Type type, Stream message)
+        {
+            var opts = new JsonSerializerOptions
+            {
+                IgnoreNullValues = false,
+                PropertyNameCaseInsensitive = true,
+            };
+
+            try
+            {
+                var result = await JsonSerializer.DeserializeAsync(message, type, opts);
+                return (BaseRequest)result;
+            }
+            catch (JsonException)
+            {
+                return (BaseRequest)Activator.CreateInstance(type);
             }
         }
     }

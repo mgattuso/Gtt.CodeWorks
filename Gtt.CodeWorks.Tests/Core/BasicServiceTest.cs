@@ -42,7 +42,7 @@ namespace Gtt.CodeWorks.Tests.Core
                 NullTokenizer.SkipTokenization,
                 new InMemoryRateLimiter(), 
                 new InMemoryDistributedLock(), 
-                CodeWorksEnvironment.NonProduction);
+                new NonProductionEnvironmentResolver());
 
             Parallel.For(0, 1000, new ParallelOptions { MaxDegreeOfParallelism = 8 }, async i =>
             {

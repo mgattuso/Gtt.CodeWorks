@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Routing" Version="2.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Gtt.CodeWorks.Serializers.TextJson\Gtt.CodeWorks.Serializers.TextJson.csproj" />
     <ProjectReference Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
   </ItemGroup>

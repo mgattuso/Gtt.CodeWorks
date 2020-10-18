@@ -17,7 +17,7 @@ namespace Gtt.CodeWorks
         protected BaseServiceInstance(CoreDependencies coreDependencies)
         {
             _pipeline.Add(new RateLimiterMiddleware(coreDependencies.RateLimiter));
-            _pipeline.Add(new TokenizationMiddleware(coreDependencies.Tokenizer, coreDependencies.Environment));
+            _pipeline.Add(new TokenizationMiddleware(coreDependencies.Tokenizer, coreDependencies.EnvironmentResolver));
             _pipeline.Add(new LoggingMiddleware(coreDependencies.ServiceLogger));
             _pipeline.Add(new DistributedLockMiddleware<TRequest>(coreDependencies.DistributedLockService, CreateDistributedLockKey));
         }
@@ -39,12 +39,12 @@ namespace Gtt.CodeWorks
             {
                 try
                 {
-                   var middlewareResult = await middleware.OnRequest(this, request, cancellationToken);
-                   if (middlewareResult != null)
-                   {
-                       response = new ServiceResponse<TResponse>(default(TResponse), middlewareResult.MetaData);
-                       break;
-                   }
+                    var middlewareResult = await middleware.OnRequest(this, request, cancellationToken);
+                    if (middlewareResult != null)
+                    {
+                        response = new ServiceResponse<TResponse>(default(TResponse), middlewareResult.MetaData);
+                        break;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -72,7 +72,8 @@ namespace Gtt.CodeWorks
                 try
                 {
                     await middleware.OnResponse(this, request, response);
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     if (!middleware.IgnoreExceptions)
                     {
@@ -121,5 +122,14 @@ namespace Gtt.CodeWorks
         public string Name => GetType().Name;
         public DateTimeOffset StartTime => _startTime;
         public Guid CorrelationId => _correlationId;
+        public abstract ServiceAction Action { get; }
+        public async Task<ServiceResponse> Execute(BaseRequest request, CancellationToken cancellationToken)
+        {
+            var result = await Execute((TRequest)request, cancellationToken);
+            return result;
+        }
+
+        public Type RequestType => typeof(TRequest);
+        public Type ResponseType => typeof(TResponse);
     }
 }

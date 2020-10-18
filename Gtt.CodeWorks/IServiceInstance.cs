@@ -18,5 +18,9 @@ namespace Gtt.CodeWorks
         string Name { get; }
         DateTimeOffset StartTime { get; }
         Guid CorrelationId { get; }
+        public ServiceAction Action { get; }
+        Task<ServiceResponse> Execute(BaseRequest request, CancellationToken cancellationToken);
+        Type RequestType { get; }
+        Type ResponseType { get; }
     }
 }

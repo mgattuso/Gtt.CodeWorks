@@ -11,10 +11,10 @@ namespace Gtt.CodeWorks.Middleware
         private readonly ICodeWorksTokenizer _tokenizer;
         private readonly CodeWorksEnvironment _environment;
 
-        public TokenizationMiddleware(ICodeWorksTokenizer tokenizer, CodeWorksEnvironment environment)
+        public TokenizationMiddleware(ICodeWorksTokenizer tokenizer, IServiceEnvironmentResolver environmentResolver)
         {
             _tokenizer = tokenizer;
-            _environment = environment;
+            _environment = environmentResolver.Environment;
         }
 
         public async Task<ServiceResponse> OnRequest<TReq>(IServiceInstance service, TReq request, CancellationToken cancellationToken) where TReq : BaseRequest, new()

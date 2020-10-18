@@ -17,9 +17,15 @@ namespace Gtt.CodeWorks.SampleWeb.Services
             return Task.FromResult("ABC");
         }
 
-        protected override async Task<ServiceResponse<Response>> Implementation(Request request, CancellationToken cancellationToken)
+        public override ServiceAction Action => ServiceAction.Read;
+
+        protected override Task<ServiceResponse<Response>> Implementation(Request request, CancellationToken cancellationToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(10));
+            return Task.FromResult(Implementation(request));
+        }
+
+        private ServiceResponse<Response> Implementation(Request request)
+        {
             var response = new Response
             {
                 Message = request.Message
