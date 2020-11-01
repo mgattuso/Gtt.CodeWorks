@@ -23,7 +23,7 @@ namespace Gtt.CodeWorks.Tests.Core
             for (int i = 0; i < 100000; i++)
             {
                 var s = new TimeService(new CoreDependencies());
-                var r = await s.Execute(new TimeService.Request(), CancellationToken.None);
+                var r = await s.Execute(new TimeService.Request(), ServiceClock.CurrentTime(), CancellationToken.None);
                 Console.WriteLine(r.MetaData.DurationMs);
             }
             sw.Stop();
@@ -47,7 +47,7 @@ namespace Gtt.CodeWorks.Tests.Core
             Parallel.For(0, 1000, new ParallelOptions { MaxDegreeOfParallelism = 8 }, async i =>
             {
                 var s = new TimeService(coreDependencies);
-                var r = await s.Execute(new TimeService.Request(), CancellationToken.None);
+                var r = await s.Execute(new TimeService.Request(), ServiceClock.CurrentTime(), CancellationToken.None);
             });
             sw.Stop();
             await Task.CompletedTask;

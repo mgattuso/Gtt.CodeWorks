@@ -27,7 +27,11 @@ namespace Gtt.CodeWorks.Middleware
             return this.ContinuePipeline();
         }
 
-        public Task OnResponse<TReq, TRes>(IServiceInstance service, TReq request, ServiceResponse<TRes> response) where TReq : BaseRequest, new() where TRes : new()
+        public Task OnResponse<TReq, TRes>(
+            IServiceInstance service, 
+            TReq request, 
+            ServiceResponse<TRes> response, 
+            CancellationToken cancellationToken) where TReq : BaseRequest, new() where TRes : new()
         {
             return Task.CompletedTask;
         }

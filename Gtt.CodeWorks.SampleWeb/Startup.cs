@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gtt.CodeWorks.AspNet;
+using Gtt.CodeWorks.SampleWeb.Services;
 using Gtt.CodeWorks.Serializers.TextJson;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -18,6 +19,7 @@ namespace Gtt.CodeWorks.SampleWeb
         {
             services.AddTransient<IHttpDataSerializer, HttpJsonDataSerializer>();
             services.AddTransient<HttpRequestConverter>();
+            services.AddTransient<ServiceDirectory>();
             services.AddTransient<HttpRequestRunner>();
             services.AddTransient(x => new CoreDependencies());
 

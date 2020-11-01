@@ -21,15 +21,14 @@ namespace Gtt.CodeWorks.Middleware
             if (rateLimitResult == RateLimitStatus.HardLimit)
             {
                 return new ServiceResponse(new ResponseMetaData(
-                    ServiceResult.RateLimited,
-                    request.CorrelationId,
-                    service.StartTime));
+                    service,
+                    ServiceResult.RateLimited));
             }
 
             return this.ContinuePipeline();
         }
 
-        public Task OnResponse<TReq, TRes>(IServiceInstance service, TReq request, ServiceResponse<TRes> response) where TReq : BaseRequest, new() where TRes : new()
+        public Task OnResponse<TReq, TRes>(IServiceInstance service, TReq request, ServiceResponse<TRes> response, CancellationToken cancellationToken) where TReq : BaseRequest, new() where TRes : new()
         {
             return _rateLimiter.LeaveService(request);
         }

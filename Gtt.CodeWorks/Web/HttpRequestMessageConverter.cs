@@ -26,7 +26,7 @@ namespace Gtt.CodeWorks.Web
 
         public async Task<HttpResponseMessage> ConvertResponse<T>(ServiceResponse<T> response) where T : new()
         {
-            var serializedData = await _serializer.SerializeResponse(response);
+            var serializedData = await _serializer.SerializeResponse(response, typeof(ServiceResponse<T>));
             var contentType = _serializer.ContentType;
             var encoding = _serializer.Encoding;
             var httpMsg = new HttpResponseMessage

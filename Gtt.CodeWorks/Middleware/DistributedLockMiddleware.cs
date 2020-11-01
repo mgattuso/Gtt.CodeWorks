@@ -37,16 +37,22 @@ namespace Gtt.CodeWorks.Middleware
 
             if (locked == DistributedLockStatus.Locked)
             {
-                return new ServiceResponse(new ResponseMetaData(ServiceResult.TransientError,
-                    service.CorrelationId,
-                    service.StartTime, $"Distributed lock exists for key \"{_key}\""
-                    ));
+                return new ServiceResponse(new ResponseMetaData(
+                        service,
+                        ServiceResult.TransientError,
+                        new ErrorData($"A lock already exists for key \"{_key}\"")
+                    )
+                );
             }
 
             return this.ContinuePipeline();
         }
 
-        public Task OnResponse<TReq, TRes>(IServiceInstance service, TReq request, ServiceResponse<TRes> response) where TReq : BaseRequest, new() where TRes : new()
+        public Task OnResponse<TReq, TRes>(
+            IServiceInstance service, 
+            TReq request, 
+            ServiceResponse<TRes> response, 
+            CancellationToken cancellationToken) where TReq : BaseRequest, new() where TRes : new()
         {
             return Task.FromResult(
                 _distributedLockService.ReleaseLock(_key, CancellationToken.None)

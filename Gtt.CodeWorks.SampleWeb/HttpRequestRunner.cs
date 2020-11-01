@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
@@ -22,7 +23,7 @@ namespace Gtt.CodeWorks.AspNet
             where TRes : new()
         {
             var input = await _converter.ConvertRequest<TReq>(context.Request);
-            var output = await service.Execute(input, cancellationToken);
+            var output = await service.Execute(input, ServiceClock.CurrentTime(), cancellationToken);
             await _converter.ConvertResponse(output, context.Response);
         }
 
@@ -32,9 +33,23 @@ namespace Gtt.CodeWorks.AspNet
             CancellationToken cancellationToken
         )
         {
-            var input = await _converter.ConvertRequest(service.RequestType, context.Request);
-            var output = await service.Execute(input, cancellationToken);
-            await _converter.ConvertResponse(output, context.Response);
+            DateTimeOffset start = ServiceClock.CurrentTime();
+            ServiceResponse output;
+            try
+            {
+                var input = await _converter.ConvertRequest(service.RequestType, context.Request);
+                output = await service.Execute(input, start, cancellationToken);
+            }
+            catch (ValidationErrorException vex)
+            {
+                output = new ServiceResponse(
+                    new ResponseMetaData(
+                        service,
+                        ServiceResult.ValidationError,
+                        vex.Error));
+            }
+
+            await _converter.ConvertResponse(output, service.ResponseType, context.Response);
         }
     }
 }

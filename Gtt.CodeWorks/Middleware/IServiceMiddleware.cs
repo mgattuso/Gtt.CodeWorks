@@ -14,7 +14,8 @@ namespace Gtt.CodeWorks.Middleware
         Task OnResponse<TReq, TRes>(
                 IServiceInstance service, 
                 TReq request, 
-                ServiceResponse<TRes> response)
+                ServiceResponse<TRes> response,
+                CancellationToken cancellationToken)
             where TReq : BaseRequest, new()
             where TRes : new();
 

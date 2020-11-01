@@ -23,7 +23,7 @@ namespace Gtt.CodeWorks.Web
             where TReq : BaseRequest, new() where TRes : new()
         {
             var input = await _responseGenerator.ConvertRequest<TReq>(request);
-            var output = await service.Execute(input, cancellationToken);
+            var output = await service.Execute(input, ServiceClock.CurrentTime(), cancellationToken);
             var response = await _responseGenerator.ConvertResponse(output);
             return response;
         }

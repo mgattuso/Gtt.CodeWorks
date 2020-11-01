@@ -9,32 +9,38 @@ namespace Gtt.CodeWorks
     {
         private readonly DateTimeOffset _startTime;
 
-        public ResponseMetaData(ServiceResult result, Guid correlationId, DateTimeOffset startTime)
+        public ResponseMetaData(
+            IServiceInstance service,
+            ServiceResult result,
+            Dictionary<string, ResponseMetaData> dependencies = null)
         {
-            _startTime = startTime;
+            _startTime = service.StartTime;
             Result = result;
-            CorrelationId = correlationId;
-            ResponseCreated = DateTimeOffset.UtcNow;
+            CorrelationId = service.CorrelationId;
+            Dependencies = dependencies;
+            ResponseCreated = ServiceClock.CurrentTime();
+            ServiceName = service.Name;
         }
 
         public ResponseMetaData(
-            ServiceResult result, 
-            Guid correlationId, 
-            DateTimeOffset startTime,
-            string errorInformation)
+            IServiceInstance service,
+            ServiceResult result,
+            ErrorData error)
         {
-            _startTime = startTime;
+            _startTime = service.StartTime;
             Result = result;
-            CorrelationId = correlationId;
-            ErrorInformation = errorInformation;
-            ResponseCreated = DateTimeOffset.UtcNow;
+            CorrelationId = service.CorrelationId;
+            Errors = error.ToDictionary();
+            ResponseCreated = ServiceClock.CurrentTime();
+            ServiceName = service.Name;
         }
 
+        public string ServiceName { get; }
         public Guid CorrelationId { get; set; }
         public ServiceResult Result { get; }
         public long DurationMs => (long)(ServiceClock.CurrentTime() - _startTime).TotalMilliseconds;
         public DateTimeOffset ResponseCreated { get; }
-
-        public string ErrorInformation { get; }
+        public Dictionary<string, string[]> Errors { get; }
+        public Dictionary<string, ResponseMetaData> Dependencies { get; }
     }
 }

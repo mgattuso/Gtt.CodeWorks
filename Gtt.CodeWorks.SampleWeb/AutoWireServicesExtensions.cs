@@ -13,11 +13,10 @@ namespace Gtt.CodeWorks.SampleWeb
         {
             appBuilder.UseEndpoints(endpoint =>
             {
-                endpoint.MapPost("/{service}/{*action}", async context =>
+                endpoint.Map("/{service}/{*action}", async context =>
                 {
                     var runner = context.RequestServices.GetService<HttpRequestRunner>();
                     var resolver = context.RequestServices.GetService<IServiceResolver>();
-                    var r = context.GetRouteData();
                     var serviceName = context.GetRouteValue("service")?.ToString();
                     IServiceInstance svc;
                     try

@@ -9,7 +9,7 @@ namespace Gtt.CodeWorks
     {
         string ContentType { get; }
         Encoding Encoding { get; }
-        Task<string> SerializeResponse(ServiceResponse response);
+        Task<string> SerializeResponse(ServiceResponse response, Type responseType);
         Task<T> DeserializeRequest<T>(Stream message) where T : BaseRequest, new();
         Task<BaseRequest> DeserializeRequest(Type type, Stream message);
     }

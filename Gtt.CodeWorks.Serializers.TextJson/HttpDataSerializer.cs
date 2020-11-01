@@ -19,7 +19,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
 
         public string ContentType => "application/json";
         public Encoding Encoding => Encoding.UTF8;
-        public async Task<string> SerializeResponse(ServiceResponse response)
+        public async Task<string> SerializeResponse(ServiceResponse response, Type responseType)
         {
             var opts = new JsonSerializerOptions
             {
@@ -31,7 +31,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             opts.Converters.Add(new JsonStringEnumConverter());
 
             await using var stream = new MemoryStream();
-            await JsonSerializer.SerializeAsync(stream, response, opts);
+            await JsonSerializer.SerializeAsync(stream, response, responseType, opts);
 
             stream.Position = 0;
             using var reader = new StreamReader(stream);

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Gtt.CodeWorks.Middleware;
-using Microsoft.Extensions.Logging;
 
 namespace Gtt.CodeWorks
 {
@@ -23,12 +22,11 @@ namespace Gtt.CodeWorks
         }
 
         private Guid _correlationId;
-        private DateTimeOffset _startTime;
 
-        public async Task<ServiceResponse<TResponse>> Execute(TRequest request, CancellationToken cancellationToken)
+        public async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
-            _startTime = DateTimeOffset.UtcNow;
+            StartTime = startTime;
             _correlationId = request.CorrelationId;
             request.SyncCorrelationIds();
             ServiceResponse<TResponse> response = null;
@@ -58,7 +56,14 @@ namespace Gtt.CodeWorks
             // EXECUTE THE SERVICE
             try
             {
-                response ??= await Implementation(request, cancellationToken);
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    response ??= await Implementation(request, cancellationToken);
+                }
+                else
+                {
+                    response = TemporaryException("Cancellation Requested");
+                }
             }
             catch (Exception ex)
             {
@@ -71,7 +76,7 @@ namespace Gtt.CodeWorks
                 var middleware = _pipeline[i];
                 try
                 {
-                    await middleware.OnResponse(this, request, response);
+                    await middleware.OnResponse(this, request, response, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -85,27 +90,46 @@ namespace Gtt.CodeWorks
             return response;
         }
 
+        protected ServiceResponse<TResponse> TemporaryException(string reason)
+        {
+            return new ServiceResponse<TResponse>(default(TResponse),
+                new ResponseMetaData(
+                    this,
+                    ServiceResult.TransientError,
+                    new ErrorData()
+                ));
+        }
+
+        protected ServiceResponse<TResponse> TemporaryException(Exception ex)
+        {
+            return new ServiceResponse<TResponse>(default(TResponse),
+                new ResponseMetaData(
+                    this,
+                    ServiceResult.TransientError,
+                    new ErrorData()
+                ));
+        }
+
         protected ServiceResponse<TResponse> PermanentError(Exception ex)
         {
             return new ServiceResponse<TResponse>(default(TResponse),
                 new ResponseMetaData(
+                    this,
                     ServiceResult.PermanentError,
-                    _correlationId,
-                    _startTime,
-                    ex.ToString()
+                    new ErrorData(ex)
                 )
             );
         }
 
 #pragma warning disable IDE0060 // Remove unused parameter
-        protected ServiceResponse<TResponse> Successful(TResponse response, ServiceResult result = ServiceResult.Successful)
+        protected ServiceResponse<TResponse> Successful(TResponse response, ServiceResult result = ServiceResult.Successful, Dictionary<string, ResponseMetaData> dependencyMetaData = null)
 #pragma warning restore IDE0060 // Remove unused parameter
         {
             if (result.Category() != ResultCategory.Successful)
             {
                 throw new Exception("Cannot return a non-successful result through the success response");
             }
-            return new ServiceResponse<TResponse>(response, new ResponseMetaData(ServiceResult.Successful, _correlationId, _startTime));
+            return new ServiceResponse<TResponse>(response, new ResponseMetaData(this, ServiceResult.Successful, dependencyMetaData));
         }
         protected ServiceResponse<TResponse> Created(TResponse response)
         {
@@ -120,16 +144,16 @@ namespace Gtt.CodeWorks
         protected abstract Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken);
 
         public string Name => GetType().Name;
-        public DateTimeOffset StartTime => _startTime;
+        public DateTimeOffset StartTime { get; private set; }
         public Guid CorrelationId => _correlationId;
         public abstract ServiceAction Action { get; }
-        public async Task<ServiceResponse> Execute(BaseRequest request, CancellationToken cancellationToken)
+        public async Task<ServiceResponse> Execute(BaseRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
-            var result = await Execute((TRequest)request, cancellationToken);
+            var result = await Execute((TRequest)request, startTime, cancellationToken);
             return result;
         }
 
         public Type RequestType => typeof(TRequest);
-        public Type ResponseType => typeof(TResponse);
+        public Type ResponseType => typeof(ServiceResponse<TResponse>);
     }
 }
