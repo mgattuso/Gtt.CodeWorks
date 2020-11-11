@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.1</Version>
+    <Version>0.0.3</Version>
     <Authors>Michael Gattuso</Authors>
     <Product>Codeworks</Product>
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Condition=" '$(Configuration)' == 'Debug'" Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
+    <ProjectReference Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
   </ItemGroup>
 
 </Project>

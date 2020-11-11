@@ -9,6 +9,16 @@ namespace Gtt.CodeWorks
     {
         private readonly DateTimeOffset _startTime;
 
+#if !DEBUG
+        /// <summary>
+        /// Used for Deserialization
+        /// </summary>
+        public ResponseMetaData()
+        {
+            
+        }
+#endif
+
         public ResponseMetaData(
             IServiceInstance service,
             ServiceResult result,

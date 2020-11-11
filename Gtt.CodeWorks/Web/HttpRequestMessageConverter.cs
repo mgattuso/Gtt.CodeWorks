@@ -17,16 +17,16 @@ namespace Gtt.CodeWorks.Web
             _serializer = serializer;
         }
 
-        public async Task<T> ConvertRequest<T>(HttpRequestMessage request) where T : BaseRequest, new()
+        public async Task<BaseRequest> ConvertRequest(Type type, HttpRequestMessage request)
         {
             var contents = await request.Content.ReadAsStreamAsync();
-            var result = await _serializer.DeserializeRequest<T>(contents);
+            var result = await _serializer.DeserializeRequest(type, contents);
             return result;
         }
 
-        public async Task<HttpResponseMessage> ConvertResponse<T>(ServiceResponse<T> response) where T : new()
+        public async Task<HttpResponseMessage> ConvertResponse(ServiceResponse response, Type type)
         {
-            var serializedData = await _serializer.SerializeResponse(response, typeof(ServiceResponse<T>));
+            var serializedData = await _serializer.SerializeResponse(response, type);
             var contentType = _serializer.ContentType;
             var encoding = _serializer.Encoding;
             var httpMsg = new HttpResponseMessage

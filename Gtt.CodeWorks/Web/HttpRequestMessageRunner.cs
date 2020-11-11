@@ -16,15 +16,14 @@ namespace Gtt.CodeWorks.Web
             _responseGenerator = responseGenerator;
         }
 
-        public async Task<HttpResponseMessage> Handle<TReq, TRes>(
+        public async Task<HttpResponseMessage> Handle(
             HttpRequestMessage request, 
-            BaseServiceInstance<TReq, TRes> service,
-            CancellationToken cancellationToken) 
-            where TReq : BaseRequest, new() where TRes : new()
+            IServiceInstance service,
+            CancellationToken cancellationToken)
         {
-            var input = await _responseGenerator.ConvertRequest<TReq>(request);
+            var input = await _responseGenerator.ConvertRequest(service.RequestType, request);
             var output = await service.Execute(input, ServiceClock.CurrentTime(), cancellationToken);
-            var response = await _responseGenerator.ConvertResponse(output);
+            var response = await _responseGenerator.ConvertResponse(output, service.ResponseType);
             return response;
         }
 

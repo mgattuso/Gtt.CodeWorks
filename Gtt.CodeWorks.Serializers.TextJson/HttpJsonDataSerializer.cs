@@ -5,15 +5,18 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Gtt.CodeWorks.Serializers.TextJson
 {
     public class HttpJsonDataSerializer : IHttpDataSerializer
     {
+        private readonly ILogger<HttpJsonDataSerializer> _logger;
         private readonly bool _debugMode;
 
-        public HttpJsonDataSerializer()
+        public HttpJsonDataSerializer(ILogger<HttpJsonDataSerializer> logger)
         {
+            _logger = logger;
             _debugMode = true;
         }
 
@@ -52,9 +55,10 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 var result = await JsonSerializer.DeserializeAsync<T>(stream, opts);
                 return result;
             }
-            catch (JsonException)
+            catch (JsonException ex)
             {
-                return new T();
+                _logger.LogError("Cannot deserialize request", ex);
+                throw;
             }
         }
 
@@ -71,9 +75,10 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 var result = await JsonSerializer.DeserializeAsync(message, type, opts);
                 return (BaseRequest)result;
             }
-            catch (JsonException)
+            catch (JsonException ex)
             {
-                return (BaseRequest)Activator.CreateInstance(type);
+                _logger.LogError("Cannot deserialize request", ex);
+                throw;
             }
         }
     }
