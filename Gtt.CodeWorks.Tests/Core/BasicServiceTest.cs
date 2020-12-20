@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using EasyNetQ;
 using Gtt.CodeWorks.EasyNetQ;
 using Gtt.CodeWorks.Serializers.TextJson;
+using Gtt.CodeWorks.Validation;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -22,7 +23,7 @@ namespace Gtt.CodeWorks.Tests.Core
             sw.Start();
             for (int i = 0; i < 100000; i++)
             {
-                var s = new TimeService(new CoreDependencies());
+                var s = new TimeService(CoreDependencies.NullDependencies);
                 var r = await s.Execute(new TimeService.Request(), ServiceClock.CurrentTime(), CancellationToken.None);
                 Console.WriteLine(r.MetaData.DurationMs);
             }
@@ -37,12 +38,13 @@ namespace Gtt.CodeWorks.Tests.Core
             Stopwatch sw = new Stopwatch();
             sw.Start();
             var coreDependencies = new CoreDependencies(
-                NullLogger.Instance,
+                NullLoggerFactory.Instance, 
                 new EasyNetQServiceLogger(new JsonLogObjectSerializer(), bus),
                 NullTokenizer.SkipTokenization,
                 new InMemoryRateLimiter(), 
                 new InMemoryDistributedLock(), 
-                new NonProductionEnvironmentResolver());
+                new NonProductionEnvironmentResolver(),
+                NullRequestValidator.Instance);
 
             Parallel.For(0, 1000, new ParallelOptions { MaxDegreeOfParallelism = 8 }, async i =>
             {

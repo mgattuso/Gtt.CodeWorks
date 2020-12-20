@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gtt.CodeWorks.AspNet;
+using Gtt.CodeWorks.DataAnnotations;
 using Gtt.CodeWorks.SampleWeb.Services;
 using Gtt.CodeWorks.Serializers.TextJson;
+using Gtt.CodeWorks.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,11 +19,22 @@ namespace Gtt.CodeWorks.SampleWeb
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddLogging();
+
             services.AddTransient<IHttpDataSerializer, HttpJsonDataSerializer>();
             services.AddTransient<HttpRequestConverter>();
             services.AddTransient<ServiceDirectory>();
             services.AddTransient<HttpRequestRunner>();
-            services.AddTransient(x => new CoreDependencies());
+
+            services.AddTransient<ILogObjectSerializer, JsonLogObjectSerializer>();
+            services.AddTransient<IServiceLogger, ServiceLogger>();
+            services.AddTransient<ICodeWorksTokenizer>(cfg => NullTokenizer.SkipTokenization);
+            services.AddTransient<IRateLimiter>(cfg => new InMemoryRateLimiter());
+            services.AddTransient<IDistributedLockService>(cfg => new InMemoryDistributedLock());
+            services.AddTransient<IServiceEnvironmentResolver>(cfg => new NonProductionEnvironmentResolver());
+            services.AddTransient<IRequestValidator, DataAnnotationsRequestValidator>();
+
+            services.AddTransient<CoreDependencies>();
 
             foreach (var svc in GetConcreteInstancesOf<IServiceInstance>())
             {

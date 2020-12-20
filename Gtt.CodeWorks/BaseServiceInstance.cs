@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Gtt.CodeWorks.Middleware;
+using Gtt.CodeWorks.Validation;
 
 namespace Gtt.CodeWorks
 {
@@ -19,6 +21,7 @@ namespace Gtt.CodeWorks
             _pipeline.Add(new TokenizationMiddleware(coreDependencies.Tokenizer, coreDependencies.EnvironmentResolver));
             _pipeline.Add(new LoggingMiddleware(coreDependencies.ServiceLogger));
             _pipeline.Add(new DistributedLockMiddleware<TRequest>(coreDependencies.DistributedLockService, CreateDistributedLockKey));
+            _pipeline.Add(new ValidationMiddleware(coreDependencies.RequestValidator));
         }
 
         private Guid _correlationId;
@@ -138,6 +141,23 @@ namespace Gtt.CodeWorks
         protected ServiceResponse<TResponse> Queued(TResponse response)
         {
             return Successful(response, ServiceResult.Queued);
+        }
+
+        protected ServiceResponse ValidationError(ValidationErrorData error)
+        {
+            var ver = new ValidationErrorResponse();
+            ver.AddValidationError(error);
+            return new ServiceResponse(new ResponseMetaData(this, ver));
+        }
+
+        protected ServiceResponse ValidationError(params ValidationErrorData[] validationErrors)
+        {
+            var ver = new ValidationErrorResponse();
+            foreach (var error in validationErrors)
+            {
+                ver.AddValidationError(error);  
+            }
+            return new ServiceResponse(new ResponseMetaData(this, ver));
         }
 
         protected abstract Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken);

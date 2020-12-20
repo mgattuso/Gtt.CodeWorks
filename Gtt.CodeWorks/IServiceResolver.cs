@@ -7,7 +7,8 @@ namespace Gtt.CodeWorks
 {
     public interface IServiceResolver
     {
-        public IServiceInstance GetInstanceByName(string name);
+        IServiceInstance GetInstanceByName(string name);
+        IServiceInstance[] GetRegistered();
     }
 
     public class ServiceResolver : IServiceResolver
@@ -35,6 +36,11 @@ namespace Gtt.CodeWorks
             }
 
             return matchingInstances[0];
+        }
+
+        public IServiceInstance[] GetRegistered()
+        {
+            return _instances.OrderBy(x => x.Name).ToArray();
         }
     }
 }

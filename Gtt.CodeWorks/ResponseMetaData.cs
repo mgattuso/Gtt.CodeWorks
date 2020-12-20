@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
+using Gtt.CodeWorks.Validation;
 
 namespace Gtt.CodeWorks
 {
@@ -15,7 +17,7 @@ namespace Gtt.CodeWorks
         /// </summary>
         public ResponseMetaData()
         {
-            
+
         }
 #endif
 
@@ -32,17 +34,47 @@ namespace Gtt.CodeWorks
             ServiceName = service.Name;
         }
 
+        public ResponseMetaData(IServiceInstance service, ValidationErrorResponse validationErrors, Dictionary<string, ResponseMetaData> dependencies = null)
+        {
+            _startTime = service.StartTime;
+            Result = ServiceResult.ValidationError;
+            CorrelationId = service.CorrelationId;
+            Dependencies = dependencies;
+            ResponseCreated = ServiceClock.CurrentTime();
+            ServiceName = service.Name;
+            Errors = validationErrors.ToDictionary();
+        }
+
         public ResponseMetaData(
             IServiceInstance service,
             ServiceResult result,
-            ErrorData error)
+            ErrorData error,
+            Dictionary<string, ResponseMetaData> dependencies = null)
         {
             _startTime = service.StartTime;
             Result = result;
             CorrelationId = service.CorrelationId;
-            Errors = error.ToDictionary();
+            Dependencies = dependencies;
             ResponseCreated = ServiceClock.CurrentTime();
             ServiceName = service.Name;
+            Errors = error.ToDictionary();
+        }
+
+        public ResponseMetaData(
+            string serviceName,
+            DateTimeOffset startTime,
+            Guid correlationId,
+            ServiceResult result,
+            IDictionary<string, string[]> errors,
+            Dictionary<string, ResponseMetaData> dependencies = null)
+        {
+            _startTime = startTime;
+            Result = result;
+            CorrelationId = correlationId;
+            Dependencies = dependencies;
+            ResponseCreated = ServiceClock.CurrentTime();
+            ServiceName = serviceName;
+            Errors = errors != null ? new Dictionary<string, string[]>(errors) : new Dictionary<string, string[]>();
         }
 
         public string ServiceName { get; }

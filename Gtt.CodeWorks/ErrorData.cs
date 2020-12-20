@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using Gtt.CodeWorks.Validation;
 
 namespace Gtt.CodeWorks
 {
@@ -34,8 +35,8 @@ namespace Gtt.CodeWorks
             Members = new[] { "" };
         }
 
-        public string ErrorMessage { get; set; }
-        public IEnumerable<string> Members { get; set; }
+        public string ErrorMessage { get; }
+        public IEnumerable<string> Members { get; }
 
         public Dictionary<string, string[]> ToDictionary()
         {

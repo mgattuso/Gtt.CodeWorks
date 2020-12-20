@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{3BAC
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.Redis", "Gtt.CodeWorks.Redis\Gtt.CodeWorks.Redis.csproj", "{4E8A37F2-7D1E-4879-88AE-BEC0D63087B5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.DataAnnotations", "Gtt.CodeWorks.DataAnnotations\Gtt.CodeWorks.DataAnnotations.csproj", "{28C35213-EA8E-41F3-B75C-46B5619CB909}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{4E8A37F2-7D1E-4879-88AE-BEC0D63087B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E8A37F2-7D1E-4879-88AE-BEC0D63087B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E8A37F2-7D1E-4879-88AE-BEC0D63087B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28C35213-EA8E-41F3-B75C-46B5619CB909}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28C35213-EA8E-41F3-B75C-46B5619CB909}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28C35213-EA8E-41F3-B75C-46B5619CB909}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28C35213-EA8E-41F3-B75C-46B5619CB909}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

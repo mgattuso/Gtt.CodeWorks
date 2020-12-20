@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using Gtt.CodeWorks.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -8,36 +9,42 @@ namespace Gtt.CodeWorks
     public class CoreDependencies
     {
         public CoreDependencies(
-            ILogger logger, 
-            IServiceLogger serviceLogger, 
-            ICodeWorksTokenizer tokenizer, 
+            ILoggerFactory loggerFactory,
+            IServiceLogger serviceLogger,
+            ICodeWorksTokenizer tokenizer,
             IRateLimiter rateLimiter,
             IDistributedLockService distributedLockService,
-            IServiceEnvironmentResolver environmentResolver)
+            IServiceEnvironmentResolver environmentResolver,
+            IRequestValidator requestValidator)
         {
-            Logger = logger;
+            LoggerFactory = loggerFactory;
             ServiceLogger = serviceLogger;
             Tokenizer = tokenizer;
             RateLimiter = rateLimiter;
             DistributedLockService = distributedLockService;
             EnvironmentResolver = environmentResolver;
+            RequestValidator = requestValidator;
         }
 
-        public CoreDependencies()
+        private CoreDependencies()
         {
-            Logger = NullLogger.Instance;
+            LoggerFactory = new NullLoggerFactory();
             ServiceLogger = NullServiceLogger.Instance;
             Tokenizer = NullTokenizer.SkipTokenization;
             RateLimiter = new InMemoryRateLimiter();
             DistributedLockService = new InMemoryDistributedLock();
             EnvironmentResolver = new NonProductionEnvironmentResolver();
+            RequestValidator = NullRequestValidator.Instance;
         }
 
         public IServiceLogger ServiceLogger { get; }
         public ICodeWorksTokenizer Tokenizer { get; }
-        public ILogger Logger { get; }
+        public ILoggerFactory LoggerFactory { get; }
         public IRateLimiter RateLimiter { get; }
         public IDistributedLockService DistributedLockService { get; }
         public IServiceEnvironmentResolver EnvironmentResolver { get; }
+        public IRequestValidator RequestValidator { get; }
+        public static CoreDependencies NullDependencies => new CoreDependencies();
+
     }
 }
