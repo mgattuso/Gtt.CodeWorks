@@ -22,7 +22,11 @@ namespace Gtt.CodeWorks.Web
             options ??= new HttpDataSerializerOptions();
             DateTimeOffset start = ServiceClock.CurrentTime();
             var payload = await _dataSerializer.SerializeRequest(request, typeof(TRequest), options);
-            var apiResponse = await _client.PostAsync(new Uri(url), new StringContent(payload, Encoding.UTF8, "application/json"));
+
+            var requestMsg = new HttpRequestMessage(HttpMethod.Post, new Uri(url));
+            requestMsg.Headers.Add("codeworks-prefs-enum", options.EnumSerializationMethod.ToString());
+            requestMsg.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+            var apiResponse = await _client.SendAsync(requestMsg);
             var responseStream = await apiResponse.Content.ReadAsStreamAsync();
             var response = await _dataSerializer.DeserializeResponse<InternalServiceResponse<TResponse>>(responseStream);
             return new ServiceResponse<TResponse>(response.Data, new ResponseMetaData(response.MetaData.ServiceName, start, response.MetaData.CorrelationId, response.MetaData.Result, response.MetaData.Errors)); //TODO: FIX ERROR DATA
