@@ -35,7 +35,6 @@ namespace Gtt.CodeWorks.SampleWeb.Services
 
         public class Request : BaseRequest
         {
-            [Range(0, 1000)]
             public double Principal { get; set; }
             public double InterestRate { get; set; }
             public double TimePeriods { get; set; }

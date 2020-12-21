@@ -70,7 +70,7 @@ namespace Gtt.CodeWorks.AspNet
                         }
                         catch (Exception)
                         {
-                            throw new ValidationErrorException($"Cannot convert {qv} to {property.PropertyType.Name}", property.Name, result?.CorrelationId ?? Guid.Empty);
+                            throw new ValidationErrorException($"Cannot convert {qv} to {property.PropertyType.Name}", property.Name);
                         }
                     }
                 }

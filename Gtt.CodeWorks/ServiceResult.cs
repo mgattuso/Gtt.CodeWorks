@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.ComponentModel;
+using System.Net;
 
 namespace Gtt.CodeWorks
 {
@@ -18,7 +19,8 @@ namespace Gtt.CodeWorks
             ResultOutcome.Failed,
             ResultCategory.SystemError,
             httpStatusCode: (int)HttpStatusCode.InternalServerError)]
-        PermanentError,
+        [Description("Permanent Error")]
+        PermanentError = 0,
 
         /// <summary>
         /// The request resulted in an error in the service that is expected to be
@@ -28,7 +30,8 @@ namespace Gtt.CodeWorks
             ResultOutcome.Failed,
             ResultCategory.SystemError,
             httpStatusCode: (int)HttpStatusCode.ServiceUnavailable)]
-        TransientError,
+        [Description("Transient Error")]
+        TransientError = 1,
 
 
         /// <summary>
@@ -38,7 +41,8 @@ namespace Gtt.CodeWorks
             ResultOutcome.Failed,
             ResultCategory.SystemError,
             httpStatusCode: (int)HttpStatusCode.TooManyRequests)]
-        RateLimited,
+        [Description("Rate Limited")]
+        RateLimited = 2,
 
         /// <summary>
         /// The request timed out on an upstream dependent service. The current state of the upstream service
@@ -48,7 +52,8 @@ namespace Gtt.CodeWorks
             ResultOutcome.Failed,
             ResultCategory.DependencyError,
             httpStatusCode: (int)HttpStatusCode.GatewayTimeout)]
-        UpstreamTimeout,
+        [Description("Upstream Timeout")]
+        UpstreamTimeout = 3,
 
         /// <summary>
         /// The request resulted in an error in an upstream dependent service. The caller should review
@@ -58,7 +63,8 @@ namespace Gtt.CodeWorks
             ResultOutcome.Failed,
             ResultCategory.DependencyError,
             httpStatusCode: (int)HttpStatusCode.BadGateway)]
-        UpstreamError,
+        [Description("Upstream Error")]
+        UpstreamError = 4,
 
         // BUSINESS / LOGIC ERRORS
 
@@ -69,7 +75,8 @@ namespace Gtt.CodeWorks
             ResultOutcome.Failed,
             ResultCategory.BusinessLogicError,
             httpStatusCode: (int)HttpStatusCode.NotFound)]
-        ResourceNotFound,
+        [Description("Resource Not Found")]
+        ResourceNotFound = 5,
 
         /// <summary>
         /// The service request resulted in a validation error due to the request details or
@@ -79,7 +86,8 @@ namespace Gtt.CodeWorks
             ResultOutcome.Failed,
             ResultCategory.BusinessLogicError,
             httpStatusCode: (int)HttpStatusCode.BadRequest)]
-        ValidationError,
+        [Description("Validation Error")]
+        ValidationError = 6,
 
         /// <summary>
         /// The service request was not fulfilled as it conflicts with the
@@ -89,7 +97,8 @@ namespace Gtt.CodeWorks
             ResultOutcome.Failed,
             ResultCategory.BusinessLogicError,
             httpStatusCode: (int)HttpStatusCode.Conflict)]
-        ConflictingRequest,
+        [Description("Conflicting Request")]
+        ConflictingRequest = 7,
 
 
         // SUCCESSFUL STATUS
@@ -101,7 +110,7 @@ namespace Gtt.CodeWorks
             ResultOutcome.Successful, 
             ResultCategory.Successful, 
             httpStatusCode: (int)HttpStatusCode.OK)]
-        Successful,
+        Successful = 8,
 
         /// <summary>
         /// Successful service result and resource was created 
@@ -110,7 +119,7 @@ namespace Gtt.CodeWorks
             ResultOutcome.Successful, 
             ResultCategory.Successful, 
             httpStatusCode: (int)HttpStatusCode.Created)]
-        Created,
+        Created = 9,
 
         /// <summary>
         /// Service result was successful due to existing resource that met the criteria
@@ -119,7 +128,8 @@ namespace Gtt.CodeWorks
             ResultOutcome.Successful, 
             ResultCategory.Successful, 
             httpStatusCode: (int)HttpStatusCode.OK)]
-        FulfilledByExistingResource,
+        [Description("Fulfilled by Existing Resource")]
+        FulfilledByExistingResource = 9,
 
         // QUEUED STATUS
 
@@ -130,6 +140,6 @@ namespace Gtt.CodeWorks
             ResultOutcome.Successful, 
             ResultCategory.Successful, 
             httpStatusCode: (int)HttpStatusCode.Accepted)]
-        Queued
+        Queued = 10
     }
 }

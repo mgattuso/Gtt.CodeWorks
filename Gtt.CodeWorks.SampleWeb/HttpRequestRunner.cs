@@ -35,9 +35,11 @@ namespace Gtt.CodeWorks.AspNet
         {
             DateTimeOffset start = ServiceClock.CurrentTime();
             ServiceResponse output;
+            Guid? correlationId = null;
             try
             {
                 var input = await _converter.ConvertRequest(service.RequestType, context.Request);
+                correlationId = input.CorrelationId;
                 output = await service.Execute(input, start, cancellationToken);
             }
             catch (ValidationErrorException vex)

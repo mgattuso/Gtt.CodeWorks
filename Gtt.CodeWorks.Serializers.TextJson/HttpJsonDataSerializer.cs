@@ -31,7 +31,9 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 IgnoreNullValues = true
             };
-            opts.Converters.Add(new JsonStringEnumConverter());
+            opts.Converters.Add(new JsonEnumConverter());
+            //opts.Converters.Add(new JsonStringEnumConverter());
+
 
             await using var stream = new MemoryStream();
             await JsonSerializer.SerializeAsync(stream, response, responseType, opts);
@@ -49,6 +51,8 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 IgnoreNullValues = false,
                 PropertyNameCaseInsensitive = true,
             };
+            opts.Converters.Add(new JsonEnumConverter());
+            //opts.Converters.Add(new JsonStringEnumConverter());
 
             try
             {
@@ -69,8 +73,8 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 IgnoreNullValues = false,
                 PropertyNameCaseInsensitive = true,
             };
-
-            opts.Converters.Add(new JsonStringEnumConverter());
+            opts.Converters.Add(new JsonEnumConverter());
+            //opts.Converters.Add(new JsonStringEnumConverter());
 
             try
             {
@@ -93,7 +97,8 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 IgnoreNullValues = true
             };
-            opts.Converters.Add(new JsonStringEnumConverter());
+            opts.Converters.Add(new JsonEnumConverter());
+            //opts.Converters.Add(new JsonStringEnumConverter());
 
             await using var stream = new MemoryStream();
             await JsonSerializer.SerializeAsync(stream, request, requestType, opts);
@@ -111,7 +116,8 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 IgnoreNullValues = false,
                 PropertyNameCaseInsensitive = true
             };
-            opts.Converters.Add(new JsonStringEnumConverter());
+            opts.Converters.Add(new JsonEnumConverter());
+            //opts.Converters.Add(new JsonStringEnumConverter());
 
             try
             {
@@ -132,6 +138,8 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 IgnoreNullValues = false,
                 PropertyNameCaseInsensitive = true,
             };
+            opts.Converters.Add(new JsonEnumConverter());
+            //opts.Converters.Add(new JsonStringEnumConverter());
 
             try
             {

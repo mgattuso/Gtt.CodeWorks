@@ -6,35 +6,32 @@ namespace Gtt.CodeWorks
     [Serializable]
     public class ValidationErrorException : Exception
     {
-        public Guid CorrelationId { get; }
         public ErrorData Error { get; }
 
-        public ValidationErrorException(string error, string member, Guid correlationId) 
-            : this(new ErrorData(error, member), correlationId)
+        public ValidationErrorException(string error, string member) 
+            : this(new ErrorData(error, member))
         {
-            CorrelationId = correlationId;
+
         }
 
-        public ValidationErrorException(string error, string[] members, Guid correlationId) : this(new ErrorData(error, members), correlationId)
+        public ValidationErrorException(string error, string[] members) : this(new ErrorData(error, members))
         {
-            CorrelationId = correlationId;
+
         }
 
-        public ValidationErrorException(string error, Guid correlationId) : this(new ErrorData(error), correlationId)
+        public ValidationErrorException(string error) : this(new ErrorData(error))
         {
-            CorrelationId = correlationId;
+
         }
 
-        public ValidationErrorException(ErrorData error, Guid correlationId) : base(error?.ErrorMessage)
+        public ValidationErrorException(ErrorData error) : base(error?.ErrorMessage)
         {
             Error = error;
-            CorrelationId = correlationId;
         }
 
-        public ValidationErrorException(ErrorData error, Exception inner, Guid correlationId) : base(
+        public ValidationErrorException(ErrorData error, Exception inner) : base(
             error?.ErrorMessage, inner)
         {
-            CorrelationId = correlationId;
         }
         protected ValidationErrorException(
             System.Runtime.Serialization.SerializationInfo info,
