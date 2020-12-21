@@ -23,7 +23,7 @@ namespace Gtt.CodeWorks.Web
         {
             var input = await _responseGenerator.ConvertRequest(service.RequestType, request);
             var output = await service.Execute(input, ServiceClock.CurrentTime(), cancellationToken);
-            var response = await _responseGenerator.ConvertResponse(output, service.ResponseType);
+            var response = await _responseGenerator.ConvertResponse(request, output, service.ResponseType);
             return response;
         }
 

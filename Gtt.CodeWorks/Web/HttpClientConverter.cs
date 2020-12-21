@@ -17,10 +17,11 @@ namespace Gtt.CodeWorks.Web
             _dataSerializer = dataSerializer;
         }
 
-        public async Task<ServiceResponse<TResponse>> Call<TRequest, TResponse>(TRequest request, string url) where TRequest : BaseRequest where TResponse : new()
+        public async Task<ServiceResponse<TResponse>> Call<TRequest, TResponse>(TRequest request, string url, HttpDataSerializerOptions options = null) where TRequest : BaseRequest where TResponse : new()
         {
+            options ??= new HttpDataSerializerOptions();
             DateTimeOffset start = ServiceClock.CurrentTime();
-            var payload = await _dataSerializer.SerializeRequest(request, typeof(TRequest));
+            var payload = await _dataSerializer.SerializeRequest(request, typeof(TRequest), options);
             var apiResponse = await _client.PostAsync(new Uri(url), new StringContent(payload, Encoding.UTF8, "application/json"));
             var responseStream = await apiResponse.Content.ReadAsStreamAsync();
             var response = await _dataSerializer.DeserializeResponse<InternalServiceResponse<TResponse>>(responseStream);

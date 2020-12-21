@@ -46,7 +46,8 @@ namespace Gtt.CodeWorks.SampleWeb.Services
         {
             public double Principal { get; set; }
             public double PrincipalAndInterest { get; set; }
-            public double Interest { get; set; }
+            public double PeriodInterest { get; set; }
+            public double CumulativeInterest { get; set; }
             public List<InterestPerPeriodData> InterestPerPeriod { get; set; } = new List<InterestPerPeriodData>();
 
             public class InterestPerPeriodData

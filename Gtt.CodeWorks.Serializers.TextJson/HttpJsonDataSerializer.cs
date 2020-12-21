@@ -22,18 +22,9 @@ namespace Gtt.CodeWorks.Serializers.TextJson
 
         public string ContentType => "application/json";
         public Encoding Encoding => Encoding.UTF8;
-        public async Task<string> SerializeResponse(ServiceResponse response, Type responseType)
+        public async Task<string> SerializeResponse(ServiceResponse response, Type responseType, HttpDataSerializerOptions options = null)
         {
-            var opts = new JsonSerializerOptions
-            {
-                WriteIndented = _debugMode,
-                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                IgnoreNullValues = true
-            };
-            opts.Converters.Add(new JsonEnumConverter());
-            //opts.Converters.Add(new JsonStringEnumConverter());
-
+            var opts = CreateJsonSerializerOptions(options);
 
             await using var stream = new MemoryStream();
             await JsonSerializer.SerializeAsync(stream, response, responseType, opts);
@@ -44,15 +35,9 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             return result;
         }
 
-        public async Task<T> DeserializeRequest<T>(Stream stream) where T : BaseRequest, new()
+        public async Task<T> DeserializeRequest<T>(Stream stream, HttpDataSerializerOptions options = null) where T : BaseRequest, new()
         {
-            var opts = new JsonSerializerOptions
-            {
-                IgnoreNullValues = false,
-                PropertyNameCaseInsensitive = true,
-            };
-            opts.Converters.Add(new JsonEnumConverter());
-            //opts.Converters.Add(new JsonStringEnumConverter());
+            var opts = CreateJsonSerializerOptions(options);
 
             try
             {
@@ -66,15 +51,9 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             }
         }
 
-        public async Task<BaseRequest> DeserializeRequest(Type type, Stream message)
+        public async Task<BaseRequest> DeserializeRequest(Type type, Stream message, HttpDataSerializerOptions options = null)
         {
-            var opts = new JsonSerializerOptions
-            {
-                IgnoreNullValues = false,
-                PropertyNameCaseInsensitive = true,
-            };
-            opts.Converters.Add(new JsonEnumConverter());
-            //opts.Converters.Add(new JsonStringEnumConverter());
+            var opts = CreateJsonSerializerOptions(options);
 
             try
             {
@@ -88,17 +67,9 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             }
         }
 
-        public async Task<string> SerializeRequest(BaseRequest request, Type requestType)
+        public async Task<string> SerializeRequest(BaseRequest request, Type requestType, HttpDataSerializerOptions options = null)
         {
-            var opts = new JsonSerializerOptions
-            {
-                WriteIndented = _debugMode,
-                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                IgnoreNullValues = true
-            };
-            opts.Converters.Add(new JsonEnumConverter());
-            //opts.Converters.Add(new JsonStringEnumConverter());
+            var opts = CreateJsonSerializerOptions(options);
 
             await using var stream = new MemoryStream();
             await JsonSerializer.SerializeAsync(stream, request, requestType, opts);
@@ -109,16 +80,9 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             return result;
         }
 
-        public async Task<T> DeserializeResponse<T>(Stream stream) where T : new()
+        public async Task<T> DeserializeResponse<T>(Stream stream, HttpDataSerializerOptions options = null) where T : new()
         {
-            var opts = new JsonSerializerOptions
-            {
-                IgnoreNullValues = false,
-                PropertyNameCaseInsensitive = true
-            };
-            opts.Converters.Add(new JsonEnumConverter());
-            //opts.Converters.Add(new JsonStringEnumConverter());
-
+            var opts = CreateJsonSerializerOptions(options);
             try
             {
                 var result = await JsonSerializer.DeserializeAsync<T>(stream, opts);
@@ -131,16 +95,9 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             }
         }
 
-        public async Task<ServiceResponse> DeserializeResponse(Type type, Stream message)
+        public async Task<ServiceResponse> DeserializeResponse(Type type, Stream message, HttpDataSerializerOptions options = null)
         {
-            var opts = new JsonSerializerOptions
-            {
-                IgnoreNullValues = false,
-                PropertyNameCaseInsensitive = true,
-            };
-            opts.Converters.Add(new JsonEnumConverter());
-            //opts.Converters.Add(new JsonStringEnumConverter());
-
+            var opts = CreateJsonSerializerOptions(options);
             try
             {
                 var result = await JsonSerializer.DeserializeAsync(message, type, opts);
@@ -151,6 +108,25 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 _logger.LogError("Cannot deserialize request", ex);
                 throw;
             }
+        }
+
+        private JsonSerializerOptions CreateJsonSerializerOptions(HttpDataSerializerOptions options)
+        {
+            options ??= new HttpDataSerializerOptions();
+            var opts = new JsonSerializerOptions
+            {
+                WriteIndented = _debugMode,
+                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                IgnoreNullValues = true
+            };
+
+            if (options.EnumSerializationMethod == EnumSerializationMethod.Object)
+                opts.Converters.Add(new JsonEnumConverter());
+            if (options.EnumSerializationMethod == EnumSerializationMethod.String)
+                opts.Converters.Add(new JsonStringEnumConverter());
+
+            return opts;
         }
     }
 }

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,14 +21,16 @@ namespace Gtt.CodeWorks.Web
 
         public async Task<BaseRequest> ConvertRequest(Type type, HttpRequestMessage request)
         {
+            var options = CreateOptionsFromHeaders(request.Headers);
             var contents = await request.Content.ReadAsStreamAsync();
-            var result = await _serializer.DeserializeRequest(type, contents);
+            var result = await _serializer.DeserializeRequest(type, contents, options);
             return result;
         }
 
-        public async Task<HttpResponseMessage> ConvertResponse(ServiceResponse response, Type type)
+        public async Task<HttpResponseMessage> ConvertResponse(HttpRequestMessage request, ServiceResponse response, Type type)
         {
-            var serializedData = await _serializer.SerializeResponse(response, type);
+            var options = CreateOptionsFromHeaders(request.Headers);
+            var serializedData = await _serializer.SerializeResponse(response, type, options);
             var contentType = _serializer.ContentType;
             var encoding = _serializer.Encoding;
             var httpMsg = new HttpResponseMessage
@@ -37,6 +41,30 @@ namespace Gtt.CodeWorks.Web
             httpMsg.Headers.Add(nameof(response.MetaData.CorrelationId), $"{response.MetaData.CorrelationId}");
 
             return httpMsg;
+        }
+
+        private HttpDataSerializerOptions CreateOptionsFromHeaders(HttpRequestHeaders headers)
+        {
+            var opts = new HttpDataSerializerOptions();
+            if (headers.Contains("codeworks-prefs-enum"))
+            {
+
+                var val = headers.GetValues("codeworks-prefs-enum").FirstOrDefault() ?? "";
+                if (Equals(val, "numeric"))
+                {
+                    opts.EnumSerializationMethod = EnumSerializationMethod.Numeric;
+                }
+                if (Equals(val, "string"))
+                {
+                    opts.EnumSerializationMethod = EnumSerializationMethod.String;
+                }
+                if (Equals(val, "object"))
+                {
+                    opts.EnumSerializationMethod = EnumSerializationMethod.Object;
+                }
+            }
+
+            return opts;
         }
     }
 }

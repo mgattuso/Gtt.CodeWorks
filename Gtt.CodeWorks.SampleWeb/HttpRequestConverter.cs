@@ -45,13 +45,14 @@ namespace Gtt.CodeWorks.AspNet
             return result ?? new T();
         }
 
-        public async Task<BaseRequest> ConvertRequest(Type requestType, HttpRequest request)
+        public async Task<BaseRequest> ConvertRequest(Type requestType, HttpRequest request, HttpDataSerializerOptions options)
         {
+            options ??= new HttpDataSerializerOptions();
             BaseRequest result = null;
             if (request.ContentLength.GetValueOrDefault() > 0)
             {
                 var contents = request.Body;
-                result = await _serializer.DeserializeRequest(requestType, contents);
+                result = await _serializer.DeserializeRequest(requestType, contents, options);
             }
 
             if (request.Query.Any())
@@ -79,9 +80,9 @@ namespace Gtt.CodeWorks.AspNet
             return result ?? (BaseRequest)Activator.CreateInstance(requestType);
         }
 
-        public async Task ConvertResponse<T>(ServiceResponse<T> response, HttpResponse httpResponse) where T : new()
+        public async Task ConvertResponse<T>(ServiceResponse<T> response, HttpResponse httpResponse, HttpDataSerializerOptions options) where T : new()
         {
-            var serializedData = await _serializer.SerializeResponse(response, typeof(ServiceResponse<T>));
+            var serializedData = await _serializer.SerializeResponse(response, typeof(ServiceResponse<T>), options);
             var contentType = _serializer.ContentType;
             var encoding = _serializer.Encoding;
 
@@ -91,9 +92,10 @@ namespace Gtt.CodeWorks.AspNet
             await httpResponse.WriteAsync(serializedData, encoding);
         }
 
-        public async Task ConvertResponse(ServiceResponse response, Type responseType, HttpResponse httpResponse)
+        public async Task ConvertResponse(ServiceResponse response, Type responseType, HttpResponse httpResponse, HttpDataSerializerOptions options = null)
         {
-            var serializedData = await _serializer.SerializeResponse(response, responseType);
+            options ??= new HttpDataSerializerOptions();
+            var serializedData = await _serializer.SerializeResponse(response, responseType, options);
             var contentType = _serializer.ContentType;
             var encoding = _serializer.Encoding;
 

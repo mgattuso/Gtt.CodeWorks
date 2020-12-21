@@ -24,7 +24,7 @@ namespace Gtt.CodeWorks.AspNet
         {
             var input = await _converter.ConvertRequest<TReq>(context.Request);
             var output = await service.Execute(input, ServiceClock.CurrentTime(), cancellationToken);
-            await _converter.ConvertResponse(output, context.Response);
+            await _converter.ConvertResponse(output, context.Response, new HttpDataSerializerOptions());
         }
 
         public async Task Execute(
@@ -38,7 +38,7 @@ namespace Gtt.CodeWorks.AspNet
             Guid? correlationId = null;
             try
             {
-                var input = await _converter.ConvertRequest(service.RequestType, context.Request);
+                var input = await _converter.ConvertRequest(service.RequestType, context.Request, new HttpDataSerializerOptions());
                 correlationId = input.CorrelationId;
                 output = await service.Execute(input, start, cancellationToken);
             }
