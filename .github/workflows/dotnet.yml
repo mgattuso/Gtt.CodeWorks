@@ -32,23 +32,27 @@ jobs:
       with:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks/Gtt.CodeWorks.csproj
+        TAG_FORMAT: Gtt.CodeWorks.* 
     
     - name: Deploy CodeWorks.Serializers.TextJson Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.Serializers.TextJson/Gtt.CodeWorks.Serializers.TextJson.csproj
+        TAG_FORMAT: Gtt.CodeWorks.Serializers.TextJson.*
     
     - name: Deploy Gtt.CodeWorks.DataAnnotations Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.DataAnnotations/Gtt.CodeWorks.DataAnnotations.csproj
+        TAG_FORMAT: Gtt.CodeWorks.DataAnnotations.*
     
     - name: Deploy Gtt.CodeWorks.EasyNetQ Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.EasyNetQ/Gtt.CodeWorks.EasyNetQ.csproj
+        TAG_FORMAT: Gtt.CodeWorks.EasyNetQ.*
 
     
