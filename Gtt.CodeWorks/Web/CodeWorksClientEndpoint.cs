@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Gtt.CodeWorks.Web
 {
     public abstract class CodeWorksClientEndpoint
     {
         private readonly Dictionary<string, string> _map;
-        private CodeWorksClientEndpoint(string rootUrl, Dictionary<string, string> urlMap)
+
+        protected CodeWorksClientEndpoint(string rootUrl, Dictionary<string, string> urlMap = null)
         {
             if (string.IsNullOrWhiteSpace(rootUrl))
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(rootUrl));
@@ -25,5 +27,6 @@ namespace Gtt.CodeWorks.Web
             }
             return new Uri(new Uri(Root), uri);
         }
+        public abstract Dictionary<string, string> ServiceRouteMap { get; }
     }
 }
