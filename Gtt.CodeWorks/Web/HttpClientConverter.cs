@@ -17,13 +17,13 @@ namespace Gtt.CodeWorks.Web
             _dataSerializer = dataSerializer;
         }
 
-        public async Task<ServiceResponse<TResponse>> Call<TRequest, TResponse>(TRequest request, string url, HttpDataSerializerOptions options = null) where TRequest : BaseRequest where TResponse : new()
+        public async Task<ServiceResponse<TResponse>> Call<TRequest, TResponse>(TRequest request, Uri uri, HttpDataSerializerOptions options = null) where TRequest : BaseRequest where TResponse : new()
         {
             options ??= new HttpDataSerializerOptions();
             DateTimeOffset start = ServiceClock.CurrentTime();
             var payload = await _dataSerializer.SerializeRequest(request, typeof(TRequest), options);
 
-            var requestMsg = new HttpRequestMessage(HttpMethod.Post, new Uri(url));
+            var requestMsg = new HttpRequestMessage(HttpMethod.Post, uri);
             requestMsg.Headers.Add("codeworks-prefs-enum", options.EnumSerializationMethod.ToString());
             requestMsg.Content = new StringContent(payload, Encoding.UTF8, "application/json");
             var apiResponse = await _client.SendAsync(requestMsg);

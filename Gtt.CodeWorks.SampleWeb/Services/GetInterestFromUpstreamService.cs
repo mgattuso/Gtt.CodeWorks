@@ -22,7 +22,7 @@ namespace Gtt.CodeWorks.SampleWeb.Services
         protected override Task<ServiceResponse<Response>> Implementation(Request request, CancellationToken cancellationToken)
         {
             var converter = new HttpClientConverter(Client, _dataSerializer);
-            return converter.Call<Request, Response>(request, "https://gtt-global-financial.azurewebsites.net/api/call/CompoundInterestService");
+            return converter.Call<Request, Response>(request, new Uri("https://gtt-global-financial.azurewebsites.net/api/call/CompoundInterestService"));
         }
 
         protected override Task<string> CreateDistributedLockKey(Request request, CancellationToken cancellationToken)
