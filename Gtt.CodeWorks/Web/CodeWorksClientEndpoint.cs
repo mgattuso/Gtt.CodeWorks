@@ -12,6 +12,9 @@ namespace Gtt.CodeWorks.Web
         {
             if (string.IsNullOrWhiteSpace(rootUrl))
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(rootUrl));
+            // APPEND TRAILING / IF NEEDED
+            if (!rootUrl.EndsWith("/")) rootUrl = rootUrl + "/";
+
             Root = rootUrl;
             _map = urlMap ?? new Dictionary<string, string>();
         }
@@ -19,8 +22,12 @@ namespace Gtt.CodeWorks.Web
         public string Root { get; }
         public Uri GetUrl(string originalUrl)
         {
-            string route = _map.GetValueOrDefault(originalUrl) ?? originalUrl;
-            var uri = new Uri(route);
+            string route = _map.GetValueOrDefault(originalUrl) ?? originalUrl ?? "";
+            while (route.StartsWith("/"))
+            {
+                route = route.Substring(1, route.Length - 1);
+            }
+            var uri = new Uri(route, UriKind.RelativeOrAbsolute);
             if (uri.IsAbsoluteUri)
             {
                 return uri;
