@@ -12,31 +12,39 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.301
+    
     - name: Restore dependencies
       run: dotnet restore
+    
     - name: Build
       run: dotnet build --no-restore
+    
     - name: Test
       run: dotnet test --no-build --verbosity normal
+    
     - name: Deploy CodeWorks Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks/Gtt.CodeWorks.csproj
+    
     - name: Deploy CodeWorks.Serializers.TextJson Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.Serializers.TextJson/Gtt.CodeWorks.Serializers.TextJson.csproj
+    
     - name: Deploy Gtt.CodeWorks.DataAnnotations Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.DataAnnotations/Gtt.CodeWorks.DataAnnotations.csproj
+    
     - name: Deploy Gtt.CodeWorks.EasyNetQ Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
