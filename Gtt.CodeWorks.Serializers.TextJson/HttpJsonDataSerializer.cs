@@ -118,7 +118,8 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 WriteIndented = _debugMode,
                 DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                IgnoreNullValues = true
+                IgnoreNullValues = true,
+                PropertyNameCaseInsensitive = true
             };
 
             if (options.EnumSerializationMethod == EnumSerializationMethod.Object)
