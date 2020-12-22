@@ -20,4 +20,8 @@
     <ProjectReference Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="EasyNetQ\" />
+  </ItemGroup>
+
 </Project>

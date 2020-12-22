@@ -129,7 +129,7 @@ namespace Gtt.CodeWorks
             ResultCategory.Successful, 
             httpStatusCode: (int)HttpStatusCode.OK)]
         [Description("Fulfilled by Existing Resource")]
-        FulfilledByExistingResource = 9,
+        FulfilledByExistingResource = 10,
 
         // QUEUED STATUS
 
@@ -140,6 +140,6 @@ namespace Gtt.CodeWorks
             ResultOutcome.Successful, 
             ResultCategory.Successful, 
             httpStatusCode: (int)HttpStatusCode.Accepted)]
-        Queued = 10
+        Queued = 11
     }
 }
