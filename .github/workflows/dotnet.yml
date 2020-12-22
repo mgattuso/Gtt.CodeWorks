@@ -3,7 +3,7 @@ name: .NET
 on:
   push:
     branches: 
-      - 'releases/**'
+      - master
 
 jobs:
   build:
@@ -22,3 +22,15 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
+    - name: Deploy CodeWorks Package
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        NUGET_KEY: ${{ secrets.nuget_key }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks/Gtt.CodeWorks.csproj
+    - name: Deploy CodeWorks.Serializers.TextJson Package
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        NUGET_KEY: ${{ secrets.nuget_key }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.Serializers.TextJson/Gtt.CodeWorks.Serializers.TextJson.csproj
+
+    
