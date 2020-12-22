@@ -5,9 +5,13 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>0.0.5</Version>
     <Authors>Michael Gattuso</Authors>
-    <Product>Codeworks</Product>
+    <Product>CodeWorks</Product>
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
     <AssemblyVersion>0.0.5.0</AssemblyVersion>
+    <Copyright>2020, Michael Gattuso</Copyright>
+    <Description>CodeWorks serializer adds the ability to serialize codework services request/response to JSON using the dotnet TextJson serializer.</Description>
+    <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
