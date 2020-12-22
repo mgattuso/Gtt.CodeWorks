@@ -28,23 +28,6 @@ namespace Gtt.CodeWorks.Tests.Serializers
         }
 
         [TestMethod]
-        public async Task Serialize_Happy_Path_Debug_Indents_Output()
-        {
-            // ARRANGE
-            var obj = new TestA()
-            {
-                Message = "Hello World"
-            };
-            var serializer = new JsonLogObjectSerializer(debugMode: true);
-
-            // ACT
-            var result = await serializer.Serialize(obj);
-
-            // ASSERT
-            Assert.AreEqual("{\r\n  \"message\": \"Hello World\"\r\n}", result);
-        }
-
-        [TestMethod]
         public async Task Serialize_Enums_As_Text()
         {
             // ARRANGE
