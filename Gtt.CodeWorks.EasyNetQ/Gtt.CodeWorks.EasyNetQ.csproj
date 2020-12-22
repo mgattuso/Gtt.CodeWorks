@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Version>0.0.3</Version>
+    <Version>0.0.4</Version>
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
     <Authors>Michael Gattuso</Authors>
     <Company>Michael Gattuso</Company>
@@ -15,10 +15,11 @@
 
   <ItemGroup>
     <PackageReference Include="EasyNetQ" Version="5.2.2" />
+    <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks" Version="0.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
+    <ProjectReference Condition=" '$(Configuration)' == 'Debug'" Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
   </ItemGroup>
 
 </Project>
