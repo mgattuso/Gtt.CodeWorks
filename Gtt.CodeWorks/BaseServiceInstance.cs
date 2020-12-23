@@ -155,7 +155,7 @@ namespace Gtt.CodeWorks
             var ver = new ValidationErrorResponse();
             foreach (var error in validationErrors)
             {
-                ver.AddValidationError(error);  
+                ver.AddValidationError(error);
             }
             return new ServiceResponse(new ResponseMetaData(this, ver));
         }
@@ -164,6 +164,7 @@ namespace Gtt.CodeWorks
         protected abstract Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken);
 
         public string Name => GetType().Name;
+        public string FullName => GetType().FullName?.Replace("+", ".") ?? GetType().Name;
         public DateTimeOffset StartTime { get; private set; }
         public Guid CorrelationId => _correlationId;
         public abstract ServiceAction Action { get; }

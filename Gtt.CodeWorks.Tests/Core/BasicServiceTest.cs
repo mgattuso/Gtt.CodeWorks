@@ -56,7 +56,33 @@ namespace Gtt.CodeWorks.Tests.Core
             Console.WriteLine($"Duration: {sw.ElapsedMilliseconds}");
         }
 
-        public class TimeService : BaseReadService<TimeService.Request, TimeService.Response>
+        [TestMethod]
+        public void FullNameIsServiceNamePlusNamespace()
+        {
+            // ARRANGE
+            var s = new TimeService(CoreDependencies.NullDependencies);
+
+            // ACT
+            var fn = s.FullName;
+            
+            // ASSERT
+            Assert.AreEqual("Gtt.CodeWorks.Tests.Core.TimeService", fn);
+        }
+
+        [TestMethod]
+        public void FullNameIsServiceNamePlusNamespaceEvenWhenNested()
+        {
+            // ARRANGE
+            var s = new TimeServiceNested(CoreDependencies.NullDependencies);
+
+            // ACT
+            var fn = s.FullName;
+
+            // ASSERT
+            Assert.AreEqual("Gtt.CodeWorks.Tests.Core.BasicServiceTest.TimeServiceNested", fn);
+        }
+
+        public class TimeServiceNested : BaseReadService<TimeServiceNested.Request, TimeServiceNested.Response>
         {
             public class Response
             {
@@ -67,7 +93,7 @@ namespace Gtt.CodeWorks.Tests.Core
             {
             }
 
-            public TimeService(CoreDependencies coreDependencies) : base(coreDependencies)
+            public TimeServiceNested(CoreDependencies coreDependencies) : base(coreDependencies)
             {
             }
 
@@ -82,6 +108,34 @@ namespace Gtt.CodeWorks.Tests.Core
 
                 return Successful(response);
             }
+        }
+    }
+
+    public class TimeService : BaseReadService<TimeService.Request, TimeService.Response>
+    {
+        public class Response
+        {
+            public DateTimeOffset CurrentTime { get; set; }
+        }
+
+        public class Request : BaseRequest
+        {
+        }
+
+        public TimeService(CoreDependencies coreDependencies) : base(coreDependencies)
+        {
+        }
+
+        protected override async Task<ServiceResponse<Response>> Implementation(Request request, CancellationToken cancellationToken)
+        {
+            await Task.CompletedTask;
+
+            var response = new Response
+            {
+                CurrentTime = ServiceClock.CurrentTime()
+            };
+
+            return Successful(response);
         }
     }
 }

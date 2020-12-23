@@ -15,6 +15,7 @@ namespace Gtt.CodeWorks
     public interface IServiceInstance
     {
         string Name { get; }
+        string FullName { get; }
         DateTimeOffset StartTime { get; }
         Guid CorrelationId { get; }
         public ServiceAction Action { get; }
