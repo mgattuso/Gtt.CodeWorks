@@ -70,7 +70,7 @@ namespace Gtt.CodeWorks
             }
             catch (ValidationErrorException ex)
             {
-                response = ValidationError(new ValidationErrorData(ex.Error.ErrorMessage, ex.Error.Members.ToArray()))
+                response = ValidationError(new ValidationErrorData(ex.Error.ErrorMessage, ex.Error.Members.ToArray()));
             }
             catch (Exception ex)
             {
