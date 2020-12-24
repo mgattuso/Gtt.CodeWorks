@@ -68,6 +68,10 @@ namespace Gtt.CodeWorks
                     response = TemporaryException("Cancellation Requested");
                 }
             }
+            catch (ValidationErrorException ex)
+            {
+                response = ValidationError(new ValidationErrorData(ex.Error.ErrorMessage, ex.Error.Members.ToArray()))
+            }
             catch (Exception ex)
             {
                 response = PermanentError(ex);
@@ -143,21 +147,21 @@ namespace Gtt.CodeWorks
             return Successful(response, ServiceResult.Queued);
         }
 
-        protected ServiceResponse ValidationError(ValidationErrorData error)
+        protected ServiceResponse<TResponse> ValidationError(ValidationErrorData error)
         {
             var ver = new ValidationErrorResponse();
             ver.AddValidationError(error);
-            return new ServiceResponse(new ResponseMetaData(this, ver));
+            return new ServiceResponse<TResponse>(default(TResponse), new ResponseMetaData(this, ver));
         }
 
-        protected ServiceResponse ValidationError(params ValidationErrorData[] validationErrors)
+        protected ServiceResponse<TResponse> ValidationError(params ValidationErrorData[] validationErrors)
         {
             var ver = new ValidationErrorResponse();
             foreach (var error in validationErrors)
             {
                 ver.AddValidationError(error);
             }
-            return new ServiceResponse(new ResponseMetaData(this, ver));
+            return new ServiceResponse<TResponse>(default(TResponse), new ResponseMetaData(this, ver));
         }
 
         protected abstract Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken);
