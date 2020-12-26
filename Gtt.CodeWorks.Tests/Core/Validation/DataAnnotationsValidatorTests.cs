@@ -175,6 +175,39 @@ namespace Gtt.CodeWorks.Tests.Core.Validation
             Assert.AreEqual("EmailAddresses.2.Address", results[3].MemberNames.ToArray()[0]);
         }
 
+        [TestMethod]
+        public void CollectionWithRequiredAttributeIsRequiredToHaveAtLeastOneEntry_InvalidWhenCollectionIsNull()
+        {
+            var dav = new DataAnnotationsValidator(new DottedNumberCollectionPropertyNamingStrategy());
+            var request = new TestRequiredCollection() { PhoneNumbers = null };
+            List<ValidationResult> results = new List<ValidationResult>();
+            var isValid = dav.TryValidateObjectRecursive(request, results, new ValidationContext(request));
+            Assert.IsFalse(isValid);
+            Assert.AreEqual(1, results.Count);
+        }
+
+        [TestMethod]
+        public void CollectionWithRequiredAttributeIsRequiredToHaveAtLeastOneEntry_InvalidWhenCollectionIsEmpty()
+        {
+            var dav = new DataAnnotationsValidator(new DottedNumberCollectionPropertyNamingStrategy());
+            var request = new TestRequiredCollection() { PhoneNumbers = new TestPhone[0] };
+            List<ValidationResult> results = new List<ValidationResult>();
+            var isValid = dav.TryValidateObjectRecursive(request, results, new ValidationContext(request));
+            Assert.IsFalse(isValid);
+            Assert.AreEqual(1, results.Count);
+        }
+
+        [TestMethod]
+        public void CollectionWithRequiredAttributeIsRequiredToHaveAtLeastOneEntry_ValidWhenCollectionIsNotEmpty()
+        {
+            var dav = new DataAnnotationsValidator(new DottedNumberCollectionPropertyNamingStrategy());
+            var request = new TestRequiredCollection() { PhoneNumbers = new [] { new TestPhone { Category = "", Number = "513000000"}  } };
+            List<ValidationResult> results = new List<ValidationResult>();
+            var isValid = dav.TryValidateObjectRecursive(request, results, new ValidationContext(request));
+            Assert.IsTrue(isValid);
+            Assert.AreEqual(0, results.Count);
+        }
+
         public class TestPerson
         {
             [Required]
@@ -195,6 +228,12 @@ namespace Gtt.CodeWorks.Tests.Core.Validation
             public string Category { get; set; }
             [Required]
             public string Address { get; set; }
+        }
+
+        public class TestRequiredCollection
+        {
+            [RequiredCollection]
+            public TestPhone[] PhoneNumbers { get; set; }
         }
     }
 }
