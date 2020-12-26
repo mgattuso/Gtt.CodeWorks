@@ -9,7 +9,14 @@ namespace Gtt.CodeWorks.DataAnnotations
 {
     public class DataAnnotationsValidator
     {
-        public bool TryValidateObject(object obj, ICollection<ValidationResult> results, IServiceProvider serviceProvider, IDictionary<object, object> validationContextItems = null)
+        private readonly ICollectionPropertyNamingStrategy _collectionValidationNaming;
+
+        public DataAnnotationsValidator(ICollectionPropertyNamingStrategy collectionValidationNaming)
+        {
+            _collectionValidationNaming = collectionValidationNaming ?? throw new ArgumentNullException(nameof(collectionValidationNaming));
+        }
+
+        private bool TryValidateObject(object obj, ICollection<ValidationResult> results, IServiceProvider serviceProvider, IDictionary<object, object> validationContextItems = null)
         {
             return Validator.TryValidateObject(obj, new ValidationContext(obj, serviceProvider, validationContextItems), results, true);
         }
@@ -44,6 +51,7 @@ namespace Gtt.CodeWorks.DataAnnotations
 
                 if (value is IEnumerable asEnumerable)
                 {
+                    int counter = 0;
                     foreach (var enumObj in asEnumerable)
                     {
                         if (enumObj != null)
@@ -55,10 +63,14 @@ namespace Gtt.CodeWorks.DataAnnotations
                                 foreach (var validationResult in nestedResults)
                                 {
                                     PropertyInfo property1 = property;
-                                    results.Add(new ValidationResult(validationResult.ErrorMessage, validationResult.MemberNames.Select(x => property1.Name + '.' + x)));
+                                    var counter1 = counter;
+
+                                    var memberNames = validationResult.MemberNames.Select(x => _collectionValidationNaming.CreateName(property1.Name, counter1, x));
+                                    results.Add(new ValidationResult(validationResult.ErrorMessage, memberNames));
                                 }
-                            };
+                            }
                         }
+                        counter++;
                     }
                 }
                 else
@@ -79,7 +91,7 @@ namespace Gtt.CodeWorks.DataAnnotations
             return result;
         }
 
-        public static object GetPropertyValue(object o, string propertyName)
+        private static object GetPropertyValue(object o, string propertyName)
         {
             object objValue = string.Empty;
 

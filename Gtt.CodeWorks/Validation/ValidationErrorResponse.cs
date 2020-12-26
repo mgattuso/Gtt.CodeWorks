@@ -98,8 +98,8 @@ namespace Gtt.CodeWorks.Validation
                         if (errors.TryGetValue(member, out var memberErrors))
                         {
                             string[] arr = new string[memberErrors.Length + 1];
-                            Array.Copy(memberErrors, arr, member.Length);
-                            arr[member.Length] = error.ErrorMessage;
+                            Array.Copy(memberErrors, arr, memberErrors.Length);
+                            arr[memberErrors.Length] = error.ErrorMessage;
                             errors[member] = arr;
                         }
                         else

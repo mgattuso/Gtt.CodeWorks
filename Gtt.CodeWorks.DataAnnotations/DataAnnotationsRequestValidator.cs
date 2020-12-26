@@ -9,17 +9,31 @@ namespace Gtt.CodeWorks.DataAnnotations
     public class DataAnnotationsRequestValidator : IRequestValidator
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly ICollectionPropertyNamingStrategy _collectionPropertyNamingStrategy = new DottedNumberCollectionPropertyNamingStrategy();
 
+
+
+        /// <summary>
+        /// Creates an instance of the RequestValidator using the .net Validation framework as part of the DataAnnotations.
+        /// The collection naming strategy can be overridden by creating a resolvable instance of <code>ICollectionPropertyNamingStrategy</code>
+        /// in the serviceProvider
+        /// </summary>
+        /// <param name="serviceProvider"></param>
         public DataAnnotationsRequestValidator(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            var altStrategy = serviceProvider.GetService(typeof(ICollectionPropertyNamingStrategy));
+            if (altStrategy != null)
+            {
+                _collectionPropertyNamingStrategy = (ICollectionPropertyNamingStrategy)altStrategy;
+            }
         }
 
         public ValidationAttempt Validate<T>(T request) where T : BaseRequest
         {
             var context = new ValidationContext(request, serviceProvider: _serviceProvider, items: null);
             var results = new List<ValidationResult>();
-            var isValid = new DataAnnotationsValidator().TryValidateObjectRecursive(request, results, context);
+            var isValid = new DataAnnotationsValidator(_collectionPropertyNamingStrategy).TryValidateObjectRecursive(request, results, context);
 
 
             if (isValid)
