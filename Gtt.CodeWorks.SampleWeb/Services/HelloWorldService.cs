@@ -17,6 +17,11 @@ namespace Gtt.CodeWorks.SampleWeb.Services
             return Task.FromResult("ABC");
         }
 
+        protected override IDictionary<int, string> DefineErrorCodes()
+        {
+            return NoErrorCodes();
+        }
+
         public override ServiceAction Action => ServiceAction.Read;
 
         protected override Task<ServiceResponse<Response>> Implementation(Request request, CancellationToken cancellationToken)

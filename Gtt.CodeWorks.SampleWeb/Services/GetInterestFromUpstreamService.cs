@@ -5,29 +5,39 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Gtt.CodeWorks.Web;
+using Gtt.CodeWorks.Clients.HttpClient;
 
 namespace Gtt.CodeWorks.SampleWeb.Services
 {
     public class GetInterestFromUpstreamService : BaseServiceInstance<GetInterestFromUpstreamService.Request, GetInterestFromUpstreamService.Response>
     {
         private readonly IHttpDataSerializer _dataSerializer;
+        private readonly IHttpSerializerOptionsResolver _optionsResolver;
         private static readonly HttpClient Client = new HttpClient();
 
-        public GetInterestFromUpstreamService(IHttpDataSerializer dataSerializer, CoreDependencies coreDependencies) : base(coreDependencies)
+        public GetInterestFromUpstreamService(
+            IHttpDataSerializer dataSerializer, 
+            CoreDependencies coreDependencies,
+            IHttpSerializerOptionsResolver optionsResolver) : base(coreDependencies)
         {
             _dataSerializer = dataSerializer;
+            _optionsResolver = optionsResolver;
         }
 
         protected override Task<ServiceResponse<Response>> Implementation(Request request, CancellationToken cancellationToken)
         {
-            var converter = new HttpClientConverter(Client, _dataSerializer);
-            return converter.Call<Request, Response>(request, new Uri("https://gtt-global-financial.azurewebsites.net/api/call/CompoundInterestService"));
+            var converter = new HttpClientConverter(Client, _dataSerializer, _optionsResolver);
+            return converter.Call<Request, Response>(request, new Uri("https://gtt-global-financial.azurewebsites.net/api/call/CompoundInterestService"), cancellationToken);
         }
 
         protected override Task<string> CreateDistributedLockKey(Request request, CancellationToken cancellationToken)
         {
             return Task.FromResult("");
+        }
+
+        protected override IDictionary<int, string> DefineErrorCodes()
+        {
+            return NoErrorCodes();
         }
 
         public override ServiceAction Action => ServiceAction.Create;

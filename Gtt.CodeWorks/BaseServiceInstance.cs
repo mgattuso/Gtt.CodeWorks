@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Gtt.CodeWorks.Middleware;
 using Gtt.CodeWorks.Validation;
+using Microsoft.Extensions.Logging;
 
 namespace Gtt.CodeWorks
 {
@@ -14,6 +15,7 @@ namespace Gtt.CodeWorks
         where TRequest : BaseRequest, new() where TResponse : new()
     {
         private readonly IList<IServiceMiddleware> _pipeline = new List<IServiceMiddleware>();
+        private ILogger _logger;
 
         protected BaseServiceInstance(CoreDependencies coreDependencies)
         {
@@ -22,15 +24,21 @@ namespace Gtt.CodeWorks
             _pipeline.Add(new LoggingMiddleware(coreDependencies.ServiceLogger));
             _pipeline.Add(new DistributedLockMiddleware<TRequest>(coreDependencies.DistributedLockService, CreateDistributedLockKey));
             _pipeline.Add(new ValidationMiddleware(coreDependencies.RequestValidator));
+            _logger = coreDependencies.LoggerFactory.CreateLogger(GetType());
         }
 
         private Guid _correlationId;
+        private Guid? _sessionId;
+        private int? _serviceHop;
+
 
         public async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             StartTime = startTime;
             _correlationId = request.CorrelationId;
+            _sessionId = request.SessionId;
+            _serviceHop = request.ServiceHop;
             request.SyncCorrelationIds();
             ServiceResponse<TResponse> response = null;
 
@@ -107,6 +115,29 @@ namespace Gtt.CodeWorks
                 ));
         }
 
+        protected ServiceResponse<TResponse> ErrorCode(int code)
+        {
+            if (DefineErrorCodes().TryGetValue(code, out var msg))
+            {
+                return new ServiceResponse<TResponse>(default(TResponse),
+                    new ResponseMetaData(
+                        this,
+                        ServiceResult.PermanentError,
+                        new ErrorData(msg, code.ToString())
+                    )
+                );
+            }
+
+            _logger.LogWarning($"No error code defined for value {code}");
+
+            return new ServiceResponse<TResponse>(default(TResponse),
+                new ResponseMetaData(
+                    this,
+                    ServiceResult.PermanentError,
+                    new ErrorData($"An unexpected error code {code} was returned", "")
+                ));
+        }
+
         protected ServiceResponse<TResponse> TemporaryException(Exception ex)
         {
             return new ServiceResponse<TResponse>(default(TResponse),
@@ -126,6 +157,16 @@ namespace Gtt.CodeWorks
                     new ErrorData(ex)
                 )
             );
+        }
+
+        protected Task<string> NoDistributedLock()
+        {
+            return Task.FromResult(string.Empty);
+        }
+
+        protected Dictionary<int, string> NoErrorCodes()
+        {
+            return new Dictionary<int, string>();
         }
 
 #pragma warning disable IDE0060 // Remove unused parameter
@@ -166,11 +207,17 @@ namespace Gtt.CodeWorks
 
         protected abstract Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken);
         protected abstract Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken);
+        protected abstract IDictionary<int, string> DefineErrorCodes();
 
         public string Name => GetType().Name;
         public string FullName => GetType().FullName?.Replace("+", ".") ?? GetType().Name;
         public DateTimeOffset StartTime { get; private set; }
         public Guid CorrelationId => _correlationId;
+        public Guid? SessionId => _sessionId;
+        public int? ServiceHop => _serviceHop;
+
+        public IEnumerable<KeyValuePair<int, string>> AllErrorCodes() => DefineErrorCodes() ?? new Dictionary<int, string>();
+
         public abstract ServiceAction Action { get; }
         public async Task<ServiceResponse> Execute(BaseRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {

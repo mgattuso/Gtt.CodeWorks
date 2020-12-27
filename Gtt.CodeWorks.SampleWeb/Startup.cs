@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gtt.CodeWorks.AspNet;
+using Gtt.CodeWorks.Clients.HttpClient;
 using Gtt.CodeWorks.DataAnnotations;
 using Gtt.CodeWorks.SampleWeb.Services;
 using Gtt.CodeWorks.Serializers.TextJson;
@@ -33,6 +34,7 @@ namespace Gtt.CodeWorks.SampleWeb
             services.AddTransient<IDistributedLockService>(cfg => new InMemoryDistributedLock());
             services.AddTransient<IServiceEnvironmentResolver>(cfg => new NonProductionEnvironmentResolver());
             services.AddTransient<IRequestValidator, DataAnnotationsRequestValidator>();
+            services.AddTransient<IHttpSerializerOptionsResolver, DefaultHttpSerializerOptionsResolver>();
 
             services.AddTransient<CoreDependencies>();
 
@@ -43,7 +45,10 @@ namespace Gtt.CodeWorks.SampleWeb
             }
 
             services.AddTransient<IServiceResolver>(config =>
-                new ServiceResolver(config.GetServices<IServiceInstance>()));
+                new ServiceResolver(config.GetServices<IServiceInstance>(), new ServiceResolverOptions
+                {
+                    NamespacePrefixToIgnore = "Gtt.CodeWorks.SampleWeb.Services"
+                }));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

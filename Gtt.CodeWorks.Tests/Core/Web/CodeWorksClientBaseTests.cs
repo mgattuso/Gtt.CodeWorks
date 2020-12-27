@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Gtt.CodeWorks.Web;
+using Gtt.CodeWorks.Clients.HttpClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Gtt.CodeWorks.Tests.Core.Web

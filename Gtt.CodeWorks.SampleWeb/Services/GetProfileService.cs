@@ -37,5 +37,10 @@ namespace Gtt.CodeWorks.SampleWeb.Services
                 )
             );
         }
+
+        protected override IDictionary<int, string> DefineErrorCodes()
+        {
+            return NoErrorCodes();
+        }
     }
 }

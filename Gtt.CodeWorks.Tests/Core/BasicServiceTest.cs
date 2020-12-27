@@ -108,6 +108,11 @@ namespace Gtt.CodeWorks.Tests.Core
 
                 return Successful(response);
             }
+
+            protected override IDictionary<int, string> DefineErrorCodes()
+            {
+                return NoErrorCodes();
+            }
         }
     }
 
@@ -136,6 +141,11 @@ namespace Gtt.CodeWorks.Tests.Core
             };
 
             return Successful(response);
+        }
+
+        protected override IDictionary<int, string> DefineErrorCodes()
+        {
+            return NoErrorCodes();
         }
     }
 }

@@ -45,6 +45,11 @@ namespace Gtt.CodeWorks.SampleWeb.Services
             return Task.FromResult(string.Empty);
         }
 
+        protected override IDictionary<int, string> DefineErrorCodes()
+        {
+            return NoErrorCodes();
+        }
+
         public override ServiceAction Action => ServiceAction.Read;
 
         public class Request : BaseRequest
