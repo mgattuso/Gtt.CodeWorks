@@ -11,7 +11,7 @@ namespace Gtt.CodeWorks.Clients
         public string ClientId { get; }
         public string[] RegisteredServices();
         Task<ServiceResponse<TResponse>> Call<TRequest, TResponse>(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken) 
-            where TRequest : BaseRequest, TResponse
+            where TRequest : BaseRequest
             where TResponse : new(); 
     }
 
