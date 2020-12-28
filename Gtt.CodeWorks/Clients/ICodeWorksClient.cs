@@ -8,8 +8,8 @@ namespace Gtt.CodeWorks.Clients
 {
     public interface ICodeWorksClient
     {
-        public string ClientId { get; }
-        public string[] RegisteredServices();
+        string ClientId { get; }
+        string[] RegisteredServices();
         Task<ServiceResponse<TResponse>> Call<TRequest, TResponse>(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken) 
             where TRequest : BaseRequest
             where TResponse : new(); 

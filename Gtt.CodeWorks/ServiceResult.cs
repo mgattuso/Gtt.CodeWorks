@@ -40,7 +40,7 @@ namespace Gtt.CodeWorks
         [ServiceResultMetadata(
             ResultOutcome.Failed,
             ResultCategory.SystemError,
-            httpStatusCode: (int)HttpStatusCode.TooManyRequests)]
+            httpStatusCode: 429)] // TooManyRequests
         [Description("Rate Limited")]
         RateLimited = 2,
 

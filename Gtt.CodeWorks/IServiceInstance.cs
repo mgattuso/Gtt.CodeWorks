@@ -19,7 +19,7 @@ namespace Gtt.CodeWorks
         Guid CorrelationId { get; }
         Guid? SessionId { get; }
         int? ServiceHop { get; }
-        public ServiceAction Action { get; }
+        ServiceAction Action { get; }
         Task<ServiceResponse> Execute(BaseRequest request, DateTimeOffset startTime, CancellationToken cancellationToken);
         Type RequestType { get; }
         Type ResponseType { get; }

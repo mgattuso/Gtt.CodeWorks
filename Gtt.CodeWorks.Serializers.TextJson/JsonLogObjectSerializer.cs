@@ -40,13 +40,21 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             };
             opts.Converters.Add(new JsonStringEnumConverter());
 
-            await using var stream = new MemoryStream();
-            await JsonSerializer.SerializeAsync(stream, obj, opts);
+            using (var stream = new MemoryStream())
+            {
+                await JsonSerializer.SerializeAsync(stream, obj, opts);
+                stream.Position = 0;
 
-            stream.Position = 0;
-            using var reader = new StreamReader(stream);
-            var result = await reader.ReadToEndAsync();
-            return result;
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = await reader.ReadToEndAsync();
+                    return result;
+                }
+            }
+            
+
+            
+            
         }
     }
 }

@@ -65,7 +65,7 @@ namespace Gtt.CodeWorks
 
             if (_options.NamespaceDepth.HasValue)
             {
-                string[] fn = fullName.Split(".");
+                string[] fn = fullName.Split('.');
                 var depth = _options.NamespaceDepth.Value + 1;
                 if (fn.Length > depth)
                 {

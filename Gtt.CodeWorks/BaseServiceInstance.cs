@@ -69,7 +69,10 @@ namespace Gtt.CodeWorks
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    response ??= await Implementation(request, cancellationToken);
+                    if (response == null)
+                    {
+                        response = await Implementation(request, cancellationToken);
+                    }
                 }
                 else
                 {

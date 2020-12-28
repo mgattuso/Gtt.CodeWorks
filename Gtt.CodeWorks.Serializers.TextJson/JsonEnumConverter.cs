@@ -80,13 +80,25 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                         T? e1 = null;
                         T? e2 = null;
 
-                        if (!string.IsNullOrWhiteSpace(name)) e1 = Enum.Parse<T>(name);
+                        if (!string.IsNullOrWhiteSpace(name))
+                        {
+                            if (Enum.TryParse(name, true, out T eh))
+                            {
+                                e2 = eh;
+                            }
+                        }
 
-                        if (value != null) e2 = (T)Enum.ToObject(typeof(T), value);
+                        if (value != null) 
+                            e1 = (T)Enum.ToObject(typeof(T), value);
 
                         if (e1 != null && e2 != null && !e1.Value.Equals(e2.Value))
                             throw new ValidationErrorException(
                                 "If the name and value properties are provided they must agree on the enum type");
+
+                        if (e1 == null && e2 == null)
+                        {
+                            throw new ValidationErrorException($"An enum value must be provided for type {typeof(T).Name}");
+                        }
 
                         return e1 ?? e2.Value;
                     }
@@ -97,10 +109,12 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                     var s = reader.GetString();
                     if (Enum.IsDefined(typeToConvert, s))
                     {
-                        return Enum.Parse<T>(s, true);
+                        if (Enum.TryParse(s, true, out T eh))
+                        {
+                            return eh;
+                        }
                     }
                     throw new ValidationErrorException($"Cannot create enum of type{typeToConvert.Name} from the value {s}", "");
-
                 }
             }
             catch (ValidationErrorException)

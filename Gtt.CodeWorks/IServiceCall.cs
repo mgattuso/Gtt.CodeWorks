@@ -8,6 +8,8 @@ namespace Gtt.CodeWorks
         where TRequest : BaseRequest, new()
         where TResponse : new()
     {
+        string Name { get; }
+        string FullName { get; }
         Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken);
     }
 }

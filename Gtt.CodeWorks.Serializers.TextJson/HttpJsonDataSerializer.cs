@@ -26,13 +26,17 @@ namespace Gtt.CodeWorks.Serializers.TextJson
         {
             var opts = CreateJsonSerializerOptions(options);
 
-            await using var stream = new MemoryStream();
-            await JsonSerializer.SerializeAsync(stream, response, responseType, opts);
+            using (var stream = new MemoryStream())
+            {
+                await JsonSerializer.SerializeAsync(stream, response, responseType, opts);
+                stream.Position = 0;
 
-            stream.Position = 0;
-            using var reader = new StreamReader(stream);
-            var result = await reader.ReadToEndAsync();
-            return result;
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = await reader.ReadToEndAsync();
+                    return result;
+                }
+            }
         }
 
         public async Task<T> DeserializeRequest<T>(Stream stream, HttpDataSerializerOptions options = null) where T : BaseRequest, new()
@@ -71,13 +75,21 @@ namespace Gtt.CodeWorks.Serializers.TextJson
         {
             var opts = CreateJsonSerializerOptions(options);
 
-            await using var stream = new MemoryStream();
-            await JsonSerializer.SerializeAsync(stream, request, requestType, opts);
+            using (var stream = new MemoryStream())
+            {
+                await JsonSerializer.SerializeAsync(stream, request, requestType, opts);
+                stream.Position = 0;
 
-            stream.Position = 0;
-            using var reader = new StreamReader(stream);
-            var result = await reader.ReadToEndAsync();
-            return result;
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = await reader.ReadToEndAsync();
+                    return result;
+                }
+            }
+
+            
+
+            
         }
 
         public async Task<T> DeserializeResponse<T>(Stream stream, HttpDataSerializerOptions options = null) where T : new()
@@ -112,7 +124,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
 
         private JsonSerializerOptions CreateJsonSerializerOptions(HttpDataSerializerOptions options)
         {
-            options ??= new HttpDataSerializerOptions();
+            options = options ?? new HttpDataSerializerOptions();
             var opts = new JsonSerializerOptions
             {
                 WriteIndented = _debugMode,
