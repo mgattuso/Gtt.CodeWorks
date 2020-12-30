@@ -9,6 +9,7 @@ namespace Gtt.CodeWorks
     {
         IServiceInstance GetInstanceByName(string name);
         IServiceInstance[] GetRegistered();
+        string GetRegisteredNameFromFullName(string fullName);
     }
 
     public class ServiceResolver : IServiceResolver
