@@ -33,6 +33,5 @@ namespace Gtt.CodeWorks.Clients.HttpClient
             }
             return new Uri(new Uri(Root), uri);
         }
-        public abstract Dictionary<string, string> ServiceRouteMap { get; }
     }
 }

@@ -59,8 +59,6 @@ namespace Gtt.CodeWorks.Tests.Core.Web
             public HarnessClient(string rootUrl, Dictionary<string, string> urlMap = null) : base(rootUrl, urlMap)
             {
             }
-
-            public override Dictionary<string, string> ServiceRouteMap => new Dictionary<string, string>();
         }
     }
 }
