@@ -15,7 +15,7 @@ namespace Gtt.CodeWorks
         where TRequest : BaseRequest, new() where TResponse : new()
     {
         private readonly IList<IServiceMiddleware> _pipeline = new List<IServiceMiddleware>();
-        private ILogger _logger;
+        private readonly ILogger _logger;
 
         protected BaseServiceInstance(CoreDependencies coreDependencies)
         {

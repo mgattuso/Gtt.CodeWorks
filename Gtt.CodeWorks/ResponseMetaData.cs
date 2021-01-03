@@ -31,7 +31,7 @@ namespace Gtt.CodeWorks
             CorrelationId = service.CorrelationId;
             Dependencies = dependencies;
             ResponseCreated = ServiceClock.CurrentTime();
-            ServiceName = service.Name;
+            ServiceName = service.FullName;
         }
 
         public ResponseMetaData(IServiceInstance service, ValidationErrorResponse validationErrors, Dictionary<string, ResponseMetaData> dependencies = null)
@@ -41,7 +41,7 @@ namespace Gtt.CodeWorks
             CorrelationId = service.CorrelationId;
             Dependencies = dependencies;
             ResponseCreated = ServiceClock.CurrentTime();
-            ServiceName = service.Name;
+            ServiceName = service.FullName;
             Errors = validationErrors.ToDictionary();
         }
 
@@ -56,7 +56,7 @@ namespace Gtt.CodeWorks
             CorrelationId = service.CorrelationId;
             Dependencies = dependencies;
             ResponseCreated = ServiceClock.CurrentTime();
-            ServiceName = service.Name;
+            ServiceName = service.FullName;
             Errors = error.ToDictionary();
         }
 
@@ -75,12 +75,13 @@ namespace Gtt.CodeWorks
             ResponseCreated = ServiceClock.CurrentTime();
             ServiceName = serviceName;
             Errors = errors != null ? new Dictionary<string, string[]>(errors) : new Dictionary<string, string[]>();
+            DurationMs = (long) (ServiceClock.CurrentTime() - _startTime).TotalMilliseconds;
         }
 
         public string ServiceName { get; }
         public Guid CorrelationId { get; set; }
         public ServiceResult Result { get; }
-        public long DurationMs => (long)(ServiceClock.CurrentTime() - _startTime).TotalMilliseconds;
+        public long DurationMs { get; }
         public DateTimeOffset ResponseCreated { get; }
         public Dictionary<string, string[]> Errors { get; }
         public Dictionary<string, ResponseMetaData> Dependencies { get; }

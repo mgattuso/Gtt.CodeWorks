@@ -49,7 +49,20 @@ namespace Gtt.CodeWorks.Clients.HttpClient
             var apiResponse = await _client.SendAsync(requestMsg, cancellationToken);
             var responseStream = await apiResponse.Content.ReadAsStreamAsync();
             var response = await _dataSerializer.DeserializeResponse<InternalServiceResponse<TResponse>>(responseStream);
-            return new ServiceResponse<TResponse>(response.Data, new ResponseMetaData(response.MetaData.ServiceName, start, response.MetaData.CorrelationId, response.MetaData.Result, response.MetaData.Errors)); //TODO: FIX ERROR DATA
+
+            var dependencies = new Dictionary<string, ResponseMetaData>
+            {
+                {
+                    response.MetaData.ServiceName, new ResponseMetaData(
+                        response.MetaData.ServiceName,
+                        DateTimeOffset.UtcNow.AddMilliseconds(-1 * response.MetaData.DurationMs),
+                        response.MetaData.CorrelationId,
+                        response.MetaData.Result,
+                        response.MetaData.Errors
+                    )
+                }
+            };
+            return new ServiceResponse<TResponse>(response.Data, new ResponseMetaData($"{response.MetaData.ServiceName}.Client", start, response.MetaData.CorrelationId, response.MetaData.Result, response.MetaData.Errors, dependencies)); //TODO: FIX ERROR DATA
 
         }
 
