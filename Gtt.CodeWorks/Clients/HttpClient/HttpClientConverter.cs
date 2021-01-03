@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -45,24 +46,49 @@ namespace Gtt.CodeWorks.Clients.HttpClient
 
             var requestMsg = new HttpRequestMessage(HttpMethod.Post, uri);
             requestMsg.Headers.Add("codeworks-prefs-enum", options.EnumSerializationMethod.ToString());
+            if (options.IncludeDependencyMetaData)
+            {
+                requestMsg.Headers.Add("codeworks-prefs-dep-meta", "full");
+            }
+
             requestMsg.Content = new StringContent(payload, Encoding.UTF8, "application/json");
             var apiResponse = await _client.SendAsync(requestMsg, cancellationToken);
             var responseStream = await apiResponse.Content.ReadAsStreamAsync();
             var response = await _dataSerializer.DeserializeResponse<InternalServiceResponse<TResponse>>(responseStream);
 
-            var dependencies = new Dictionary<string, ResponseMetaData>
+            Dictionary<string, ResponseMetaData> dependencies = null;
+
+            if (options.IncludeDependencyMetaData)
             {
+                //TODO: Currently handles 1 level of dependencies - need to add recursion
+
+                dependencies = new Dictionary<string, ResponseMetaData>
                 {
-                    response.MetaData.ServiceName, new ResponseMetaData(
-                        response.MetaData.ServiceName,
-                        DateTimeOffset.UtcNow.AddMilliseconds(-1 * response.MetaData.DurationMs),
-                        response.MetaData.CorrelationId,
-                        response.MetaData.Result,
-                        response.MetaData.Errors
-                    )
-                }
-            };
-            return new ServiceResponse<TResponse>(response.Data, new ResponseMetaData($"{response.MetaData.ServiceName}.Client", start, response.MetaData.CorrelationId, response.MetaData.Result, response.MetaData.Errors, dependencies)); //TODO: FIX ERROR DATA
+                    {
+                        response.MetaData.ServiceName, new ResponseMetaData(
+                            response.MetaData.ServiceName,
+                            response.MetaData.ResponseCreated,
+                            response.MetaData.DurationMs,
+                            response.MetaData.CorrelationId,
+                            response.MetaData.Result,
+                            response.MetaData.Errors
+                        )
+                    }
+                };
+            }
+
+            var end = ServiceClock.CurrentTime();
+
+            return new ServiceResponse<TResponse>(
+                response.Data, 
+                new ResponseMetaData(
+                    $"{response.MetaData.ServiceName}.Client",
+                    end,
+                    (long)(end - start).TotalMilliseconds,
+                    response.MetaData.CorrelationId, 
+                    response.MetaData.Result, 
+                    response.MetaData.Errors, 
+                    dependencies)); //TODO: FIX ERROR DATA
 
         }
 
@@ -74,7 +100,7 @@ namespace Gtt.CodeWorks.Clients.HttpClient
             public long DurationMs { get; set; }
             public DateTimeOffset ResponseCreated { get; set; }
             public Dictionary<string, string[]> Errors { get; set; }
-            public Dictionary<string, ResponseMetaData> Dependencies { get; set; }
+            public Dictionary<string, InternalResponseMetadata> Dependencies { get; set; }
         }
 
         public class InternalServiceResponse<TResponse> where TResponse : new()

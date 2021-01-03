@@ -62,20 +62,20 @@ namespace Gtt.CodeWorks
 
         public ResponseMetaData(
             string serviceName,
-            DateTimeOffset startTime,
+            DateTimeOffset responseCreated,
+            long durationMs,
             Guid correlationId,
             ServiceResult result,
             IDictionary<string, string[]> errors,
             Dictionary<string, ResponseMetaData> dependencies = null)
         {
-            _startTime = startTime;
             Result = result;
             CorrelationId = correlationId;
             Dependencies = dependencies;
-            ResponseCreated = ServiceClock.CurrentTime();
+            ResponseCreated = responseCreated;
             ServiceName = serviceName;
             Errors = errors != null ? new Dictionary<string, string[]>(errors) : new Dictionary<string, string[]>();
-            DurationMs = (long) (ServiceClock.CurrentTime() - _startTime).TotalMilliseconds;
+            DurationMs = durationMs;
         }
 
         public string ServiceName { get; }

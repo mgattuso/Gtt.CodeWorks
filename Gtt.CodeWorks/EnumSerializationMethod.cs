@@ -8,6 +8,7 @@ namespace Gtt.CodeWorks
     public class HttpDataSerializerOptions
     {
         public EnumSerializationMethod EnumSerializationMethod { get; set; }
+        public bool IncludeDependencyMetaData { get; set; }
     }
 
     public enum EnumSerializationMethod

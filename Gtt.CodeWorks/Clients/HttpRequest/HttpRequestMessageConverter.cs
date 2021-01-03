@@ -45,7 +45,6 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
             var opts = new HttpDataSerializerOptions();
             if (headers.Contains("codeworks-prefs-enum"))
             {
-
                 var val = headers.GetValues("codeworks-prefs-enum").FirstOrDefault() ?? "";
                 if (Equals(val, "numeric"))
                 {
@@ -58,6 +57,17 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
                 if (Equals(val, "object"))
                 {
                     opts.EnumSerializationMethod = EnumSerializationMethod.Object;
+                }
+            }
+
+            string includeDependencyMetaDataHeader = "codeworks-prefs-dep-meta";
+
+            if (headers.Contains(includeDependencyMetaDataHeader))
+            {
+                var val = headers.GetValues(includeDependencyMetaDataHeader).FirstOrDefault() ?? "";
+                if (Equals(val, "full"))
+                {
+                    opts.IncludeDependencyMetaData = true;
                 }
             }
 
