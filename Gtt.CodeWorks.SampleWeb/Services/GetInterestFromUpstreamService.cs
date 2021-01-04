@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Gtt.CodeWorks.Clients.HttpClient;
+using Microsoft.Extensions.Logging;
 
 namespace Gtt.CodeWorks.SampleWeb.Services
 {
@@ -13,20 +14,23 @@ namespace Gtt.CodeWorks.SampleWeb.Services
     {
         private readonly IHttpDataSerializer _dataSerializer;
         private readonly IHttpSerializerOptionsResolver _optionsResolver;
+        private readonly ILoggerFactory _loggerFactory;
         private static readonly HttpClient Client = new HttpClient();
 
         public GetInterestFromUpstreamService(
             IHttpDataSerializer dataSerializer, 
             CoreDependencies coreDependencies,
-            IHttpSerializerOptionsResolver optionsResolver) : base(coreDependencies)
+            IHttpSerializerOptionsResolver optionsResolver,
+            ILoggerFactory loggerFactory) : base(coreDependencies)
         {
             _dataSerializer = dataSerializer;
             _optionsResolver = optionsResolver;
+            _loggerFactory = loggerFactory;
         }
 
         protected override Task<ServiceResponse<Response>> Implementation(Request request, CancellationToken cancellationToken)
         {
-            var converter = new HttpClientConverter(Client, _dataSerializer, _optionsResolver);
+            var converter = new HttpClientConverter(Client, _dataSerializer, _optionsResolver, _loggerFactory.CreateLogger<HttpClientConverter>());
             return converter.Call<Request, Response>(request, new Uri("https://gtt-global-financial.azurewebsites.net/api/call/CompoundInterestService"), cancellationToken);
         }
 

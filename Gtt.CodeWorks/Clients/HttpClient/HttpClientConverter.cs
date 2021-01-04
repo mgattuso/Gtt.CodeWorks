@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Gtt.CodeWorks.Clients.HttpClient
 {
@@ -13,12 +14,18 @@ namespace Gtt.CodeWorks.Clients.HttpClient
         private readonly System.Net.Http.HttpClient _client;
         private readonly IHttpDataSerializer _dataSerializer;
         private readonly IHttpSerializerOptionsResolver _optionsResolver;
+        private readonly ILogger _logger;
 
-        public HttpClientConverter(System.Net.Http.HttpClient client, IHttpDataSerializer dataSerializer, IHttpSerializerOptionsResolver optionsResolver)
+        public HttpClientConverter(
+            System.Net.Http.HttpClient client,
+            IHttpDataSerializer dataSerializer,
+            IHttpSerializerOptionsResolver optionsResolver,
+            ILogger<HttpClientConverter> logger)
         {
             _client = client;
             _dataSerializer = dataSerializer;
             _optionsResolver = optionsResolver;
+            _logger = logger;
         }
 
         public Task<ServiceResponse<TResponse>> Call<TRequest, TResponse>(TRequest request, Uri uri, CancellationToken cancellationToken) where TRequest : BaseRequest where TResponse : new()
@@ -40,12 +47,22 @@ namespace Gtt.CodeWorks.Clients.HttpClient
                 throw new Exception("Expected a data entry called \"uri\" of the type Uri with a reference to the Http Service URL");
             }
 
+            _logger.LogTrace("Calling Uri:{uri}, Request:{request?.CorrelationId}", uri, request?.CorrelationId);
+
             var options = _optionsResolver?.Options() ?? new HttpDataSerializerOptions();
             DateTimeOffset start = ServiceClock.CurrentTime();
+
+            _logger.LogTrace("Serializing request payload {request}, Request:{request?.CorrelationId}", request, request?.CorrelationId);
             var payload = await _dataSerializer.SerializeRequest(request, typeof(TRequest), options);
 
+            _logger.LogTrace("Serialized request payload {payload}, Request:{request?.CorrelationId}", payload, request?.CorrelationId);
+
             var requestMsg = new HttpRequestMessage(HttpMethod.Post, uri);
+            _logger.LogTrace("Options.EnumSerializationMethod {method}", options.EnumSerializationMethod);
             requestMsg.Headers.Add("codeworks-prefs-enum", options.EnumSerializationMethod.ToString());
+
+            _logger.LogTrace("options.IncludeDependencyMetaData:{includeDependencyMetaData} RequestId:{{request}}", options.IncludeDependencyMetaData, request?.CorrelationId);
+
             if (options.IncludeDependencyMetaData)
             {
                 requestMsg.Headers.Add("codeworks-prefs-dep-meta", "full");
@@ -54,7 +71,30 @@ namespace Gtt.CodeWorks.Clients.HttpClient
             requestMsg.Content = new StringContent(payload, Encoding.UTF8, "application/json");
             var apiResponse = await _client.SendAsync(requestMsg, cancellationToken);
             var responseStream = await apiResponse.Content.ReadAsStreamAsync();
-            var response = await _dataSerializer.DeserializeResponse<InternalServiceResponse<TResponse>>(responseStream);
+            InternalServiceResponse<TResponse> response = null;
+
+            try
+            {
+                response = await _dataSerializer
+                    .DeserializeResponse<InternalServiceResponse<TResponse>>(responseStream);
+            }
+            catch (CodeWorksSerializationException ex)
+            {
+                return new ServiceResponse<TResponse>
+                (default(TResponse), new ResponseMetaData(
+                    uri.ToString(),
+                    ServiceClock.CurrentTime(),
+                    (long)(ServiceClock.CurrentTime() - start).TotalMilliseconds,
+                    request?.CorrelationId ?? Guid.Empty,
+                    ServiceResult.PermanentError,
+                    new Dictionary<string, string[]>
+                    {
+                        {"Error", new [] { ex.ToString() }}
+                    },
+                    null
+                ));
+            }
+
 
             Dictionary<string, ResponseMetaData> dependencies = null;
 
@@ -80,14 +120,14 @@ namespace Gtt.CodeWorks.Clients.HttpClient
             var end = ServiceClock.CurrentTime();
 
             return new ServiceResponse<TResponse>(
-                response.Data, 
+                response.Data,
                 new ResponseMetaData(
                     $"{response.MetaData.ServiceName}.Client",
                     end,
                     (long)(end - start).TotalMilliseconds,
-                    response.MetaData.CorrelationId, 
-                    response.MetaData.Result, 
-                    response.MetaData.Errors, 
+                    response.MetaData.CorrelationId,
+                    response.MetaData.Result,
+                    response.MetaData.Errors,
                     dependencies)); //TODO: FIX ERROR DATA
 
         }

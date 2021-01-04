@@ -102,8 +102,8 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             }
             catch (JsonException ex)
             {
-                _logger.LogError("Cannot deserialize request", ex);
-                throw;
+                _logger.LogError("Cannot deserialize response", ex);
+                throw new CodeWorksSerializationException("Cannot deserialize JSON payload", ex);
             }
         }
 
