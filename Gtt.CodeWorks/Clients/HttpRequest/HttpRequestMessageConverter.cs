@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -10,17 +11,44 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
     public class HttpRequestMessageConverter
     {
         private readonly IHttpDataSerializer _serializer;
+        private readonly IServiceEnvironmentResolver _environmentResolver;
 
-        public HttpRequestMessageConverter(IHttpDataSerializer serializer)
+        public HttpRequestMessageConverter(IHttpDataSerializer serializer, IServiceEnvironmentResolver environmentResolver)
         {
             _serializer = serializer;
+            _environmentResolver = environmentResolver;
         }
 
         public async Task<BaseRequest> ConvertRequest(Type type, HttpRequestMessage request)
         {
-            var options = CreateOptionsFromHeaders(request.Headers);
-            var contents = await request.Content.ReadAsStreamAsync();
-            var result = await _serializer.DeserializeRequest(type, contents, options);
+            HttpDataSerializerOptions options = CreateOptionsFromHeaders(request.Headers);
+
+            Stream contents = await request.Content.ReadAsStreamAsync();
+
+            //TODO: REVISIT THIS SCHEMA VALIDATION CODE
+            //if (ShouldValidateSchema(options))
+            //{
+            //    using (var ms = new MemoryStream())
+            //    {
+            //        using (var sr = new StreamReader(ms))
+            //        {
+            //            await contents.CopyToAsync(ms);
+            //            ms.Seek(0, SeekOrigin.Begin);
+            //            var schemaErrors = await _serializer.ValidateSchema(ms, type);
+
+            //            if (schemaErrors.Any())
+            //            {
+            //                throw new SchemaValidationException($"Cannot validate payload as type of {type.FullName}", schemaErrors);
+            //            }
+
+            //            ms.Seek(0, SeekOrigin.Begin);
+            //            BaseRequest validResult = await _serializer.DeserializeRequest(type, contents, options);
+            //            return validResult;
+            //        }
+            //    }
+            //}
+
+            BaseRequest result = await _serializer.DeserializeRequest(type, contents, options);
             return result;
         }
 
@@ -42,36 +70,35 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
 
         private HttpDataSerializerOptions CreateOptionsFromHeaders(HttpRequestHeaders headers)
         {
-            var opts = new HttpDataSerializerOptions();
-            if (headers.Contains("codeworks-prefs-enum"))
+            var opts = new HttpDataSerializerOptions
             {
-                var val = headers.GetValues("codeworks-prefs-enum").FirstOrDefault() ?? "";
-                if (Equals(val, "numeric"))
-                {
-                    opts.EnumSerializationMethod = EnumSerializationMethod.Numeric;
-                }
-                if (Equals(val, "string"))
-                {
-                    opts.EnumSerializationMethod = EnumSerializationMethod.String;
-                }
-                if (Equals(val, "object"))
-                {
-                    opts.EnumSerializationMethod = EnumSerializationMethod.Object;
-                }
-            }
-
-            string includeDependencyMetaDataHeader = "codeworks-prefs-dep-meta";
-
-            if (headers.Contains(includeDependencyMetaDataHeader))
-            {
-                var val = headers.GetValues(includeDependencyMetaDataHeader).FirstOrDefault() ?? "";
-                if (Equals(val, "full"))
-                {
-                    opts.IncludeDependencyMetaData = true;
-                }
-            }
+                IncludeDependencyMetaData = ParseHeaderForEnum<IncludeDependencyMetaDataStrategy>(headers, "codeworks-prefs-dep-meta"),
+                EnumSerializationMethod = ParseHeaderForEnum<EnumSerializationMethod>(headers, "codeworks-prefs-enum"),
+                JsonSchemaValidation = ParseHeaderForEnum<JsonValidationStrategy>(headers, "codeworks-prefs-schema-check")
+            };
 
             return opts;
+        }
+
+        private T ParseHeaderForEnum<T>(HttpRequestHeaders headers, string header) where T : struct
+        {
+            if (!headers.Contains(header))
+            {
+                return default(T);
+            }
+            var v = headers.GetValues(header).FirstOrDefault();
+            return Enum.TryParse(v, true, out T t) ? t : default(T);
+        }
+
+        private bool ShouldValidateSchema(HttpDataSerializerOptions options)
+        {
+            if (_environmentResolver.Environment == CodeWorksEnvironment.Production)
+            {
+                return options.JsonSchemaValidation == JsonValidationStrategy.ForceOverride;
+            }
+
+            return options.JsonSchemaValidation == JsonValidationStrategy.Default ||
+                   options.JsonSchemaValidation == JsonValidationStrategy.ForceOverride;
         }
     }
 }

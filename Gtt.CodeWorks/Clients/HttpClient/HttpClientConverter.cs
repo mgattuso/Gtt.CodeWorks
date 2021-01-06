@@ -58,14 +58,26 @@ namespace Gtt.CodeWorks.Clients.HttpClient
             _logger.LogTrace("Serialized request payload {payload}, Request:{request?.CorrelationId}", payload, request?.CorrelationId);
 
             var requestMsg = new HttpRequestMessage(HttpMethod.Post, uri);
-            _logger.LogTrace("Options.EnumSerializationMethod {method}", options.EnumSerializationMethod);
-            requestMsg.Headers.Add("codeworks-prefs-enum", options.EnumSerializationMethod.ToString());
 
-            _logger.LogTrace("options.IncludeDependencyMetaData:{includeDependencyMetaData} RequestId:{{request}}", options.IncludeDependencyMetaData, request?.CorrelationId);
-
-            if (options.IncludeDependencyMetaData)
+            if (options.EnumSerializationMethod != default)
             {
-                requestMsg.Headers.Add("codeworks-prefs-dep-meta", "full");
+                _logger.LogTrace("Options.EnumSerializationMethod:{method} RequestId:{request}",
+                    options.EnumSerializationMethod, request?.CorrelationId);
+                requestMsg.Headers.Add("codeworks-prefs-enum", options.EnumSerializationMethod.ToString());
+            }
+
+            if (options.JsonSchemaValidation != default)
+            {
+                _logger.LogTrace("Options.JsonSchemaValidation:{method} RequestId:{request}",
+                    options.JsonSchemaValidation, request?.CorrelationId);
+                requestMsg.Headers.Add("codeworks-prefs-schema-check", options.JsonSchemaValidation.ToString());
+            }
+
+            if (options.IncludeDependencyMetaData != default)
+            {
+                _logger.LogTrace("options.IncludeDependencyMetaData:{includeDependencyMetaData} RequestId:{{request}}", 
+                    options.IncludeDependencyMetaData, request?.CorrelationId);
+                requestMsg.Headers.Add("codeworks-prefs-dep-meta", options.IncludeDependencyMetaData.ToString());
             }
 
             requestMsg.Content = new StringContent(payload, Encoding.UTF8, "application/json");
@@ -98,7 +110,7 @@ namespace Gtt.CodeWorks.Clients.HttpClient
 
             Dictionary<string, ResponseMetaData> dependencies = null;
 
-            if (options.IncludeDependencyMetaData)
+            if (options.IncludeDependencyMetaData == IncludeDependencyMetaDataStrategy.Full)
             {
                 //TODO: Currently handles 1 level of dependencies - need to add recursion
 

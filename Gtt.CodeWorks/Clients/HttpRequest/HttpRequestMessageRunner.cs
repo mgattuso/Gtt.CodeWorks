@@ -30,7 +30,7 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
                 var response = await _responseGenerator.ConvertResponse(request, output, service.ResponseType);
                 return response;
             }
-            catch (Exception ex)
+            catch (SchemaValidationException ex)
             {
                 var error = await _responseGenerator.ConvertResponse(
                     request,
@@ -40,11 +40,37 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
                             ServiceClock.CurrentTime(),
                             (long)(ServiceClock.CurrentTime() - start).TotalMilliseconds,
                             service.CorrelationId == default(Guid) ? Guid.Empty : service.CorrelationId,
+                            ServiceResult.ValidationError,
+                            ex.Errors
+                        )
+                    ),
+                    service.ResponseType);
+
+                return error;
+            }
+            catch (Exception ex)
+            {
+                var serialEx = ex as CodeWorksSerializationException;
+                string originalPayload = serialEx?.RawData ?? "";
+                var errors = new Dictionary<string, string[]>
+                {
+                    {"Error", new[] {ex.ToString()}}
+                };
+                if (!string.IsNullOrWhiteSpace(originalPayload))
+                {
+                    errors["payload"] = new[] { originalPayload };
+                }
+
+                var error = await _responseGenerator.ConvertResponse(
+                    request,
+                    new ServiceResponse(
+                        new ResponseMetaData(
+                            service.FullName,
+                            ServiceClock.CurrentTime(),
+                            (long)(ServiceClock.CurrentTime() - start).TotalMilliseconds,
+                            service.CorrelationId == default(Guid) ? Guid.Empty : service.CorrelationId,
                             ServiceResult.PermanentError,
-                            new Dictionary<string, string[]>
-                            {
-                                {"Error", new [] { ex.ToString() }}
-                            }
+                            errors
                         )
                     ),
                     service.ResponseType);

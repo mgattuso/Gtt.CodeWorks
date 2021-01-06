@@ -6,8 +6,9 @@ using System.Text;
 namespace Gtt.CodeWorks
 {
     [Serializable]
-    public class CodeWorksSerializationException : Exception
+    public class SchemaValidationException : Exception
     {
+        public IDictionary<string, string[]> Errors { get; }
         //
         // For guidelines regarding the creation of new exception types, see
         //    http://msdn.microsoft.com/library/default.asp?url=/library/en-us/cpgenref/html/cpconerrorraisinghandlingguidelines.asp
@@ -15,26 +16,24 @@ namespace Gtt.CodeWorks
         //    http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dncscol/html/csharp07192001.asp
         //
 
-        public string RawData { get; }
-
-        public CodeWorksSerializationException()
+        public SchemaValidationException()
         {
         }
 
-        public CodeWorksSerializationException(string message) : base(message)
+        public SchemaValidationException(string message, IDictionary<string, string[]> errors) : base(message)
+        {
+            Errors = errors;
+        }
+
+        public SchemaValidationException(string message) : base(message)
         {
         }
 
-        public CodeWorksSerializationException(string message, string rawData) : base(message)
-        {
-            RawData = rawData;
-        }
-
-        public CodeWorksSerializationException(string message, Exception inner) : base(message, inner)
+        public SchemaValidationException(string message, Exception inner) : base(message, inner)
         {
         }
 
-        protected CodeWorksSerializationException(
+        protected SchemaValidationException(
             SerializationInfo info,
             StreamingContext context) : base(info, context)
         {

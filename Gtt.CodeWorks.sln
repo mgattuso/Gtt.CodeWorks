@@ -19,7 +19,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{3BAC
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.Redis", "Gtt.CodeWorks.Redis\Gtt.CodeWorks.Redis.csproj", "{4E8A37F2-7D1E-4879-88AE-BEC0D63087B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.DataAnnotations", "Gtt.CodeWorks.DataAnnotations\Gtt.CodeWorks.DataAnnotations.csproj", "{28C35213-EA8E-41F3-B75C-46B5619CB909}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.DataAnnotations", "Gtt.CodeWorks.DataAnnotations\Gtt.CodeWorks.DataAnnotations.csproj", "{28C35213-EA8E-41F3-B75C-46B5619CB909}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.SampleAzureFunc", "Gtt.CodeWorks.SampleAzureFunc\Gtt.CodeWorks.SampleAzureFunc.csproj", "{AB8EA83F-2035-4765-93AC-11D66C559C3F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.Functions.Host", "Gtt.CodeWorks.Functions.Host\Gtt.CodeWorks.Functions.Host.csproj", "{58D5B3EB-4868-4601-87CD-700490549DF6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.SampleServices", "Gtt.CodeWorks.SampleServices\Gtt.CodeWorks.SampleServices.csproj", "{A4F67136-6E7F-4B55-899F-1D32AD7E584E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,12 +65,26 @@ Global
 		{28C35213-EA8E-41F3-B75C-46B5619CB909}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{28C35213-EA8E-41F3-B75C-46B5619CB909}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{28C35213-EA8E-41F3-B75C-46B5619CB909}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB8EA83F-2035-4765-93AC-11D66C559C3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB8EA83F-2035-4765-93AC-11D66C559C3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB8EA83F-2035-4765-93AC-11D66C559C3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB8EA83F-2035-4765-93AC-11D66C559C3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58D5B3EB-4868-4601-87CD-700490549DF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58D5B3EB-4868-4601-87CD-700490549DF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58D5B3EB-4868-4601-87CD-700490549DF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58D5B3EB-4868-4601-87CD-700490549DF6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4F67136-6E7F-4B55-899F-1D32AD7E584E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4F67136-6E7F-4B55-899F-1D32AD7E584E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4F67136-6E7F-4B55-899F-1D32AD7E584E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4F67136-6E7F-4B55-899F-1D32AD7E584E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{EE26C10F-C32B-49BE-B7C3-F1C805E511BF} = {3BAC12EC-7ACC-48E3-9EF6-1A9A321766C0}
+		{AB8EA83F-2035-4765-93AC-11D66C559C3F} = {3BAC12EC-7ACC-48E3-9EF6-1A9A321766C0}
+		{A4F67136-6E7F-4B55-899F-1D32AD7E584E} = {3BAC12EC-7ACC-48E3-9EF6-1A9A321766C0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AFE85099-AE5F-4C27-8750-56E5A26AE1B6}

@@ -11,5 +11,22 @@ namespace Gtt.CodeWorks
             if (dict == null) return default(TValue);
             return dict.TryGetValue(key, out var val) ? val : default(TValue);
         }
+
+        public static void AddOrAppendValue(this IDictionary<string, string[]> dict, string key, string value)
+        {
+            if (dict == null) throw new ArgumentNullException(nameof(dict));
+            var existing = dict.GetValueOrDefault(key);
+            if (existing == null)
+            {
+                dict[key] = new[] { value };
+            }
+            else
+            {
+                string[] newA = new string[existing.Length + 1];
+                Array.Copy(existing, newA, existing.Length);
+                newA[newA.Length - 1] = value;
+                dict[key] = newA;
+            }
+        }
     }
 }

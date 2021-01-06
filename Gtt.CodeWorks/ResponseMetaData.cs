@@ -9,8 +9,6 @@ namespace Gtt.CodeWorks
 {
     public class ResponseMetaData : ITraceable
     {
-        private readonly DateTimeOffset _startTime;
-
 #if !DEBUG
         /// <summary>
         /// Used for Deserialization
@@ -26,21 +24,23 @@ namespace Gtt.CodeWorks
             ServiceResult result,
             Dictionary<string, ResponseMetaData> dependencies = null)
         {
-            _startTime = service.StartTime;
+            var startTime = service.StartTime;
             Result = result;
             CorrelationId = service.CorrelationId;
             Dependencies = dependencies;
             ResponseCreated = ServiceClock.CurrentTime();
+            DurationMs = (long)(ResponseCreated-startTime).TotalMilliseconds;
             ServiceName = service.FullName;
         }
 
         public ResponseMetaData(IServiceInstance service, ValidationErrorResponse validationErrors, Dictionary<string, ResponseMetaData> dependencies = null)
         {
-            _startTime = service.StartTime;
+            var startTime = service.StartTime;
             Result = ServiceResult.ValidationError;
             CorrelationId = service.CorrelationId;
             Dependencies = dependencies;
             ResponseCreated = ServiceClock.CurrentTime();
+            DurationMs = (long)(ResponseCreated - startTime).TotalMilliseconds;
             ServiceName = service.FullName;
             Errors = validationErrors.ToDictionary();
         }
@@ -51,11 +51,12 @@ namespace Gtt.CodeWorks
             ErrorData error,
             Dictionary<string, ResponseMetaData> dependencies = null)
         {
-            _startTime = service.StartTime;
+            var startTime = service.StartTime;
             Result = result;
             CorrelationId = service.CorrelationId;
             Dependencies = dependencies;
             ResponseCreated = ServiceClock.CurrentTime();
+            DurationMs = (long)(ResponseCreated - startTime).TotalMilliseconds;
             ServiceName = service.FullName;
             Errors = error.ToDictionary();
         }
