@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.13</Version>
+    <Version>0.0.14</Version>
     <Authors>Michael Gattuso</Authors>
     <Product>CodeWorks</Product>
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
-    <AssemblyVersion>0.0.13.0</AssemblyVersion>
+    <AssemblyVersion>0.0.14.0</AssemblyVersion>
     <Copyright>2020, Michael Gattuso</Copyright>
     <Description>CodeWorks serializer adds the ability to serialize codework services request/response to JSON using the dotnet TextJson serializer.</Description>
     <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>

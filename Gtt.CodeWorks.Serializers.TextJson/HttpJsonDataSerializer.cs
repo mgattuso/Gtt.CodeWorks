@@ -7,10 +7,15 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Namotion.Reflection;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using NJsonSchema;
 using NJsonSchema.Generation;
 using NJsonSchema.Validation;
+using NJsonSchema.Validation.FormatValidators;
 using JsonException = System.Text.Json.JsonException;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -138,13 +143,21 @@ namespace Gtt.CodeWorks.Serializers.TextJson
         {
             options = options ?? new HttpDataSerializerOptions();
             string contents = Encoding.UTF8.GetString(message);
+
+            var settings = new JsonSerializerSettings();
+            settings.Converters.Add(new StringEnumConverter());
+            settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+
             JsonSchema schema = JsonSchema.FromType(type, new JsonSchemaGeneratorSettings
             {
                 FlattenInheritanceHierarchy = true,
                 AlwaysAllowAdditionalObjectProperties = AllowAdditionalPropertiesForJsonSchemaValidation(options),
-                GenerateEnumMappingDescription = true
+                GenerateEnumMappingDescription = true,
+                ExcludedTypeNames = new [] { "ServiceHop" },
+                SerializerSettings = settings,
+                ReflectionService = new CustomReflectionService() 
             });
-            ICollection<ValidationError> errors = schema.Validate(contents);
+            ICollection<ValidationError> errors = schema.Validate(contents, new EnumFormatValidator());
             IDictionary<string, object> dict = new Dictionary<string, object>();
             foreach (var err in errors)
             {
@@ -226,6 +239,37 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             };
 
             return allowProps.Contains(options.JsonSchemaValidation);
+        }
+    }
+
+    public class EnumFormatValidator : IFormatValidator
+    {
+        public bool IsValid(string value, JTokenType tokenType)
+        {
+            return true;
+        }
+
+        public ValidationErrorKind ValidationErrorKind { get; set; }
+        public string Format => "Enum";
+    }
+
+    public class CustomReflectionService : DefaultReflectionService
+    {
+        public override JsonTypeDescription GetDescription(ContextualType contextualType,
+            ReferenceTypeNullHandling defaultReferenceTypeNullHandling, JsonSchemaGeneratorSettings settings)
+        {
+            return base.GetDescription(contextualType, defaultReferenceTypeNullHandling, settings);
+        }
+
+
+        public override bool IsNullable(ContextualType contextualType, ReferenceTypeNullHandling defaultReferenceTypeNullHandling)
+        {
+            return base.IsNullable(contextualType, defaultReferenceTypeNullHandling);
+        }
+
+        public override bool IsStringEnum(ContextualType contextualType, JsonSerializerSettings serializerSettings)
+        {
+            return base.IsStringEnum(contextualType, serializerSettings);
         }
     }
 }
