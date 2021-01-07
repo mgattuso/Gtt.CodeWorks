@@ -82,13 +82,13 @@ namespace Gtt.CodeWorks.Clients.HttpClient
 
             requestMsg.Content = new StringContent(payload, Encoding.UTF8, "application/json");
             var apiResponse = await _client.SendAsync(requestMsg, cancellationToken);
-            var responseStream = await apiResponse.Content.ReadAsStreamAsync();
+            var responseData = await apiResponse.Content.ReadAsByteArrayAsync();
             InternalServiceResponse<TResponse> response = null;
 
             try
             {
                 response = await _dataSerializer
-                    .DeserializeResponse<InternalServiceResponse<TResponse>>(responseStream);
+                    .DeserializeResponse<InternalServiceResponse<TResponse>>(responseData);
             }
             catch (CodeWorksSerializationException ex)
             {
@@ -99,7 +99,7 @@ namespace Gtt.CodeWorks.Clients.HttpClient
                     (long)(ServiceClock.CurrentTime() - start).TotalMilliseconds,
                     request?.CorrelationId ?? Guid.Empty,
                     ServiceResult.PermanentError,
-                    new Dictionary<string, string[]>
+                    new Dictionary<string, object>
                     {
                         {"Error", new [] { ex.ToString() }}
                     },
@@ -151,7 +151,7 @@ namespace Gtt.CodeWorks.Clients.HttpClient
             public ServiceResult Result { get; set; }
             public long DurationMs { get; set; }
             public DateTimeOffset ResponseCreated { get; set; }
-            public Dictionary<string, string[]> Errors { get; set; }
+            public Dictionary<string, object> Errors { get; set; }
             public Dictionary<string, InternalResponseMetadata> Dependencies { get; set; }
         }
 

@@ -81,9 +81,9 @@ namespace Gtt.CodeWorks.Validation
             return ve;
         }
 
-        public Dictionary<string, string[]> ToDictionary()
+        public Dictionary<string, object> ToDictionary()
         {
-            Dictionary<string, string[]> errors = new Dictionary<string, string[]>();
+            Dictionary<string, object> errors = new Dictionary<string, object>();
             if (GlobalErrors.Any())
             {
                 errors[""] = GlobalErrors.ToArray();
@@ -95,17 +95,7 @@ namespace Gtt.CodeWorks.Validation
                 {
                     foreach (var member in error.Members)
                     {
-                        if (errors.TryGetValue(member, out var memberErrors))
-                        {
-                            string[] arr = new string[memberErrors.Length + 1];
-                            Array.Copy(memberErrors, arr, memberErrors.Length);
-                            arr[memberErrors.Length] = error.ErrorMessage;
-                            errors[member] = arr;
-                        }
-                        else
-                        {
-                            errors[member] = new[] { error.ErrorMessage };
-                        }
+                        errors.AddOrAppendValue(member, error.ErrorMessage, forceArray: true);
                     }
                 }
             }

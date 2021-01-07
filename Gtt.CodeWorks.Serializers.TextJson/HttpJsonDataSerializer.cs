@@ -7,9 +7,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using NJsonSchema;
 using NJsonSchema.Generation;
 using NJsonSchema.Validation;
+using JsonException = System.Text.Json.JsonException;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Gtt.CodeWorks.Serializers.TextJson
 {
@@ -43,14 +46,17 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             }
         }
 
-        public async Task<T> DeserializeRequest<T>(Stream stream, HttpDataSerializerOptions options = null) where T : BaseRequest, new()
+        public async Task<T> DeserializeRequest<T>(byte[] message, HttpDataSerializerOptions options = null) where T : BaseRequest, new()
         {
             var opts = CreateJsonSerializerOptions(options);
 
             try
             {
-                var result = await JsonSerializer.DeserializeAsync<T>(stream, opts);
-                return result;
+                using (var ms = new MemoryStream(message))
+                {
+                    var result = await JsonSerializer.DeserializeAsync<T>(ms, opts);
+                    return result;
+                }
             }
             catch (JsonException ex)
             {
@@ -59,42 +65,38 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             }
         }
 
-        public async Task<BaseRequest> DeserializeRequest(Type type, Stream message,
+        public async Task<BaseRequest> DeserializeRequest(
+            Type type,
+            byte[] message,
             HttpDataSerializerOptions options = null)
         {
             var opts = CreateJsonSerializerOptions(options);
 
-            using (var ms = new MemoryStream())
+            if (message.Length == 0)
             {
-                using (var reader = new StreamReader(ms))
+                return (BaseRequest)Activator.CreateInstance(type);
+            }
+
+            try
+            {
+                using (var ms = new MemoryStream(message))
                 {
-                    await message.CopyToAsync(ms);
-
-                    if (ms.Length == 0)
-                    {
-                        return (BaseRequest)Activator.CreateInstance(type);
-                    }
-
-                    ms.Seek(0, SeekOrigin.Begin);
-
-                    try
-                    {
-                        var result = await JsonSerializer.DeserializeAsync(ms, type, opts);
-                        return (BaseRequest)result;
-                    }
-                    catch (JsonException ex)
-                    {
-                        ms.Seek(0, SeekOrigin.Begin);
-                        var contents = await reader.ReadToEndAsync();
-                        if (string.IsNullOrWhiteSpace(contents))
-                        {
-                            return (BaseRequest)Activator.CreateInstance(type);
-                        }
-                        _logger.LogError(ex, $"Cannot deserialize request payload {contents}");
-                        throw new CodeWorksSerializationException($"Cannot parse payload as JSON. Payload={contents}", contents);
-                    }
+                    var result = await JsonSerializer.DeserializeAsync(ms, type, opts);
+                    return (BaseRequest)result;
                 }
             }
+            catch (JsonException ex)
+            {
+                var contents = Encoding.UTF8.GetString(message);
+
+                if (string.IsNullOrWhiteSpace(contents))
+                {
+                    return (BaseRequest)Activator.CreateInstance(type);
+                }
+                _logger.LogError(ex, $"Cannot deserialize request payload {contents}");
+                throw new CodeWorksSerializationException($"Cannot parse payload as JSON. Payload={contents}", contents);
+            }
+
         }
 
         public async Task<string> SerializeRequest(BaseRequest request, Type requestType, HttpDataSerializerOptions options = null)
@@ -114,13 +116,16 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             }
         }
 
-        public async Task<T> DeserializeResponse<T>(Stream stream, HttpDataSerializerOptions options = null) where T : new()
+        public async Task<T> DeserializeResponse<T>(byte[] message, HttpDataSerializerOptions options = null) where T : new()
         {
             var opts = CreateJsonSerializerOptions(options);
             try
             {
-                var result = await JsonSerializer.DeserializeAsync<T>(stream, opts);
-                return result;
+                using (var ms = new MemoryStream(message))
+                {
+                    var result = await JsonSerializer.DeserializeAsync<T>(ms, opts);
+                    return result;
+                }
             }
             catch (JsonException ex)
             {
@@ -129,64 +134,61 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             }
         }
 
-        public async Task<IDictionary<string, string[]>> ValidateSchema(Stream stream, Type type)
+        public Task<IDictionary<string, object>> ValidateSchema(byte[] message, Type type, HttpDataSerializerOptions options = null)
         {
-            var sr = new StreamReader(stream);
-
-            var content = await sr.ReadToEndAsync();
+            options = options ?? new HttpDataSerializerOptions();
+            string contents = Encoding.UTF8.GetString(message);
             JsonSchema schema = JsonSchema.FromType(type, new JsonSchemaGeneratorSettings
             {
-                ExcludedTypeNames = new[] { "CorrelationId", "ServiceHop", "SessionId" }
+                FlattenInheritanceHierarchy = true,
+                AlwaysAllowAdditionalObjectProperties = AllowAdditionalPropertiesForJsonSchemaValidation(options),
+                GenerateEnumMappingDescription = true
             });
-
-            ICollection<ValidationError> errors = schema.Validate(content);
-
-            var dict = new Dictionary<string, string[]>();
-
+            ICollection<ValidationError> errors = schema.Validate(contents);
+            IDictionary<string, object> dict = new Dictionary<string, object>();
             foreach (var err in errors)
             {
                 RecursivelyGetErrors(dict, err, schema);
             }
 
-            var d = schema.ToJson();
-            Console.WriteLine(d);
-
             if (dict.Any())
             {
-                dict.AddOrAppendValue("schema", schema.ToJson());
+                dict.AddOrAppendValue("errorType", "jsonSchemaValidation", forceArray: false);
+                dict.AddOrAppendValue("schema", schema.ToJson(Formatting.None));
+                _logger.LogTrace(schema.ToJson());
             }
 
-            return dict;
+            return Task.FromResult(dict);
 
         }
 
-        private void RecursivelyGetErrors(Dictionary<string, string[]> dict, ValidationError err, JsonSchema schema)
+        private void RecursivelyGetErrors(IDictionary<string, object> dict, ValidationError err, JsonSchema schema)
         {
-            Console.WriteLine(err.Path);
             if (err is ChildSchemaValidationError child)
             {
                 foreach (var childError in child.Errors)
                 {
                     foreach (var ce in childError.Value)
                     {
+                        dict.AddOrAppendValue($"{err.Path}.{ce.Property}", ce.Kind.ToString());
                         RecursivelyGetErrors(dict, ce, childError.Key);
                     }
                 }
             }
 
-            var kind = err.Kind;
-            string property = err.Property;
-            string path = err.Path;
-            Console.WriteLine($"{kind} {property} {path}");
+            dict.AddOrAppendValue($"{err.Property}", err.Kind.ToString());
         }
 
-        public async Task<ServiceResponse> DeserializeResponse(Type type, Stream message, HttpDataSerializerOptions options = null)
+        public async Task<ServiceResponse> DeserializeResponse(Type type, byte[] message, HttpDataSerializerOptions options = null)
         {
             var opts = CreateJsonSerializerOptions(options);
             try
             {
-                var result = await JsonSerializer.DeserializeAsync(message, type, opts);
-                return (ServiceResponse)result;
+                using (var ms = new MemoryStream(message))
+                {
+                    var result = await JsonSerializer.DeserializeAsync(ms, type, opts);
+                    return (ServiceResponse)result;
+                }
             }
             catch (JsonException ex)
             {
@@ -213,6 +215,17 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 opts.Converters.Add(new JsonStringEnumConverter());
 
             return opts;
+        }
+
+        private bool AllowAdditionalPropertiesForJsonSchemaValidation(HttpDataSerializerOptions options)
+        {
+            var allowProps = new[]
+            {
+                JsonValidationStrategy.DefaultAllowAdditionalProperties,
+                JsonValidationStrategy.ForceAllowAdditionalProperties
+            };
+
+            return allowProps.Contains(options.JsonSchemaValidation);
         }
     }
 }

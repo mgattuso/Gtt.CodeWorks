@@ -67,7 +67,7 @@ namespace Gtt.CodeWorks
             long durationMs,
             Guid correlationId,
             ServiceResult result,
-            IDictionary<string, string[]> errors,
+            IDictionary<string, object> errors,
             Dictionary<string, ResponseMetaData> dependencies = null)
         {
             Result = result;
@@ -75,7 +75,7 @@ namespace Gtt.CodeWorks
             Dependencies = dependencies;
             ResponseCreated = responseCreated;
             ServiceName = serviceName;
-            Errors = errors != null ? new Dictionary<string, string[]>(errors) : new Dictionary<string, string[]>();
+            Errors = errors != null ? new Dictionary<string, object>(errors) : new Dictionary<string, object>();
             DurationMs = durationMs;
         }
 
@@ -84,7 +84,7 @@ namespace Gtt.CodeWorks
         public ServiceResult Result { get; }
         public long DurationMs { get; }
         public DateTimeOffset ResponseCreated { get; }
-        public Dictionary<string, string[]> Errors { get; }
+        public Dictionary<string, object> Errors { get; }
         public Dictionary<string, ResponseMetaData> Dependencies { get; }
     }
 }

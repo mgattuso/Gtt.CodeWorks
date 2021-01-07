@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -12,20 +13,34 @@ namespace Gtt.CodeWorks
             return dict.TryGetValue(key, out var val) ? val : default(TValue);
         }
 
-        public static void AddOrAppendValue(this IDictionary<string, string[]> dict, string key, string value)
+        public static void AddOrAppendValue(this IDictionary<string, object> dict, string key, object value, bool forceArray = true)
         {
             if (dict == null) throw new ArgumentNullException(nameof(dict));
             var existing = dict.GetValueOrDefault(key);
             if (existing == null)
             {
-                dict[key] = new[] { value };
+                if (!forceArray)
+                {
+                    dict[key] = value;
+                }
+                else
+                {
+                    dict[key] = new List<object> { value };
+                }
             }
             else
             {
-                string[] newA = new string[existing.Length + 1];
-                Array.Copy(existing, newA, existing.Length);
-                newA[newA.Length - 1] = value;
-                dict[key] = newA;
+                if (existing is ICollection coll)
+                {
+                    object[] newA = new object[coll.Count + 1];
+                    coll.CopyTo(newA, 0);
+                    newA[coll.Count] = value;
+                    dict[key] = newA;
+                }
+                else
+                {
+                    dict[key] = new List<object> { existing, value };
+                }
             }
         }
     }

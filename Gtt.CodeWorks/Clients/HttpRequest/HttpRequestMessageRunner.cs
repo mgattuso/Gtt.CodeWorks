@@ -52,7 +52,7 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
             {
                 var serialEx = ex as CodeWorksSerializationException;
                 string originalPayload = serialEx?.RawData ?? "";
-                var errors = new Dictionary<string, string[]>
+                var errors = new Dictionary<string, object>
                 {
                     {"Error", new[] {ex.ToString()}}
                 };

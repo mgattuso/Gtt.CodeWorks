@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -26,8 +27,10 @@ namespace Gtt.CodeWorks.AspNet
             //TODO: CALL THE TYPE BASED VERSION?
             if (request.ContentLength.GetValueOrDefault() > 0)
             {
-                var contents = request.Body;
-                result = await _serializer.DeserializeRequest<T>(contents);
+                await using var ms = new MemoryStream();
+                await request.Body.CopyToAsync(ms);
+                var message = ms.ToArray();
+                result = await _serializer.DeserializeRequest<T>(message);
             }
 
             if (request.Query.Any())
@@ -51,8 +54,10 @@ namespace Gtt.CodeWorks.AspNet
             BaseRequest result = null;
             if (request.ContentLength.GetValueOrDefault() > 0)
             {
-                var contents = request.Body;
-                result = await _serializer.DeserializeRequest(requestType, contents, options);
+                await using var ms = new MemoryStream();
+                await request.Body.CopyToAsync(ms);
+                var message = ms.ToArray();
+                result = await _serializer.DeserializeRequest(requestType, message, options);
             }
 
             if (request.Query.Any())

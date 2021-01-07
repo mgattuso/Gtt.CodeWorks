@@ -38,9 +38,9 @@ namespace Gtt.CodeWorks
         public string ErrorMessage { get; }
         public IEnumerable<string> Members { get; }
 
-        public Dictionary<string, string[]> ToDictionary()
+        public Dictionary<string, object> ToDictionary()
         {
-            var d = new Dictionary<string, string[]>();
+            var d = new Dictionary<string, object>();
             foreach (var member in Members)
             {
                 d[member] = new[] { ErrorMessage };

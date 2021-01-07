@@ -24,7 +24,7 @@ namespace Gtt.CodeWorks.Tests.Core.Validation
 
             // ASSERT
             Assert.AreEqual(1, dict.Count);
-            var errorMessages = dict["test"];
+            var errorMessages = (object[])dict["test"];
             Assert.AreEqual(2, errorMessages.Length);
             Assert.IsTrue(errorMessages.Contains("Error"), "Contains error message=Error");
             Assert.IsTrue(errorMessages.Contains("Other error"), "Contains error message=Other error");

@@ -12,7 +12,7 @@ namespace Gtt.CodeWorks.Tests.Core
         public void AddOrUpdate_HappyPath()
         {
             //arrange
-            var d = new Dictionary<string, string[]>();
+            var d = new Dictionary<string, object>();
 
             // act
             d.AddOrAppendValue("test", "1");
@@ -22,7 +22,7 @@ namespace Gtt.CodeWorks.Tests.Core
             d.AddOrAppendValue("test", null);
 
             // assert
-            Assert.AreEqual(5, d["test"].Length);
+            Assert.AreEqual(5, ((object[])d["test"]).Length);
         }
     }
 }

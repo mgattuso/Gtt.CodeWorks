@@ -1,151 +1,151 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using EasyNetQ;
-using Gtt.CodeWorks.EasyNetQ;
-using Gtt.CodeWorks.Serializers.TextJson;
-using Gtt.CodeWorks.Validation;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Diagnostics;
+//using System.Text;
+//using System.Threading;
+//using System.Threading.Tasks;
+//using EasyNetQ;
+//using Gtt.CodeWorks.EasyNetQ;
+//using Gtt.CodeWorks.Serializers.TextJson;
+//using Gtt.CodeWorks.Validation;
+//using Microsoft.Extensions.Logging.Abstractions;
+//using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Gtt.CodeWorks.Tests.Core
-{
-    [TestClass]
-    public class BasicServiceTest
-    {
-        [TestMethod]
-        public async Task StandardResponse()
-        {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            for (int i = 0; i < 100000; i++)
-            {
-                var s = new TimeService(CoreDependencies.NullDependencies);
-                var r = await s.Execute(new TimeService.Request(), ServiceClock.CurrentTime(), CancellationToken.None);
-                Console.WriteLine(r.MetaData.DurationMs);
-            }
-            sw.Stop();
-            Console.WriteLine($"Duration: {sw.ElapsedMilliseconds}");
-        }
+//namespace Gtt.CodeWorks.Tests.Core
+//{
+//    [TestClass]
+//    public class BasicServiceTest
+//    {
+//        [TestMethod]
+//        public async Task StandardResponse()
+//        {
+//            Stopwatch sw = new Stopwatch();
+//            sw.Start();
+//            for (int i = 0; i < 100000; i++)
+//            {
+//                var s = new TimeService(CoreDependencies.NullDependencies);
+//                var r = await s.Execute(new TimeService.Request(), ServiceClock.CurrentTime(), CancellationToken.None);
+//                Console.WriteLine(r.MetaData.DurationMs);
+//            }
+//            sw.Stop();
+//            Console.WriteLine($"Duration: {sw.ElapsedMilliseconds}");
+//        }
 
-        [TestMethod]
-        public async Task RabbitMqLogging()
-        {
-            using var bus = RabbitHutch.CreateBus("host=localhost");
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            var coreDependencies = new CoreDependencies(
-                NullLoggerFactory.Instance, 
-                new EasyNetQServiceLogger(new JsonLogObjectSerializer(), bus),
-                NullTokenizer.SkipTokenization,
-                new InMemoryRateLimiter(), 
-                new InMemoryDistributedLock(), 
-                new NonProductionEnvironmentResolver(),
-                NullRequestValidator.Instance);
+//        [TestMethod]
+//        public async Task RabbitMqLogging()
+//        {
+//            using var bus = RabbitHutch.CreateBus("host=localhost");
+//            Stopwatch sw = new Stopwatch();
+//            sw.Start();
+//            var coreDependencies = new CoreDependencies(
+//                NullLoggerFactory.Instance, 
+//                new EasyNetQServiceLogger(new JsonLogObjectSerializer(), bus),
+//                NullTokenizer.SkipTokenization,
+//                new InMemoryRateLimiter(), 
+//                new InMemoryDistributedLock(), 
+//                new NonProductionEnvironmentResolver(),
+//                NullRequestValidator.Instance);
 
-            Parallel.For(0, 1000, new ParallelOptions { MaxDegreeOfParallelism = 8 }, async i =>
-            {
-                var s = new TimeService(coreDependencies);
-                var r = await s.Execute(new TimeService.Request(), ServiceClock.CurrentTime(), CancellationToken.None);
-            });
-            sw.Stop();
-            await Task.CompletedTask;
-            Console.WriteLine($"Duration: {sw.ElapsedMilliseconds}");
-        }
+//            Parallel.For(0, 1000, new ParallelOptions { MaxDegreeOfParallelism = 8 }, async i =>
+//            {
+//                var s = new TimeService(coreDependencies);
+//                var r = await s.Execute(new TimeService.Request(), ServiceClock.CurrentTime(), CancellationToken.None);
+//            });
+//            sw.Stop();
+//            await Task.CompletedTask;
+//            Console.WriteLine($"Duration: {sw.ElapsedMilliseconds}");
+//        }
 
-        [TestMethod]
-        public void FullNameIsServiceNamePlusNamespace()
-        {
-            // ARRANGE
-            var s = new TimeService(CoreDependencies.NullDependencies);
+//        [TestMethod]
+//        public void FullNameIsServiceNamePlusNamespace()
+//        {
+//            // ARRANGE
+//            var s = new TimeService(CoreDependencies.NullDependencies);
 
-            // ACT
-            var fn = s.FullName;
+//            // ACT
+//            var fn = s.FullName;
             
-            // ASSERT
-            Assert.AreEqual("Gtt.CodeWorks.Tests.Core.TimeService", fn);
-        }
+//            // ASSERT
+//            Assert.AreEqual("Gtt.CodeWorks.Tests.Core.TimeService", fn);
+//        }
 
-        [TestMethod]
-        public void FullNameIsServiceNamePlusNamespaceEvenWhenNested()
-        {
-            // ARRANGE
-            var s = new TimeServiceNested(CoreDependencies.NullDependencies);
+//        [TestMethod]
+//        public void FullNameIsServiceNamePlusNamespaceEvenWhenNested()
+//        {
+//            // ARRANGE
+//            var s = new TimeServiceNested(CoreDependencies.NullDependencies);
 
-            // ACT
-            var fn = s.FullName;
+//            // ACT
+//            var fn = s.FullName;
 
-            // ASSERT
-            Assert.AreEqual("Gtt.CodeWorks.Tests.Core.BasicServiceTest.TimeServiceNested", fn);
-        }
+//            // ASSERT
+//            Assert.AreEqual("Gtt.CodeWorks.Tests.Core.BasicServiceTest.TimeServiceNested", fn);
+//        }
 
-        public class TimeServiceNested : BaseReadService<TimeServiceNested.Request, TimeServiceNested.Response>
-        {
-            public class Response
-            {
-                public DateTimeOffset CurrentTime { get; set; }
-            }
+//        public class TimeServiceNested : BaseReadService<TimeServiceNested.Request, TimeServiceNested.Response>
+//        {
+//            public class Response
+//            {
+//                public DateTimeOffset CurrentTime { get; set; }
+//            }
 
-            public class Request : BaseRequest
-            {
-            }
+//            public class Request : BaseRequest
+//            {
+//            }
 
-            public TimeServiceNested(CoreDependencies coreDependencies) : base(coreDependencies)
-            {
-            }
+//            public TimeServiceNested(CoreDependencies coreDependencies) : base(coreDependencies)
+//            {
+//            }
 
-            protected override async Task<ServiceResponse<Response>> Implementation(Request request, CancellationToken cancellationToken)
-            {
-                await Task.CompletedTask;
+//            protected override async Task<ServiceResponse<Response>> Implementation(Request request, CancellationToken cancellationToken)
+//            {
+//                await Task.CompletedTask;
 
-                var response = new Response
-                {
-                    CurrentTime = ServiceClock.CurrentTime()
-                };
+//                var response = new Response
+//                {
+//                    CurrentTime = ServiceClock.CurrentTime()
+//                };
 
-                return Successful(response);
-            }
+//                return Successful(response);
+//            }
 
-            protected override IDictionary<int, string> DefineErrorCodes()
-            {
-                return NoErrorCodes();
-            }
-        }
-    }
+//            protected override IDictionary<int, string> DefineErrorCodes()
+//            {
+//                return NoErrorCodes();
+//            }
+//        }
+//    }
 
-    public class TimeService : BaseReadService<TimeService.Request, TimeService.Response>
-    {
-        public class Response
-        {
-            public DateTimeOffset CurrentTime { get; set; }
-        }
+//    public class TimeService : BaseReadService<TimeService.Request, TimeService.Response>
+//    {
+//        public class Response
+//        {
+//            public DateTimeOffset CurrentTime { get; set; }
+//        }
 
-        public class Request : BaseRequest
-        {
-        }
+//        public class Request : BaseRequest
+//        {
+//        }
 
-        public TimeService(CoreDependencies coreDependencies) : base(coreDependencies)
-        {
-        }
+//        public TimeService(CoreDependencies coreDependencies) : base(coreDependencies)
+//        {
+//        }
 
-        protected override async Task<ServiceResponse<Response>> Implementation(Request request, CancellationToken cancellationToken)
-        {
-            await Task.CompletedTask;
+//        protected override async Task<ServiceResponse<Response>> Implementation(Request request, CancellationToken cancellationToken)
+//        {
+//            await Task.CompletedTask;
 
-            var response = new Response
-            {
-                CurrentTime = ServiceClock.CurrentTime()
-            };
+//            var response = new Response
+//            {
+//                CurrentTime = ServiceClock.CurrentTime()
+//            };
 
-            return Successful(response);
-        }
+//            return Successful(response);
+//        }
 
-        protected override IDictionary<int, string> DefineErrorCodes()
-        {
-            return NoErrorCodes();
-        }
-    }
-}
+//        protected override IDictionary<int, string> DefineErrorCodes()
+//        {
+//            return NoErrorCodes();
+//        }
+//    }
+//}

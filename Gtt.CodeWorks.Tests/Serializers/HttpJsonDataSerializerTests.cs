@@ -23,11 +23,9 @@ namespace Gtt.CodeWorks.Tests.Serializers
             var logger = Mock.Of<ILogger<HttpJsonDataSerializer>>();
             var serializer = new HttpJsonDataSerializer(logger);
 
-            await using var memStream = new MemoryStream();
-            await using var sw = new StreamWriter(memStream, Encoding.UTF8);
-            await sw.WriteAsync("");
-            memStream.Position = 0;
-            var response = await serializer.DeserializeResponse<TestResponse>(sw.BaseStream);
+            string contents = "";
+            byte[] message = Encoding.UTF8.GetBytes(contents);
+            var response = await serializer.DeserializeResponse<TestResponse>(message);
         }
 
         public class TestResponse

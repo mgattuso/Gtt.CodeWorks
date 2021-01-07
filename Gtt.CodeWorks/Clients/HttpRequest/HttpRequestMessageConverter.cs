@@ -23,30 +23,20 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
         {
             HttpDataSerializerOptions options = CreateOptionsFromHeaders(request.Headers);
 
-            Stream contents = await request.Content.ReadAsStreamAsync();
+            byte[] contents = await request.Content.ReadAsByteArrayAsync();
 
-            //TODO: REVISIT THIS SCHEMA VALIDATION CODE
-            //if (ShouldValidateSchema(options))
-            //{
-            //    using (var ms = new MemoryStream())
-            //    {
-            //        using (var sr = new StreamReader(ms))
-            //        {
-            //            await contents.CopyToAsync(ms);
-            //            ms.Seek(0, SeekOrigin.Begin);
-            //            var schemaErrors = await _serializer.ValidateSchema(ms, type);
+            if (ShouldValidateSchema(options))
+            {
+                var schemaErrors = await _serializer.ValidateSchema(contents, type, options);
 
-            //            if (schemaErrors.Any())
-            //            {
-            //                throw new SchemaValidationException($"Cannot validate payload as type of {type.FullName}", schemaErrors);
-            //            }
+                if (schemaErrors.Any())
+                {
+                    throw new SchemaValidationException($"Cannot validate payload as type of {type.FullName}", schemaErrors);
+                }
 
-            //            ms.Seek(0, SeekOrigin.Begin);
-            //            BaseRequest validResult = await _serializer.DeserializeRequest(type, contents, options);
-            //            return validResult;
-            //        }
-            //    }
-            //}
+                BaseRequest validResult = await _serializer.DeserializeRequest(type, contents, options);
+                return validResult;
+            }
 
             BaseRequest result = await _serializer.DeserializeRequest(type, contents, options);
             return result;
@@ -94,11 +84,23 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
         {
             if (_environmentResolver.Environment == CodeWorksEnvironment.Production)
             {
-                return options.JsonSchemaValidation == JsonValidationStrategy.ForceOverride;
+                var prodValidationOptions = new[]
+                {
+                    JsonValidationStrategy.ForceStrict,
+                    JsonValidationStrategy.ForceAllowAdditionalProperties,
+                };
+                return prodValidationOptions.Contains(options.JsonSchemaValidation);
             }
 
-            return options.JsonSchemaValidation == JsonValidationStrategy.Default ||
-                   options.JsonSchemaValidation == JsonValidationStrategy.ForceOverride;
+            var nonProdValidationOptions = new[]
+            {
+                JsonValidationStrategy.DefaultStrict,
+                JsonValidationStrategy.DefaultAllowAdditionalProperties,
+                JsonValidationStrategy.ForceStrict,
+                JsonValidationStrategy.ForceAllowAdditionalProperties,
+            };
+
+            return nonProdValidationOptions.Contains(options.JsonSchemaValidation);
         }
     }
 }

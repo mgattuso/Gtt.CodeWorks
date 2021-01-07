@@ -28,15 +28,24 @@ namespace Gtt.CodeWorks
     public enum JsonValidationStrategy
     {
         /// <summary>
-        /// Follow the server configuration. Typically this is validation in non-prod.
-        /// No validation in production environments
+        /// Follow the configuration on the server. Additional properties will not cause a validation error
         /// </summary>
-        Default = 0,
-        // No JSON schema validation
-        None = 10,
+        DefaultAllowAdditionalProperties = 0,
         /// <summary>
-        /// Force JSON schema validation
+        /// Follow the configuration on the server. Additional properties will trigger a validation error
         /// </summary>
-        ForceOverride = 20
+        DefaultStrict = 1,
+        /// <summary>
+        /// Force validation for this object. Additional properties will not cause a validation error
+        /// </summary>
+        ForceAllowAdditionalProperties = 50,
+        /// <summary>
+        /// Force validation for this object. Additional properties will trigger a validation error
+        /// </summary>
+        ForceStrict = 51,
+        /// <summary>
+        /// No validation on the json payload will be performed
+        /// </summary>
+        None = 100
     }
 }
