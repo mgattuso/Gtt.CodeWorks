@@ -53,21 +53,8 @@ namespace Gtt.CodeWorks.Serializers.TextJson
 
         public async Task<T> DeserializeRequest<T>(byte[] message, HttpDataSerializerOptions options = null) where T : BaseRequest, new()
         {
-            var opts = CreateJsonSerializerOptions(options);
-
-            try
-            {
-                using (var ms = new MemoryStream(message))
-                {
-                    var result = await JsonSerializer.DeserializeAsync<T>(ms, opts);
-                    return result;
-                }
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError("Cannot deserialize request", ex);
-                throw;
-            }
+            var r = await DeserializeRequest(typeof(T), message, options);
+            return r as T;
         }
 
         public async Task<BaseRequest> DeserializeRequest(
@@ -93,6 +80,13 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             catch (JsonException ex)
             {
                 var contents = Encoding.UTF8.GetString(message);
+
+                if (ex.StackTrace.Contains("JsonConverterEnum"))
+                {
+                    // INVALID ENUM FOUND - TRY AND FIGURE IT OUT
+                    var property = ex.Path.Substring(2, ex.Path.Length - 2);
+                    throw new ValidationErrorException("Invalid enum value provided", property);
+                }
 
                 if (string.IsNullOrWhiteSpace(contents))
                 {
@@ -144,19 +138,8 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             options = options ?? new HttpDataSerializerOptions();
             string contents = Encoding.UTF8.GetString(message);
 
-            var settings = new JsonSerializerSettings();
-            settings.Converters.Add(new StringEnumConverter());
-            settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            var schema = GetSchema(type, options, options.EnumSerializationMethod == EnumSerializationMethod.String, requireReferenceTypes: false);
 
-            JsonSchema schema = JsonSchema.FromType(type, new JsonSchemaGeneratorSettings
-            {
-                FlattenInheritanceHierarchy = true,
-                AlwaysAllowAdditionalObjectProperties = AllowAdditionalPropertiesForJsonSchemaValidation(options),
-                GenerateEnumMappingDescription = true,
-                ExcludedTypeNames = new [] { "ServiceHop" },
-                SerializerSettings = settings,
-                ReflectionService = new CustomReflectionService() 
-            });
             ICollection<ValidationError> errors = schema.Validate(contents, new EnumFormatValidator());
             IDictionary<string, object> dict = new Dictionary<string, object>();
             foreach (var err in errors)
@@ -173,6 +156,66 @@ namespace Gtt.CodeWorks.Serializers.TextJson
 
             return Task.FromResult(dict);
 
+        }
+
+        public async Task<string> SerializeErrorReport(IEnumerable<ErrorCodeData> errors)
+        {
+            var options = CreateJsonSerializerOptions(new HttpDataSerializerOptions());
+            using (var stream = new MemoryStream())
+            {
+                await JsonSerializer.SerializeAsync(stream, errors, options);
+                stream.Position = 0;
+
+                using (var reader = new StreamReader(stream))
+                {
+                    var result = await reader.ReadToEndAsync();
+                    return result;
+                }
+            }
+        }
+
+        public Task<string> SerializeExample(Type t, HttpDataSerializerOptions options = null)
+        {
+            options = options ?? new HttpDataSerializerOptions();
+            var schema = GetSchema(t, options, useStringEnums: true, requireReferenceTypes: true);
+            var sample = schema.ToSampleJson();
+            var json = sample.ToString(Formatting.Indented);
+            return Task.FromResult(json);
+        }
+
+        public Task<string> SerializeSchema(Type t, HttpDataSerializerOptions options = null)
+        {
+            options = options ?? new HttpDataSerializerOptions();
+            var schema = GetSchema(t, options, useStringEnums: false, requireReferenceTypes: false);
+            return Task.FromResult(schema.ToJson(Formatting.Indented));
+        }
+
+        private JsonSchema GetSchema(Type t, HttpDataSerializerOptions options, bool useStringEnums, bool requireReferenceTypes)
+        {
+            var settings = GetSchemaSerializationSettings(useStringEnums);
+            JsonSchema schema = JsonSchema.FromType(t, new JsonSchemaGeneratorSettings
+            {
+                FlattenInheritanceHierarchy = true,
+                AlwaysAllowAdditionalObjectProperties = AllowAdditionalPropertiesForJsonSchemaValidation(options),
+                GenerateEnumMappingDescription = true,
+                ExcludedTypeNames = new[] { "ServiceHop", "serviceHop" },
+                DefaultReferenceTypeNullHandling = requireReferenceTypes ? ReferenceTypeNullHandling.NotNull : ReferenceTypeNullHandling.Null,
+                SerializerSettings = settings,
+                ReflectionService = new CustomReflectionService()
+            });
+            return schema;
+        }
+
+        private JsonSerializerSettings GetSchemaSerializationSettings(bool useStringEnums)
+        {
+            var settings = new JsonSerializerSettings();
+            if (useStringEnums)
+            {
+                settings.Converters.Add(new StringEnumConverter());
+            }
+
+            settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            return settings;
         }
 
         private void RecursivelyGetErrors(IDictionary<string, object> dict, ValidationError err, JsonSchema schema)
@@ -261,9 +304,9 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             return base.GetDescription(contextualType, defaultReferenceTypeNullHandling, settings);
         }
 
-
         public override bool IsNullable(ContextualType contextualType, ReferenceTypeNullHandling defaultReferenceTypeNullHandling)
         {
+            if (contextualType.GetContextAttribute<AlwaysPresentAttribute>() != null) return false;
             return base.IsNullable(contextualType, defaultReferenceTypeNullHandling);
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -83,6 +84,13 @@ namespace Gtt.CodeWorks.Clients.HttpClient
             requestMsg.Content = new StringContent(payload, Encoding.UTF8, "application/json");
             var apiResponse = await _client.SendAsync(requestMsg, cancellationToken);
             var responseData = await apiResponse.Content.ReadAsByteArrayAsync();
+
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                var contents = Encoding.UTF8.GetString(responseData);
+                _logger.LogTrace("Serialized response payload {contents}, Request:{request?.CorrelationId}", contents, request?.CorrelationId);
+            }
+
             InternalServiceResponse<TResponse> response = null;
 
             try

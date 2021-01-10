@@ -23,5 +23,6 @@ namespace Gtt.CodeWorks
         Task<ServiceResponse> Execute(BaseRequest request, DateTimeOffset startTime, CancellationToken cancellationToken);
         Type RequestType { get; }
         Type ResponseType { get; }
+        IEnumerable<KeyValuePair<int, string>> AllErrorCodes();
     }
 }

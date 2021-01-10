@@ -17,5 +17,8 @@ namespace Gtt.CodeWorks
         Task<T> DeserializeResponse<T>(byte[] message, HttpDataSerializerOptions options = null) where T : new();
         Task<ServiceResponse> DeserializeResponse(Type type, byte[] message, HttpDataSerializerOptions options = null);
         Task<IDictionary<string, object>> ValidateSchema(byte[] contents, Type type, HttpDataSerializerOptions options = null);
+        Task<string> SerializeErrorReport(IEnumerable<ErrorCodeData> errors);
+        Task<string> SerializeExample(Type t, HttpDataSerializerOptions options = null);
+        Task<string> SerializeSchema(Type t, HttpDataSerializerOptions options = null);
     }
 }

@@ -28,9 +28,48 @@ namespace Gtt.CodeWorks.Tests.Serializers
             var response = await serializer.DeserializeResponse<TestResponse>(message);
         }
 
+        [TestMethod]
+        public void SerializeError()
+        {
+            // ARRANGE
+            var logger = Mock.Of<ILogger<HttpJsonDataSerializer>>();
+            var serializer = new HttpJsonDataSerializer(logger);
+
+            var errors = new Dictionary<string, object>();
+            errors.AddOrAppendValue("a",new { a = new[] {1, 2} }, forceArray:false);
+            errors.AddOrAppendValue("a", new[] { 3, 4 }, forceArray: false);
+            var md = new ResponseMetaData("TestService", DateTimeOffset.UtcNow, 1, Guid.Empty, ServiceResult.PermanentError, errors);
+            var re = new ServiceResponse<TestResponse>(null, md);
+            var str = serializer.SerializeResponse(re, re.GetType());
+            Assert.IsNotNull(str);
+        }
+
+        [TestMethod, ExpectedException(typeof(ValidationErrorException))]
+        public async Task SerializeInvalidEnumReturnsValidationError()
+        {
+            // ARRANGE
+            var logger = Mock.Of<ILogger<HttpJsonDataSerializer>>();
+            var serializer = new HttpJsonDataSerializer(logger);
+
+            var str = @"{ ""Category"":""Wrong"" }";
+
+            var result = await serializer.DeserializeRequest<TestRequest>(Encoding.UTF8.GetBytes(str));
+        }
+
         public class TestResponse
         {
 
+        }
+
+        public enum TestEnum
+        {
+            Value1,
+            Value2
+        }
+
+        public class TestRequest : BaseRequest
+        {
+            public TestEnum Category { get; set; }
         }
     }
 }

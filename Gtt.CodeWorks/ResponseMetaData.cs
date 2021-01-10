@@ -79,10 +79,15 @@ namespace Gtt.CodeWorks
             DurationMs = durationMs;
         }
 
+        [AlwaysPresent]
         public string ServiceName { get; }
+        [AlwaysPresent]
         public Guid CorrelationId { get; set; }
+        [AlwaysPresent]
         public ServiceResult Result { get; }
+        [AlwaysPresent]
         public long DurationMs { get; }
+        [AlwaysPresent]
         public DateTimeOffset ResponseCreated { get; }
         public Dictionary<string, object> Errors { get; }
         public Dictionary<string, ResponseMetaData> Dependencies { get; }

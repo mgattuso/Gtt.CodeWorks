@@ -16,6 +16,7 @@ namespace Gtt.CodeWorks
     {
         private readonly IList<IServiceMiddleware> _pipeline = new List<IServiceMiddleware>();
         private readonly ILogger _logger;
+        private readonly IDictionary<int, string> _acceptableErrors = new Dictionary<int, string>();
 
         protected BaseServiceInstance(CoreDependencies coreDependencies)
         {
@@ -120,7 +121,8 @@ namespace Gtt.CodeWorks
 
         protected ServiceResponse<TResponse> ErrorCode(int code)
         {
-            if (DefineErrorCodes().TryGetValue(code, out var msg))
+            var codes = DefineErrorCodes() ?? _acceptableErrors ?? new Dictionary<int, string>();
+            if (codes.TryGetValue(code, out var msg))
             {
                 return new ServiceResponse<TResponse>(default(TResponse),
                     new ResponseMetaData(
@@ -167,9 +169,20 @@ namespace Gtt.CodeWorks
             return Task.FromResult(string.Empty);
         }
 
-        protected Dictionary<int, string> NoErrorCodes()
+        protected IDictionary<int, string> AddErrorCodes(params (int code, string description)[] errors)
         {
-            return new Dictionary<int, string>();
+            foreach (var error in errors)
+            {
+                _acceptableErrors[error.code] = error.description;
+            }
+
+            return _acceptableErrors;
+        }
+
+        protected IDictionary<int, string> NoErrorCodes()
+        {
+            _acceptableErrors.Clear();
+            return _acceptableErrors;
         }
 
 #pragma warning disable IDE0060 // Remove unused parameter

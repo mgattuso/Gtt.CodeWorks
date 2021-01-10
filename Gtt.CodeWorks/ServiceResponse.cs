@@ -17,6 +17,7 @@
             MetaData = metaData;
         }
 
+        [AlwaysPresent]
         public ResponseMetaData MetaData { get; }
     }
 }

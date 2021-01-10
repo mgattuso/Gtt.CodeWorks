@@ -15,10 +15,12 @@ namespace Gtt.CodeWorks.SampleAzureFunc
     public class ServiceCallFunction : ServiceCallFunctionBase
     {
         public ServiceCallFunction(
-            HttpRequestMessageRunner runner, 
-            IServiceResolver serviceResolver, 
-            TelemetryClient telemetryClient) 
-            : base(runner, serviceResolver, telemetryClient)
+            HttpRequestMessageRunner runner,
+            IServiceResolver serviceResolver,
+            IHttpDataSerializer serializer,
+            IChainedServiceResolver chainedServiceResolver,
+            TelemetryClient telemetryClient)
+            : base(runner, serviceResolver, serializer, chainedServiceResolver, telemetryClient)
         {
         }
 

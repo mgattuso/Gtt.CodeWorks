@@ -38,7 +38,10 @@ namespace Gtt.CodeWorks.SampleServices
 
         protected override IDictionary<int, string> DefineErrorCodes()
         {
-            return NoErrorCodes();
+            return AddErrorCodes(
+                (100, "Time failed"),
+                (101, "Something else Failed")
+                );
         }
 
         public override ServiceAction Action => ServiceAction.Read;

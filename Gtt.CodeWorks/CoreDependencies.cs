@@ -15,7 +15,8 @@ namespace Gtt.CodeWorks
             IRateLimiter rateLimiter,
             IDistributedLockService distributedLockService,
             IServiceEnvironmentResolver environmentResolver,
-            IRequestValidator requestValidator)
+            IRequestValidator requestValidator,
+            IChainedServiceResolver chainedServiceResolver)
         {
             LoggerFactory = loggerFactory;
             ServiceLogger = serviceLogger;
@@ -24,6 +25,7 @@ namespace Gtt.CodeWorks
             DistributedLockService = distributedLockService;
             EnvironmentResolver = environmentResolver;
             RequestValidator = requestValidator;
+            ChainedServiceResolver = chainedServiceResolver;
         }
 
         private CoreDependencies()
@@ -35,6 +37,7 @@ namespace Gtt.CodeWorks
             DistributedLockService = new InMemoryDistributedLock();
             EnvironmentResolver = new NonProductionEnvironmentResolver();
             RequestValidator = NullRequestValidator.Instance;
+            ChainedServiceResolver = new DefaultChainedServiceResolver();
         }
 
         public IServiceLogger ServiceLogger { get; }
@@ -44,6 +47,7 @@ namespace Gtt.CodeWorks
         public IDistributedLockService DistributedLockService { get; }
         public IServiceEnvironmentResolver EnvironmentResolver { get; }
         public IRequestValidator RequestValidator { get; }
+        public IChainedServiceResolver ChainedServiceResolver { get; }
         public static CoreDependencies NullDependencies => new CoreDependencies();
 
     }

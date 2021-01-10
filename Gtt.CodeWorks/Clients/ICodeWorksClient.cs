@@ -33,4 +33,10 @@ namespace Gtt.CodeWorks.Clients
     public interface ILocalClient : IRealTimeClient
     {
     }
+
+    public interface ILocalClient<out TServiceInstance> where TServiceInstance : IServiceInstance
+    {
+        Task<ServiceResponse<TResponse>> Call<TRequest, TResponse>(IServiceInstance source, TRequest request,
+            CancellationToken cancellationToken) where TRequest : BaseRequest where TResponse : new();
+    }
 }
