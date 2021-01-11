@@ -58,8 +58,8 @@ namespace Gtt.CodeWorks.Functions.Host
             foreach (var svc in GetConcreteInstancesOf<IServiceInstance>(typeof(TServiceFromAssembly)))
             {
                 Console.WriteLine($"Registering Service {svc.Name}");
-                services.AddTransient(svc);
-                services.AddTransient(cfg => (IServiceInstance)cfg.GetService(svc));
+                services.AddScoped(svc);
+                services.AddScoped(cfg => (IServiceInstance)cfg.GetService(svc));
                 services.AddTransient(typeof(ILocalClient<>), typeof(LocalClient<>));
                 services.AddScoped<IChainedServiceResolver, DefaultChainedServiceResolver>();
             }

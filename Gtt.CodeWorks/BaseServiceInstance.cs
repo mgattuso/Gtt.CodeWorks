@@ -17,6 +17,7 @@ namespace Gtt.CodeWorks
         private readonly IList<IServiceMiddleware> _pipeline = new List<IServiceMiddleware>();
         private readonly ILogger _logger;
         private readonly IDictionary<int, string> _acceptableErrors = new Dictionary<int, string>();
+        private readonly IChainedServiceResolver _chainedServiceResolver;
 
         protected BaseServiceInstance(CoreDependencies coreDependencies)
         {
@@ -26,6 +27,8 @@ namespace Gtt.CodeWorks
             _pipeline.Add(new DistributedLockMiddleware<TRequest>(coreDependencies.DistributedLockService, CreateDistributedLockKey));
             _pipeline.Add(new ValidationMiddleware(coreDependencies.RequestValidator));
             _logger = coreDependencies.LoggerFactory.CreateLogger(GetType());
+            _chainedServiceResolver = coreDependencies.ChainedServiceResolver;
+            _chainedServiceResolver?.AddChainedService(this);
         }
 
         private Guid _correlationId;
@@ -37,9 +40,10 @@ namespace Gtt.CodeWorks
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             StartTime = startTime;
-            _correlationId = request.CorrelationId;
+            _correlationId = CalculateCorrelationId(request);
             _sessionId = request.SessionId;
-            _serviceHop = request.ServiceHop;
+            _serviceHop = CalculateServiceHop(request);
+            request.CorrelationId = _correlationId;
             request.SyncCorrelationIds();
             ServiceResponse<TResponse> response = null;
 
@@ -219,6 +223,40 @@ namespace Gtt.CodeWorks
                 ver.AddValidationError(error);
             }
             return new ServiceResponse<TResponse>(default(TResponse), new ResponseMetaData(this, ver));
+        }
+
+        private Guid CalculateCorrelationId(TRequest request)
+        {
+            var instances = _chainedServiceResolver?.AllInstances();
+            if (instances != null)
+            {
+                Guid[] entries = instances.Select(x => x.CorrelationId).ToArray();
+                var nonDefault = entries.Where(x => x != Guid.Empty);
+                var guids = nonDefault as Guid[] ?? nonDefault.ToArray();
+                if (guids.Any()) return guids.First();
+            }
+
+            if (request.CorrelationId != default(Guid))
+            {
+                return request.CorrelationId;
+            }
+
+            return Guid.NewGuid();
+        }
+
+        private int CalculateServiceHop(TRequest request)
+        {
+            int? maxHop = _chainedServiceResolver?.AllInstances()
+                .Max(x => x.ServiceHop);
+
+            if (maxHop != null) return maxHop.Value;
+
+            if (request.ServiceHop != null)
+            {
+                return request.ServiceHop.Value;
+            }
+
+            return 0;
         }
 
         protected abstract Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken);

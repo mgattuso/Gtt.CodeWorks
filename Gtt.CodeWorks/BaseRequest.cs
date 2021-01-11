@@ -6,8 +6,9 @@ namespace Gtt.CodeWorks
 {
     public abstract class BaseRequest : ITraceable
     {
-        public Guid CorrelationId { get; set; } = Guid.NewGuid();
+        public Guid CorrelationId { get; set; }
         public Guid? SessionId { get; set; }
+        [NeverShownPublicly]
         public int? ServiceHop { get; set; }
     }
 

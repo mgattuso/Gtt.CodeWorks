@@ -9,12 +9,12 @@ namespace Gtt.CodeWorks.SampleServices
 {
     public class CombinedService : BaseServiceInstance<CombinedRequest, CombinedResponse>
     {
-        private readonly ILocalClient<TimeService> _timeService;
-        private readonly ILocalClient<SumService> _sumService;
+        private readonly TimeService _timeService;
+        private readonly SumService _sumService;
 
         public CombinedService(
-            ILocalClient<TimeService> timeService,
-            ILocalClient<SumService> sumService,
+            TimeService timeService,
+            SumService sumService,
             CoreDependencies coreDependencies) : base(coreDependencies)
         {
             _timeService = timeService;
@@ -23,12 +23,12 @@ namespace Gtt.CodeWorks.SampleServices
 
         protected override async Task<ServiceResponse<CombinedResponse>> Implementation(CombinedRequest request, CancellationToken cancellationToken)
         {
-            var time = await _timeService.Call<TimeRequest, TimeResponse>(this, new TimeRequest(), cancellationToken);
-            var sum = await _sumService.Call<SumRequest, SumResponse>(this, new SumRequest
+            var time = await _timeService.Execute(new TimeRequest(), ServiceClock.CurrentTime(), cancellationToken);
+            var sum = await _sumService.Execute(new SumRequest
             {
-                Number1 = 10,
-                Number2 = 35
-            }, cancellationToken);
+                Number1 = request.Number1,
+                Number2 = request.Number2
+            }, ServiceClock.CurrentTime(), cancellationToken);
 
             var response = new CombinedResponse
             {
