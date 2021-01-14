@@ -21,11 +21,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.Redis", "Gtt.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.DataAnnotations", "Gtt.CodeWorks.DataAnnotations\Gtt.CodeWorks.DataAnnotations.csproj", "{28C35213-EA8E-41F3-B75C-46B5619CB909}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.SampleAzureFunc", "Gtt.CodeWorks.SampleAzureFunc\Gtt.CodeWorks.SampleAzureFunc.csproj", "{AB8EA83F-2035-4765-93AC-11D66C559C3F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.SampleAzureFunc", "Gtt.CodeWorks.SampleAzureFunc\Gtt.CodeWorks.SampleAzureFunc.csproj", "{AB8EA83F-2035-4765-93AC-11D66C559C3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.Functions.Host", "Gtt.CodeWorks.Functions.Host\Gtt.CodeWorks.Functions.Host.csproj", "{58D5B3EB-4868-4601-87CD-700490549DF6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.Functions.Host", "Gtt.CodeWorks.Functions.Host\Gtt.CodeWorks.Functions.Host.csproj", "{58D5B3EB-4868-4601-87CD-700490549DF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.SampleServices", "Gtt.CodeWorks.SampleServices\Gtt.CodeWorks.SampleServices.csproj", "{A4F67136-6E7F-4B55-899F-1D32AD7E584E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.SampleServices", "Gtt.CodeWorks.SampleServices\Gtt.CodeWorks.SampleServices.csproj", "{A4F67136-6E7F-4B55-899F-1D32AD7E584E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.StateMachines", "Gtt.CodeWorks.StateMachines\Gtt.CodeWorks.StateMachines.csproj", "{9E50CC8E-4FA6-4A92-8D0B-8358C2326E26}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -77,6 +79,10 @@ Global
 		{A4F67136-6E7F-4B55-899F-1D32AD7E584E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4F67136-6E7F-4B55-899F-1D32AD7E584E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A4F67136-6E7F-4B55-899F-1D32AD7E584E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E50CC8E-4FA6-4A92-8D0B-8358C2326E26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E50CC8E-4FA6-4A92-8D0B-8358C2326E26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E50CC8E-4FA6-4A92-8D0B-8358C2326E26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E50CC8E-4FA6-4A92-8D0B-8358C2326E26}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
