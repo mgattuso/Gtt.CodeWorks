@@ -7,6 +7,8 @@
     <Authors>Michael Gattuso</Authors>
     <Company>gtt.me</Company>
     <Product>Code Works</Product>
+    <Copyright>2020, Michael Gattuso</Copyright>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,12 +18,14 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.0" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.9" />
     <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks" Version="0.*" />
+    <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks.Serializers.TextJson" Version="0.*" />
+    <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks.DataAnnotations" Version="0.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Gtt.CodeWorks.DataAnnotations\Gtt.CodeWorks.DataAnnotations.csproj" />
-    <ProjectReference Include="..\Gtt.CodeWorks.Serializers.TextJson\Gtt.CodeWorks.Serializers.TextJson.csproj" />
-    <ProjectReference Condition=" '$(Configuration)' == 'Debug'" Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
+    <ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\Gtt.CodeWorks.DataAnnotations\Gtt.CodeWorks.DataAnnotations.csproj" />
+    <ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\Gtt.CodeWorks.Serializers.TextJson\Gtt.CodeWorks.Serializers.TextJson.csproj" />
+    <ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
   </ItemGroup>
 
 </Project>
