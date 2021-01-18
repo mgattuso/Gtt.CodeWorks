@@ -54,5 +54,14 @@ jobs:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.EasyNetQ/Gtt.CodeWorks.EasyNetQ.csproj
         TAG_FORMAT: Gtt.CodeWorks.EasyNetQ.*
+        
+    - name: Deploy Gtt.CodeWorks.Functions.Host Package
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        NUGET_KEY: ${{ secrets.nuget_key }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.Functions.Host/Gtt.CodeWorks.Functions.Host.csproj
+        TAG_FORMAT: Gtt.CodeWorks.Functions.Host.*
+        
+        
 
     
