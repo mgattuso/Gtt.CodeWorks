@@ -49,9 +49,9 @@ namespace Gtt.CodeWorks.Middleware
         }
 
         public Task OnResponse<TReq, TRes>(
-            IServiceInstance service, 
-            TReq request, 
-            ServiceResponse<TRes> response, 
+            IServiceInstance service,
+            TReq request,
+            ServiceResponse<TRes> response,
             CancellationToken cancellationToken) where TReq : BaseRequest, new() where TRes : new()
         {
             return Task.FromResult(
@@ -60,5 +60,6 @@ namespace Gtt.CodeWorks.Middleware
         }
 
         public bool IgnoreExceptions => false;
+        public bool SkipOnInternalCall => false;
     }
 }

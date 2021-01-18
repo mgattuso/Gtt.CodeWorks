@@ -7,5 +7,8 @@ namespace Gtt.CodeWorks
     {
         void AddChainedService(IServiceInstance serviceInstance);
         IEnumerable<IServiceInstance> AllInstances();
+        Guid Id { get; }
+        void AddCallToChain(IServiceInstance baseServiceInstance);
+        IEnumerable<IServiceInstance> GetCurrentCallChain();
     }
 }

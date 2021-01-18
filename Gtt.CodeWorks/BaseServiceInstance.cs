@@ -40,6 +40,7 @@ namespace Gtt.CodeWorks
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             StartTime = startTime;
+            _chainedServiceResolver?.AddCallToChain(this);
             _correlationId = CalculateCorrelationId(request);
             _sessionId = request.SessionId;
             _serviceHop = CalculateServiceHop(request);
@@ -53,6 +54,11 @@ namespace Gtt.CodeWorks
             {
                 try
                 {
+                    if (_serviceHop > 0 &&
+                        middleware.SkipOnInternalCall)
+                    {
+                        continue;
+                    }
                     var middlewareResult = await middleware.OnRequest(this, request, cancellationToken);
                     if (middlewareResult != null)
                     {
@@ -97,6 +103,12 @@ namespace Gtt.CodeWorks
             for (var i = _pipeline.Count - 1; i >= 0; i--)
             {
                 var middleware = _pipeline[i];
+
+                if (_serviceHop > 0 && middleware.SkipOnInternalCall)
+                {
+                    continue;
+                }
+
                 try
                 {
                     await middleware.OnResponse(this, request, response, cancellationToken);
@@ -249,13 +261,7 @@ namespace Gtt.CodeWorks
             int? maxHop = _chainedServiceResolver?.AllInstances()
                 .Max(x => x.ServiceHop);
 
-            if (maxHop != null) return maxHop.Value;
-
-            if (request.ServiceHop != null)
-            {
-                return request.ServiceHop.Value;
-            }
-
+            if (maxHop != null) return maxHop.Value + 1;
             return 0;
         }
 

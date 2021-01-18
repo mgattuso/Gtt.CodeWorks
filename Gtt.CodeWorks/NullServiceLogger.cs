@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Gtt.CodeWorks
 {
@@ -20,6 +21,7 @@ namespace Gtt.CodeWorks
             return Task.CompletedTask;
         }
 
+        public LogLevel CurrentLogLevel => LogLevel.None;
         public static NullServiceLogger Instance => new NullServiceLogger();
     }
 }

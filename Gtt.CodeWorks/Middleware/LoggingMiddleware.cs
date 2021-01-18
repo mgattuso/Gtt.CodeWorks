@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Gtt.CodeWorks.Middleware
 {
@@ -17,7 +18,7 @@ namespace Gtt.CodeWorks.Middleware
         public async Task<ServiceResponse> OnRequest<TReq>(IServiceInstance service, TReq request, CancellationToken cancellationToken)
             where TReq : BaseRequest, new()
         {
-             await Task.FromResult(_logger.LogRequest(request.CorrelationId, service.Name, request));
+            await Task.FromResult(_logger.LogRequest(request.CorrelationId, service.Name, request));
              return this.ContinuePipeline();
         }
 
@@ -33,5 +34,6 @@ namespace Gtt.CodeWorks.Middleware
         }
 
         public bool IgnoreExceptions => true;
+        public bool SkipOnInternalCall => _logger.CurrentLogLevel >= LogLevel.Information;
     }
 }

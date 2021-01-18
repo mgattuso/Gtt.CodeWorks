@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Gtt.CodeWorks.Clients;
 using Gtt.CodeWorks.Clients.HttpRequest;
-using Gtt.CodeWorks.Clients.Local;
 using Gtt.CodeWorks.DataAnnotations;
 using Gtt.CodeWorks.Serializers.TextJson;
 using Gtt.CodeWorks.Validation;
@@ -60,10 +58,9 @@ namespace Gtt.CodeWorks.Functions.Host
                 Console.WriteLine($"Registering Service {svc.Name}");
                 services.AddScoped(svc);
                 services.AddScoped(cfg => (IServiceInstance)cfg.GetService(svc));
-                services.AddTransient(typeof(ILocalClient<>), typeof(LocalClient<>));
                 services.AddScoped<IChainedServiceResolver, DefaultChainedServiceResolver>();
             }
-            services.AddSingleton<IServiceResolver>(cfg => new ServiceResolver(cfg.GetServices<IServiceInstance>(), new ServiceResolverOptions
+            services.AddScoped<IServiceResolver>(cfg => new ServiceResolver(cfg.GetServices<IServiceInstance>(), new ServiceResolverOptions
             {
                 NamespacePrefixToIgnore = namespacePrefixToIgnore
             }));

@@ -20,6 +20,7 @@ namespace Gtt.CodeWorks.Middleware
             where TRes : new();
 
         bool IgnoreExceptions { get; }
+        bool SkipOnInternalCall { get; }
     }
 
     public static class ServiceMiddlewareExtensions

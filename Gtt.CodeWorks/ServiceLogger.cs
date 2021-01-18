@@ -25,5 +25,32 @@ namespace Gtt.CodeWorks
             var data = await _logObjectSerializer.Serialize(response);
             _logger.LogInformation("Response: {serviceName}:{correlationId} {data}", serviceName, correlationId, data);
         }
+
+        private static LogLevel? _currentLogLevel;
+
+        public LogLevel CurrentLogLevel
+        {
+            get
+            {
+                if (_currentLogLevel != null) 
+                    return _currentLogLevel.Value;
+
+                Array levels = Enum.GetValues(typeof(LogLevel));
+                for (int i = 0; i < levels.Length; i++)
+                {
+                    var l = levels.GetValue(i);
+                    if (_logger.IsEnabled((LogLevel) l))
+                    {
+                        _currentLogLevel = (LogLevel) l;
+                        break;
+                    }
+                }
+
+                if (_currentLogLevel == null)
+                    _currentLogLevel = LogLevel.None;
+
+                return _currentLogLevel.Value;
+            }
+        }
     }
 }

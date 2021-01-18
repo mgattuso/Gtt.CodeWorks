@@ -8,8 +8,6 @@ namespace Gtt.CodeWorks
     {
         public Guid CorrelationId { get; set; }
         public Guid? SessionId { get; set; }
-        [NeverShownPublicly]
-        public int? ServiceHop { get; set; }
     }
 
     public abstract class BaseIdentifiableRequest<T> : BaseRequest

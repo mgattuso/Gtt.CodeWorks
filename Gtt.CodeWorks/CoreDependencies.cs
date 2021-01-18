@@ -37,7 +37,7 @@ namespace Gtt.CodeWorks
             DistributedLockService = new InMemoryDistributedLock();
             EnvironmentResolver = new NonProductionEnvironmentResolver();
             RequestValidator = NullRequestValidator.Instance;
-            ChainedServiceResolver = new DefaultChainedServiceResolver();
+            ChainedServiceResolver = new DefaultChainedServiceResolver(LoggerFactory.CreateLogger<DefaultChainedServiceResolver>());
         }
 
         public IServiceLogger ServiceLogger { get; }

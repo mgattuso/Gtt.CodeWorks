@@ -7,7 +7,7 @@ using Gtt.CodeWorks.Validation;
 
 namespace Gtt.CodeWorks.Middleware
 {
-    public class ValidationMiddleware: IServiceMiddleware
+    public class ValidationMiddleware : IServiceMiddleware
     {
         private readonly IRequestValidator _requestValidator;
 
@@ -34,5 +34,6 @@ namespace Gtt.CodeWorks.Middleware
         }
 
         public bool IgnoreExceptions => false;
+        public bool SkipOnInternalCall => false;
     }
 }

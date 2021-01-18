@@ -37,5 +37,6 @@ namespace Gtt.CodeWorks.Middleware
         }
 
         public bool IgnoreExceptions => false;
+        public bool SkipOnInternalCall => true;
     }
 }

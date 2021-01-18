@@ -22,13 +22,11 @@ namespace Gtt.CodeWorks.SampleWeb.Services
             {
                 AccountId = request.AccountId,
                 CorrelationId = request.CorrelationId,
-                ServiceHop = request.ServiceHop.GetValueOrDefault() + 1
             }, cancellationToken);
             var profileInfo = await _directory.Call(new IGetProfileService.Request
             {
                 AccountId = request.AccountId,
                 CorrelationId = request.CorrelationId,
-                ServiceHop = request.ServiceHop.GetValueOrDefault() + 1
             }, cancellationToken);
 
             response.Account = accountInfo.Data;

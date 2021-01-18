@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using EasyNetQ;
+using Microsoft.Extensions.Logging;
 
 namespace Gtt.CodeWorks.EasyNetQ
 {
@@ -39,5 +40,7 @@ namespace Gtt.CodeWorks.EasyNetQ
                 Message = msg
             });
         }
+
+        public LogLevel CurrentLogLevel => LogLevel.Information;
     }
 }
