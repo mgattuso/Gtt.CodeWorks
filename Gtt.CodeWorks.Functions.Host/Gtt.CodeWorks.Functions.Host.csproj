@@ -8,7 +8,6 @@
     <Company>gtt.me</Company>
     <Product>Code Works</Product>
     <Copyright>2020, Michael Gattuso</Copyright>
-    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,7 +15,6 @@
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Http" Version="3.0.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.14.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.0" />
-    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.9" />
     <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks" Version="0.*" />
     <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks.Serializers.TextJson" Version="0.*" />
     <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks.DataAnnotations" Version="0.*" />
