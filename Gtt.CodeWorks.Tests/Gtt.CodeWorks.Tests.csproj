@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gtt.CodeWorks.DataAnnotations\Gtt.CodeWorks.DataAnnotations.csproj" />
+    <ProjectReference Include="..\Gtt.CodeWorks.Duplicator\Gtt.CodeWorks.Duplicator.csproj" />
     <ProjectReference Include="..\Gtt.CodeWorks.EasyNetQ\Gtt.CodeWorks.EasyNetQ.csproj" />
     <ProjectReference Include="..\Gtt.CodeWorks.Serializers.TextJson\Gtt.CodeWorks.Serializers.TextJson.csproj" />
     <ProjectReference Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
