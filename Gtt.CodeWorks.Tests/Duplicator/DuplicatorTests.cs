@@ -14,10 +14,16 @@ namespace Gtt.CodeWorks.Tests.Duplicator
         public void BasicClassTest()
         {
             var mt = new ModelTree();
+            mt.AddType(typeof(GenericBase));
             mt.AddType(typeof(Basic));
             var r = mt.Write();
             Console.WriteLine(r);
         }
+    }
+
+    public class GenericBase : ServiceBase<ReferenceClass>
+    {
+        public string  Message { get; set; }
     }
 
     public class Basic : Root
@@ -47,5 +53,10 @@ namespace Common.Models
     public abstract class Root
     {
         public Guid CorrelationId { get; set; }
+    }
+
+    public class ServiceBase<T> where T : ReferenceClass
+    {
+        public T Instance { get; set; }
     }
 }

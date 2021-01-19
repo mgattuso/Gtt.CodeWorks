@@ -101,10 +101,32 @@ namespace Gtt.CodeWorks.Duplicator
             Enums.Add(enumDefinition);
         }
 
+        protected string GetGenericConstraints()
+        {
+            if (!Type.IsGenericType)
+            {
+                return "";
+            }
+
+
+            StringBuilder sb = new StringBuilder();
+            var g = Type.GetGenericTypeDefinition();
+            var args = g.GetGenericArguments();
+            foreach (var a in args)
+            {
+                string gpn = a.Name;
+                Type[] constraints = a.GetGenericParameterConstraints();
+
+                sb.Append($" where {gpn} : {string.Join(",", constraints.Select(x => x.Name))}");
+            }
+
+            return sb.ToString();
+        }
+
         public string Write()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"public {Prefix} class {Name} {BaseClass} {{");
+            sb.AppendLine($"public {Prefix} class {Name} {BaseClass} {GetGenericConstraints()} {{");
 
             foreach (var p in Properties)
             {
