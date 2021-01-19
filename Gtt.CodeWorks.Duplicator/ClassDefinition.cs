@@ -25,6 +25,7 @@ namespace Gtt.CodeWorks.Duplicator
             {
                 BaseClass = $": {parentType.Name}";
                 tree.AddType(parentType);
+                AddUsing(parentType.Namespace);
             }
 
             if (t.IsAbstract)

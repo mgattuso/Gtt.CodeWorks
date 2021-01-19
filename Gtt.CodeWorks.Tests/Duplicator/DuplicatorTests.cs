@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Common.Models;
 using Gtt.CodeWorks.Duplicator;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -27,11 +28,6 @@ namespace Gtt.CodeWorks.Tests.Duplicator
         public List<ReferenceClass> Refs { get; set; }
         public Scenes Scene { get; set; }
     }
-
-    public abstract class Root
-    {
-        public Guid CorrelationId { get; set; }
-    }
     public enum Scenes
     {
         Beach,
@@ -39,11 +35,17 @@ namespace Gtt.CodeWorks.Tests.Duplicator
         Inland,
         Mountains
     }
+}
 
+namespace Common.Models
+{
     public class ReferenceClass
     {
         public DateTimeOffset Create { get; set; }
     }
 
-
+    public abstract class Root
+    {
+        public Guid CorrelationId { get; set; }
+    }
 }

@@ -64,10 +64,6 @@ namespace Gtt.CodeWorks.Duplicator
 
         public void AddUsings(string u)
         {
-            if (Namespaces.Select(x => x.Name).Contains(u))
-            {
-                return;
-            }
             Usings.Add(u);
         }
     }
