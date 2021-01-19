@@ -61,6 +61,13 @@ jobs:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.Functions.Host/Gtt.CodeWorks.Functions.Host.csproj
         TAG_FORMAT: Gtt.CodeWorks.Functions.Host.*
+
+    - name: Deploy Gtt.CodeWorks.Duplicator Package
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        NUGET_KEY: ${{ secrets.nuget_key }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.Duplicator/Gtt.CodeWorks.Duplicator.csproj
+        TAG_FORMAT: Gtt.CodeWorks.Duplicator.*
         
         
 
