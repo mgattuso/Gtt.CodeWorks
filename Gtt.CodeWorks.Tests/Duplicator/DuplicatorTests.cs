@@ -13,10 +13,10 @@ namespace Gtt.CodeWorks.Tests.Duplicator
         [TestMethod]
         public void BasicClassTest()
         {
-            var mt = new ModelTree();
+            var mt = new Copier();
             mt.AddType(typeof(GenericBase));
             mt.AddType(typeof(Basic));
-            var r = mt.Write();
+            var r = mt.Process();
             Console.WriteLine(r);
         }
     }
