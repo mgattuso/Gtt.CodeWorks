@@ -14,6 +14,7 @@ namespace Gtt.CodeWorks.Tests.Duplicator
         public void BasicClassTest()
         {
             var mt = new Copier();
+            mt.LimitOutputToAssemblyOfType(typeof(Common.Models.Root));
             mt.AddType(typeof(GenericBase));
             mt.AddType(typeof(Basic));
             var r = mt.Process();
