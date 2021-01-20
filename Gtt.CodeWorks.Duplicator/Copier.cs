@@ -14,6 +14,13 @@ namespace Gtt.CodeWorks.Duplicator
         private List<Assembly> _onlyGenerateForAssemblies = new List<Assembly>();
         private readonly List<string> _ignoreNamespacePrefixes = new List<string>();
 
+        /// <summary>
+        /// Ignore the original modifiers and always use getters and setters.
+        /// </summary>
+        public bool AlwaysGetAndSet { get; set; } = true;
+        public string ForceNamespace { get; set; }
+        public (string replace, string with)? ReplaceNamespace { get; set; }
+
         public Copier()
         {
             ClearIgnoreNamespacePrefixes();
@@ -88,7 +95,7 @@ namespace Gtt.CodeWorks.Duplicator
 
             foreach (var prefix in _ignoreNamespacePrefixes)
             {
-                filteredList = filteredList.Where(x=>x.Namespace == null || !x.Namespace.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase)).ToList();
+                filteredList = filteredList.Where(x => x.Namespace == null || !x.Namespace.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase)).ToList();
             }
 
             var assemblyList = new List<TypeMetaData>();
@@ -142,6 +149,22 @@ namespace Gtt.CodeWorks.Duplicator
             var t = new TypeMetaData(originalType);
             if (!types.Contains(t))
             {
+                if (!string.IsNullOrWhiteSpace(ForceNamespace))
+                {
+                    t.Namespace = ForceNamespace;
+                }
+                else
+                {
+                    t.Namespace = t.Type.Namespace;
+                }
+
+                if (ReplaceNamespace != null)
+                {
+                    var rn = ReplaceNamespace.Value;
+                    if (t.Namespace != null)
+                        t.Namespace = t.Namespace.Replace(rn.replace, rn.with);
+                }
+
                 types.Add(t);
 
                 // ADD DECLARED PARENT
@@ -205,8 +228,6 @@ namespace Gtt.CodeWorks.Duplicator
 
                 if (!t.Type.IsGenericParameter && (t.Type.IsClass || t.Type.IsEnum || t.Type.IsValueType))
                 {
-                    t.Namespace = t.Type.Namespace;
-
                     if (t.Type.IsEnum)
                     {
                         t.Format = TypeFormat.Enum;
@@ -327,7 +348,7 @@ namespace Gtt.CodeWorks.Duplicator
 
                     foreach (var p in t.Properties)
                     {
-                        string modifiers = $"{{ {(p.Getter ? "get;" : "")} {(p.Setter ? "set;" : "")} }}";
+                        string modifiers = $"{{ {(p.Getter || AlwaysGetAndSet ? "get;" : "")} {(p.Setter || AlwaysGetAndSet ? "set;" : "")} }}";
                         sb.AppendLine($"public {p.Property.ClassInheritanceNormalizedName} {p.Name} {modifiers}");
                     }
 
@@ -355,5 +376,146 @@ namespace Gtt.CodeWorks.Duplicator
 
         }
 
+    }
+
+    public class GenericTypeMetaData
+    {
+        public GenericTypeMetaData(TypeMetaData t)
+        {
+            Type = t;
+        }
+
+        public string TName { get; set; }
+        public List<TypeMetaData> TypeConstraints { get; set; } = new List<TypeMetaData>();
+        public List<string> GenericConstraints { get; set; } = new List<string>();
+        public TypeMetaData Type { get; }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as GenericTypeMetaData;
+            if (other == null) return false;
+            return Equals(other.Type, this.Type);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.Type.GetHashCode();
+        }
+    }
+
+    public class PropertyMetaData
+    {
+        public PropertyMetaData()
+        {
+
+        }
+
+        public string Name { get; set; }
+        public TypeMetaData Parent { get; set; }
+        public TypeMetaData Property { get; set; }
+        public bool Getter { get; set; }
+        public bool Setter { get; set; }
+    }
+
+    public enum TypeFormat
+    {
+        @Class,
+        @Struct,
+        @Enum
+    }
+
+    public class TypeMetaData
+    {
+        public TypeMetaData(Type t)
+        {
+            Type = t;
+            FundamentalType = this;
+        }
+
+        public string Name => Type.Name;
+        public string ClassNormalizedName
+        {
+            get
+            {
+                var name = Name;
+                var nname = name.Split('`')[0];
+                if (!HasGenerics) return nname;
+                return $"{nname}<{ string.Join(",", OrderedGenericArguments.Select(x => x.Type.FundamentalType.PropertyNormalizedName).ToArray())}>";
+            }
+        }
+
+        public string ClassInheritanceNormalizedName
+        {
+            get
+            {
+                var name = Name;
+                var nname = name.Split('`')[0];
+                if (!HasGenerics) return nname;
+                return $"{nname}<{ string.Join(",", OrderedGenericInstanceArguments.Select(x => x.Type.PropertyNormalizedName).ToArray())}>";
+            }
+        }
+
+        public string PropertyNormalizedName
+        {
+            get
+            {
+                var name = Name;
+                var nname = name.Split('`')[0];
+                if (!HasGenerics) return nname;
+                return $"{nname}<{ string.Join(",", OrderedGenericArguments.Select(x => x.TName).ToArray())}>";
+            }
+        }
+        public Type Type { get; }
+        public TypeFormat Format { get; set; }
+        public bool IsAbstract { get; set; }
+        public bool IsNullable { get; set; }
+        public bool IsCollection { get; set; }
+        public bool IsTemplateType { get; set; }
+        public bool HasGenerics { get; set; }
+        public string Namespace { get; set; }
+        public List<GenericTypeMetaData> OrderedGenericArguments { get; set; } = new List<GenericTypeMetaData>();
+        public List<GenericTypeMetaData> OrderedGenericInstanceArguments { get; set; } = new List<GenericTypeMetaData>();
+        public TypeMetaData HierarchyParent { get; set; }
+        public TypeMetaData DeclaredParent { get; set; }
+        public TypeMetaData FundamentalType { get; set; }
+        public Dictionary<int, string> EnumValues { get; set; } = new Dictionary<int, string>();
+        public List<PropertyMetaData> Properties { get; set; } = new List<PropertyMetaData>();
+        public bool IsWritable
+        {
+            get
+            {
+                if (IsTemplateType) return false;
+                if (IsCollection) return false;
+                if (!OrderedGenericArguments.Any()) return true;
+                bool result = true;
+                for (int i = 0; i < OrderedGenericArguments.Count; i++)
+                {
+                    var og = OrderedGenericArguments[i];
+                    var od = OrderedGenericInstanceArguments[i];
+                    if (og.Type != od.Type)
+                    {
+                        result = false;
+                    }
+                }
+                return result;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as TypeMetaData;
+            if (other == null) return false;
+            return Equals(other.Type, this.Type);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.Type.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }
