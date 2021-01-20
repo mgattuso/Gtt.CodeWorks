@@ -138,7 +138,6 @@ namespace Gtt.CodeWorks.Duplicator
         public void GetTypesUsedInType(Type originalType, List<TypeMetaData> types)
         {
             if (originalType == null) return;
-            if (originalType == typeof(object)) return;
 
             var t = new TypeMetaData(originalType);
             if (!types.Contains(t))

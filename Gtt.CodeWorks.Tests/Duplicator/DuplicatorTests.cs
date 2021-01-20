@@ -14,9 +14,10 @@ namespace Gtt.CodeWorks.Tests.Duplicator
         public void BasicClassTest()
         {
             var mt = new Copier();
-            mt.LimitOutputToAssemblyOfType(typeof(Common.Models.Root));
-            mt.AddType(typeof(GenericBase));
-            mt.AddType(typeof(Basic));
+            //mt.LimitOutputToAssemblyOfType(typeof(Common.Models.Root));
+            // mt.AddType(typeof(GenericBase));
+            //mt.AddType(typeof(Basic));
+            mt.AddType(typeof(ServiceResponse<CompoundResponse>));
             var r = mt.Process();
             Console.WriteLine(r);
         }
@@ -24,7 +25,7 @@ namespace Gtt.CodeWorks.Tests.Duplicator
 
     public class GenericBase : ServiceBase<ReferenceClass>
     {
-        public string  Message { get; set; }
+        public string Message { get; set; }
     }
 
     public class Basic : Root
@@ -59,5 +60,27 @@ namespace Common.Models
     public class ServiceBase<T> where T : ReferenceClass
     {
         public T Instance { get; set; }
+    }
+
+    public class CompoundResponse
+    {
+        public double Principal { get; set; }
+        public double PrincipalAndInterestExact { get; set; }
+        public double PrincipalAndInterestCurrency { get; set; }
+        public double InterestExact { get; set; }
+        public double InterestCurrency { get; set; }
+        public List<InterestPerPeriodData> InterestPerPeriod { get; set; } = new List<InterestPerPeriodData>();
+
+        public class InterestPerPeriodData
+        {
+            public int Period { get; set; }
+            public double PeriodInterestExact { get; set; }
+            public double PeriodInterestCurrency { get; set; }
+            public double CumulativeInterestExact { get; set; }
+            public double CumulativeInterestCurrency { get; set; }
+            public double PrincipalAndInterestExact { get; set; }
+            public double PrincipalAndInterestCurrency { get; set; }
+            public object SomeObject { get; set; }
+        }
     }
 }
