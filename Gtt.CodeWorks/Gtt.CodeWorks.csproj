@@ -6,9 +6,9 @@
     <Company>Michael Gattuso</Company>
     <Product>CodeWorks Framework</Product>
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
-    <Version>0.0.32</Version>
+    <Version>0.0.33</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>0.0.32.0</AssemblyVersion>
+    <AssemblyVersion>0.0.33.0</AssemblyVersion>
     <Copyright>2020, Michael Gattuso</Copyright>
     <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
   </PropertyGroup>

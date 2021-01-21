@@ -10,6 +10,7 @@ namespace Gtt.CodeWorks
         IServiceInstance GetInstanceByName(string name);
         IServiceInstance[] GetRegistered();
         string GetRegisteredNameFromFullName(string fullName);
+        string[] GetPathSegments(string fullName);
     }
 
     public class ServiceResolver : IServiceResolver
@@ -56,13 +57,29 @@ namespace Gtt.CodeWorks
 
         public string GetRegisteredNameFromFullName(string fullName)
         {
+            string separator = _options.NamespaceSeparator ?? "";
+            string[] segments = GetRawSegments(fullName);
+            return string.Join(separator, segments);
+        }
+
+        public string[] GetPathSegments(string fullName)
+        {
+            var regName = GetRawSegments(fullName);
+            if (regName.Length == 1)
+            {
+                return new string[0];
+            }
+
+            return regName.Take(regName.Length - 1).ToArray();
+        }
+
+        private string[] GetRawSegments(string fullName)
+        {
             if (!_options.IncludeNamespaceInRegistration)
                 throw new Exception("Cannot call this method if the options.IncludeNamespaceInRegistration is true");
 
             if (string.IsNullOrWhiteSpace(fullName))
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(fullName));
-
-            string separator = _options.NamespaceSeparator ?? "";
 
             if (_options.NamespaceDepth.HasValue)
             {
@@ -71,18 +88,22 @@ namespace Gtt.CodeWorks
                 if (fn.Length > depth)
                 {
                     var keep = fn.Skip(fn.Length - depth);
-                    return string.Join(separator, keep);
+                    return keep.ToArray();
                 }
             }
 
             if (!string.IsNullOrWhiteSpace(_options.NamespacePrefixToIgnore))
             {
                 var s = fullName.Replace(_options.NamespacePrefixToIgnore, "");
-                if (s.StartsWith(".")) s = s.Substring(1, s.Length - 1);
-                return s.Replace(".", separator);
+                if (s.StartsWith("."))
+                {
+                    s = s.Substring(1, s.Length - 1);
+                }
+
+                return s.Split('.');
             }
 
-            return fullName.Replace(".", separator);
+            return fullName.Split('.');
         }
     }
 
