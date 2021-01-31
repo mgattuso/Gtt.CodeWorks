@@ -1,0 +1,11 @@
+POST {{host}}/api/meta:request:example/CombinedService
+Accept: application/json
+
+###
+POST {{host}}/api/call/CombinedService
+Accept: application/json
+
+{
+  "number1": 1,
+  "number2": 2
+}

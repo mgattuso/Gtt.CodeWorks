@@ -448,10 +448,17 @@ namespace Gtt.CodeWorks.Duplicator
         {
             get
             {
+                var t = this;
+                string upperLevel = "";
+                if (t.DeclaredParent != null && !t.IsTemplateType)
+                {
+                    upperLevel = t.DeclaredParent != null ? t.DeclaredParent.ClassInheritanceNormalizedName + "." : "";
+                }
+                
                 var name = Name;
                 var nname = name.Split('`')[0];
-                if (!HasGenerics) return nname;
-                return $"{nname}<{ string.Join(",", OrderedGenericInstanceArguments.Select(x => x.Type.PropertyNormalizedName).ToArray())}>";
+                if (!HasGenerics) return upperLevel + nname;
+                return $"{upperLevel}{nname}<{ string.Join(",", OrderedGenericInstanceArguments.Select(x => x.Type.PropertyNormalizedName).ToArray())}>";
             }
         }
 

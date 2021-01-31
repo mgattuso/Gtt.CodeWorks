@@ -8,17 +8,31 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Gtt.CodeWorks.Tests.Duplicator
 {
     [TestClass]
-    public class ModelTreeTests
+    public class CopierTests
     {
         [TestMethod]
         public void BasicClassTest()
         {
-            var mt = new Copier();
-            //mt.LimitOutputToAssemblyOfType(typeof(Common.Models.Root));
-            // mt.AddType(typeof(GenericBase));
-            //mt.AddType(typeof(Basic));
-            mt.AddType(typeof(ServiceResponse<CompoundResponse>));
-            var r = mt.Process();
+            var c = new Copier();
+            //c.LimitOutputToAssemblyOfType(typeof(Common.Models.Root));
+            c.AddType(typeof(GenericBase));
+            c.AddType(typeof(Basic));
+            c.AddType(typeof(ServiceResponse<CompoundResponse>));
+            c.AddType(typeof(MockRequest));
+            c.AddType(typeof(OtherMockRequest));
+            c.AddType(typeof(MockResponse));
+            var r = c.Process();
+            Console.WriteLine(r);
+        }
+
+        [TestMethod]
+        public void ClassWithEnumFromUnrelatedClass()
+        {
+            var c = new Copier();
+            c.AddType(typeof(MockRequest));
+            c.AddType(typeof(OtherMockRequest));
+            c.AddType(typeof(MockResponse));
+            var r = c.Process();
             Console.WriteLine(r);
         }
     }
@@ -42,6 +56,36 @@ namespace Gtt.CodeWorks.Tests.Duplicator
         Coastal,
         Inland,
         Mountains
+    }
+
+    public class MockService
+    {
+        public enum MockAction
+        {
+            Open,
+            Close
+        }
+
+        public enum MockState
+        {
+            Opened,
+            Closed
+        }
+    }
+
+    public class MockRequest : BaseRequest
+    {
+        public MockService.MockAction Action { get; set; }
+    }
+
+    public class OtherMockRequest
+    {
+        public MockService.MockAction Action { get; set; }
+    }
+
+    public class MockResponse
+    {
+        public MockService.MockState State { get; set; }
     }
 }
 
