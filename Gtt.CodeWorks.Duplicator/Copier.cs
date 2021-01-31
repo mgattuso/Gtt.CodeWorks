@@ -7,8 +7,15 @@ using System.Text;
 
 namespace Gtt.CodeWorks.Duplicator
 {
+    public class CopierSettings
+    {
+        public bool SkipAllOverrides { get; set; } = true;
+        public List<Type> BaseTypesToRemove { get; } = new List<Type>();
+    }
+
     public class Copier
     {
+        private readonly CopierSettings _settings;
         private readonly List<Type> _types = new List<Type>();
 
         private List<Assembly> _onlyGenerateForAssemblies = new List<Assembly>();
@@ -21,8 +28,9 @@ namespace Gtt.CodeWorks.Duplicator
         public string ForceNamespace { get; set; }
         public (string replace, string with)? ReplaceNamespace { get; set; }
 
-        public Copier()
+        public Copier(CopierSettings settings = null)
         {
+            _settings = settings ?? new CopierSettings();
             ClearIgnoreNamespacePrefixes();
         }
 
@@ -77,13 +85,17 @@ namespace Gtt.CodeWorks.Duplicator
                     var gp = p.PropertyType;
 
                     var et = l.FirstOrDefault(x => x.Type == gp);
+
+                    var isOverride = p.GetAccessors().Any(x => x.DeclaringType != x.GetBaseDefinition()?.DeclaringType);
+
                     var pr = new PropertyMetaData
                     {
                         Name = p.Name,
                         Parent = t,
                         Property = et,
                         Getter = p.CanRead,
-                        Setter = p.CanWrite
+                        Setter = p.CanWrite,
+                        IsOverride = isOverride
                     };
                     t.Properties.Add(pr);
                 }
@@ -145,188 +157,203 @@ namespace Gtt.CodeWorks.Duplicator
         public void GetTypesUsedInType(Type originalType, List<TypeMetaData> types)
         {
             if (originalType == null) return;
-
             var t = new TypeMetaData(originalType);
-            if (!types.Contains(t))
+
+            if (types.Contains(t))
             {
-                if (!string.IsNullOrWhiteSpace(ForceNamespace))
+                return;
+            }
+
+            if (_settings.BaseTypesToRemove.Contains(t.Type))
+            {
+                t.IgnoreTypeForInheritance = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(ForceNamespace))
+            {
+                t.Namespace = ForceNamespace;
+            }
+            else
+            {
+                t.Namespace = t.Type.Namespace;
+            }
+
+            if (ReplaceNamespace != null)
+            {
+                var rn = ReplaceNamespace.Value;
+                if (t.Namespace != null)
+                    t.Namespace = t.Namespace.Replace(rn.replace, rn.with);
+            }
+
+            types.Add(t);
+
+            // ADD DECLARED PARENT
+            var d = t.Type.DeclaringType;
+            if (d != null)
+            {
+                GetTypesUsedInType(d, types);
+                t.DeclaredParent = types.First(ty => ty.Type == d);
+            }
+
+            // ADD HIERARCHY PARENT
+            var b = t.Type.BaseType;
+            if (b != null && b != typeof(object) && b != typeof(ValueType) && b != typeof(Enum))
+            {
+                GetTypesUsedInType(b, types);
+                t.HierarchyParent = types.First(ty => ty.Type == t.Type.BaseType);
+            }
+
+            // GET FUNDAMENTAL TYPE (FROM LIST OF X)
+            var ut = Nullable.GetUnderlyingType(t.Type);
+            if (ut != null)
+            {
+                t.IsNullable = true;
+                GetTypesUsedInType(ut, types);
+                var ft = types.First(x => x.Type == ut);
+                t.FundamentalType = ft;
+            }
+
+            // LOOK FOR ELEMENT TYPE (EG ARRAY)
+            if (t.Type.HasElementType)
+            {
+                if (t.Type.IsArray)
                 {
-                    t.Namespace = ForceNamespace;
+                    t.IsCollection = true;
+                }
+                var at = t.Type.GetElementType();
+                if (at != null)
+                {
+                    GetTypesUsedInType(at, types);
+                    var ft = types.First(x => x.Type == at);
+                    t.FundamentalType = ft;
+                }
+            }
+
+            // LOOK FOR COLLECTIONS
+            if (typeof(ICollection).IsAssignableFrom(t.Type))
+            {
+                t.IsCollection = true;
+                var generics = t.Type.GetGenericArguments();
+                if (generics.Length == 1)
+                {
+                    var gt = t.Type.GetGenericArguments()[0];
+                    GetTypesUsedInType(gt, types);
+                    var ft = types.First(x => x.Type == gt);
+                    t.FundamentalType = ft;
+                }
+            }
+
+
+            // HANDLE GENERICS
+
+            if (!t.Type.IsGenericParameter && (t.Type.IsClass || t.Type.IsEnum || t.Type.IsValueType))
+            {
+                if (t.Type.IsEnum)
+                {
+                    t.Format = TypeFormat.Enum;
+                    t.EnumDataType = Enum.GetUnderlyingType(t.Type);
+                    var names = Enum.GetNames(t.Type);
+                    for (int i = 0; i < names.Length; i++)
+                    {
+                        var v1 = Enum.Parse(t.Type, names[i]);
+                        var val = Convert.ChangeType(v1, t.EnumDataType);
+                        if (!t.EnumValues.ContainsKey(val))
+                        {
+                            t.EnumValues.Add(val, names[i]);
+                        }
+
+                    }
+                }
+                else if (t.Type.IsValueType)
+                {
+                    t.Format = TypeFormat.Struct;
                 }
                 else
                 {
-                    t.Namespace = t.Type.Namespace;
+                    t.Format = TypeFormat.Class;
                 }
 
-                if (ReplaceNamespace != null)
+                if (t.Type.IsAbstract)
                 {
-                    var rn = ReplaceNamespace.Value;
-                    if (t.Namespace != null)
-                        t.Namespace = t.Namespace.Replace(rn.replace, rn.with);
+                    t.IsAbstract = true;
                 }
 
-                types.Add(t);
-
-                // ADD DECLARED PARENT
-                var d = t.Type.DeclaringType;
-                if (d != null)
+                if (t.Type.IsGenericType)
                 {
-                    GetTypesUsedInType(d, types);
-                    t.DeclaredParent = types.First(ty => ty.Type == d);
-                }
-
-                // ADD HIERARCHY PARENT
-                var b = t.Type.BaseType;
-                if (b != null && b != typeof(object) && b != typeof(ValueType) && b != typeof(Enum))
-                {
-                    GetTypesUsedInType(b, types);
-                    t.HierarchyParent = types.First(ty => ty.Type == t.Type.BaseType);
-                }
-
-                // GET FUNDAMENTAL TYPE (FROM LIST OF X)
-                var ut = Nullable.GetUnderlyingType(t.Type);
-                if (ut != null)
-                {
-                    t.IsNullable = true;
-                    GetTypesUsedInType(ut, types);
-                    var ft = types.First(x => x.Type == ut);
-                    t.FundamentalType = ft;
-                }
-
-                // LOOK FOR ELEMENT TYPE (EG ARRAY)
-                if (t.Type.HasElementType)
-                {
-                    if (t.Type.IsArray)
+                    t.HasGenerics = true;
+                    Type[] g = t.Type.GetGenericArguments();
+                    foreach (Type a in g)
                     {
-                        t.IsCollection = true;
+                        GetTypesUsedInType(a, types);
                     }
-                    var at = t.Type.GetElementType();
-                    if (at != null)
+
+                    var gtd = t.Type.GetGenericTypeDefinition();
+                    if (_settings.BaseTypesToRemove.Contains(gtd))
                     {
-                        GetTypesUsedInType(at, types);
-                        var ft = types.First(x => x.Type == at);
-                        t.FundamentalType = ft;
+                        t.IgnoreTypeForInheritance = true;
                     }
-                }
-
-                // LOOK FOR COLLECTIONS
-                if (typeof(ICollection).IsAssignableFrom(t.Type))
-                {
-                    t.IsCollection = true;
-                    var generics = t.Type.GetGenericArguments();
-                    if (generics.Length == 1)
+                    GetTypesUsedInType(gtd, types);
+                    var gttt = types.First(ty => ty.Type == gtd);
+                    if (gttt != t)
                     {
-                        var gt = t.Type.GetGenericArguments()[0];
-                        GetTypesUsedInType(gt, types);
-                        var ft = types.First(x => x.Type == gt);
-                        t.FundamentalType = ft;
+                        t.HierarchyParent = gttt;
                     }
-                }
-
-
-                // HANDLE GENERICS
-
-                if (!t.Type.IsGenericParameter && (t.Type.IsClass || t.Type.IsEnum || t.Type.IsValueType))
-                {
-                    if (t.Type.IsEnum)
+                    Type[] ga = gtd.GetGenericArguments();
+                    Type[] nga = t.Type.GetGenericArguments();
+                    foreach (Type a in ga)
                     {
-                        t.Format = TypeFormat.Enum;
-                        var names = Enum.GetNames(t.Type);
-                        for (int i = 0; i < names.Length; i++)
+                        // UNCOMMENT THIS TO ADD GENERIC TYPES (E.g. T TO THE LIST)
+                        GetTypesUsedInType(a, types);
+                        var gta = types.First(ty => ty.Type == a);
+                        GenericTypeMetaData gmd = new GenericTypeMetaData(gta);
+                        gmd.TName = a.Name;
+                        gmd.Type.IsTemplateType = true;
+                        t.OrderedGenericArguments.Add(gmd);
+
+                        var gc = a.GetGenericParameterConstraints();
+                        foreach (var gt in gc)
                         {
-                            var val = (int)Enum.Parse(t.Type, names[i]);
-                            t.EnumValues.Add(val, names[i]);
-                        }
-                    }
-                    else if (t.Type.IsValueType)
-                    {
-                        t.Format = TypeFormat.Struct;
-                    }
-                    else
-                    {
-                        t.Format = TypeFormat.Class;
-                    }
-
-                    if (t.Type.IsAbstract)
-                    {
-                        t.IsAbstract = true;
-                    }
-
-                    if (t.Type.IsGenericType)
-                    {
-                        t.HasGenerics = true;
-                        Type[] g = t.Type.GetGenericArguments();
-                        foreach (Type a in g)
-                        {
-                            GetTypesUsedInType(a, types);
-                        }
-
-                        var gtd = t.Type.GetGenericTypeDefinition();
-                        GetTypesUsedInType(gtd, types);
-                        var gttt = types.First(ty => ty.Type == gtd);
-                        if (gttt != t)
-                        {
-                            t.HierarchyParent = gttt;
-                        }
-                        Type[] ga = gtd.GetGenericArguments();
-                        Type[] nga = t.Type.GetGenericArguments();
-                        foreach (Type a in ga)
-                        {
-                            // UNCOMMENT THIS TO ADD GENERIC TYPES (E.g. T TO THE LIST)
-                            GetTypesUsedInType(a, types);
-                            var gta = types.First(ty => ty.Type == a);
-                            GenericTypeMetaData gmd = new GenericTypeMetaData(gta);
-                            gmd.TName = a.Name;
-                            gmd.Type.IsTemplateType = true;
-                            t.OrderedGenericArguments.Add(gmd);
-
-                            var gc = a.GetGenericParameterConstraints();
-                            foreach (var gt in gc)
+                            GetTypesUsedInType(gt, types);
+                            var gtct = types.First(x => x.Type == gt);
+                            if (gtct.Type != typeof(ValueType))
                             {
-                                GetTypesUsedInType(gt, types);
-                                var gtct = types.First(x => x.Type == gt);
-                                if (gtct.Type != typeof(ValueType))
-                                {
-                                    gmd.TypeConstraints.Add(gtct);
-                                }
-                            }
-                            var attrs = a.GenericParameterAttributes;
-                            if (attrs.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))
-                            {
-                                gmd.GenericConstraints.Add("struct");
-                            }
-
-                            if (attrs.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint) && !attrs.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))
-                            {
-                                gmd.GenericConstraints.Add("new()");
-                            }
-
-                            if (attrs.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint))
-                            {
-                                gmd.GenericConstraints.Add("class");
+                                gmd.TypeConstraints.Add(gtct);
                             }
                         }
-
-                        foreach (Type a in nga)
+                        var attrs = a.GenericParameterAttributes;
+                        if (attrs.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))
                         {
-                            GetTypesUsedInType(a, types);
-                            var gta = types.First(ty => ty.Type == a);
-                            GenericTypeMetaData gmd = new GenericTypeMetaData(gta)
-                            {
-                                TName = a.Name
-                            };
-                            t.OrderedGenericInstanceArguments.Add(gmd);
+                            gmd.GenericConstraints.Add("struct");
+                        }
+
+                        if (attrs.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint) && !attrs.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))
+                        {
+                            gmd.GenericConstraints.Add("new()");
+                        }
+
+                        if (attrs.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint))
+                        {
+                            gmd.GenericConstraints.Add("class");
                         }
                     }
 
+                    foreach (Type a in nga)
+                    {
+                        GetTypesUsedInType(a, types);
+                        var gta = types.First(ty => ty.Type == a);
+                        GenericTypeMetaData gmd = new GenericTypeMetaData(gta)
+                        {
+                            TName = a.Name
+                        };
+                        t.OrderedGenericInstanceArguments.Add(gmd);
+                    }
                 }
 
-                foreach (var p in t.Type.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public))
-                {
-                    GetTypesUsedInType(p.PropertyType, types);
-                }
+            }
 
-
+            foreach (var p in t.Type.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public))
+            {
+                GetTypesUsedInType(p.PropertyType, types);
             }
         }
 
@@ -336,7 +363,7 @@ namespace Gtt.CodeWorks.Duplicator
 
             string name = t.FundamentalType.ClassNormalizedName;
 
-            if (t.HierarchyParent != null)
+            if (t.HierarchyParent != null && !t.HierarchyParent.IgnoreTypeForInheritance)
             {
                 name = $"{name} : {t.HierarchyParent.ClassInheritanceNormalizedName}";
             }
@@ -348,8 +375,11 @@ namespace Gtt.CodeWorks.Duplicator
 
                     foreach (var p in t.Properties)
                     {
+                        if (_settings.SkipAllOverrides && p.IsOverride) continue;
+
                         string modifiers = $"{{ {(p.Getter || AlwaysGetAndSet ? "get;" : "")} {(p.Setter || AlwaysGetAndSet ? "set;" : "")} }}";
-                        sb.AppendLine($"public {p.Property.ClassInheritanceNormalizedName} {p.Name} {modifiers}");
+                        string overrideStatement = p.IsOverride ? "override " : "";
+                        sb.AppendLine($"public {overrideStatement}{p.Property.ClassInheritanceNormalizedName} {p.Name} {modifiers}");
                     }
 
                     foreach (var st in types.Where(ty => ty.DeclaredParent == t && ty.IsWritable))
@@ -359,7 +389,7 @@ namespace Gtt.CodeWorks.Duplicator
 
                     break;
                 case TypeFormat.Enum:
-                    sb.AppendLine($"public enum {name} {{");
+                    sb.AppendLine($"public enum {name} : {t.EnumDataType.Name} {{");
                     foreach (var kv in t.EnumValues.OrderBy(x => x.Key))
                     {
                         sb.AppendLine($"{kv.Value} = {kv.Key},");
@@ -415,6 +445,8 @@ namespace Gtt.CodeWorks.Duplicator
         public TypeMetaData Property { get; set; }
         public bool Getter { get; set; }
         public bool Setter { get; set; }
+        public bool IsOverride { get; set; }
+
     }
 
     public enum TypeFormat
@@ -454,7 +486,7 @@ namespace Gtt.CodeWorks.Duplicator
                 {
                     upperLevel = t.DeclaredParent != null ? t.DeclaredParent.ClassInheritanceNormalizedName + "." : "";
                 }
-                
+
                 var name = Name;
                 var nname = name.Split('`')[0];
                 if (!HasGenerics) return upperLevel + nname;
@@ -485,7 +517,8 @@ namespace Gtt.CodeWorks.Duplicator
         public TypeMetaData HierarchyParent { get; set; }
         public TypeMetaData DeclaredParent { get; set; }
         public TypeMetaData FundamentalType { get; set; }
-        public Dictionary<int, string> EnumValues { get; set; } = new Dictionary<int, string>();
+        public Dictionary<object, string> EnumValues { get; set; } = new Dictionary<object, string>();
+        public Type EnumDataType { get; set; }
         public List<PropertyMetaData> Properties { get; set; } = new List<PropertyMetaData>();
         public bool IsWritable
         {
@@ -507,6 +540,8 @@ namespace Gtt.CodeWorks.Duplicator
                 return result;
             }
         }
+
+        public bool IgnoreTypeForInheritance { get; set; }
 
         public override bool Equals(object obj)
         {

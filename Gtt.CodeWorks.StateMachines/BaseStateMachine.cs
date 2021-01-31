@@ -20,10 +20,12 @@ namespace Gtt.CodeWorks.StateMachines
 
         static BaseStateMachine()
         {
-            Settings = new JsonSerializerSettings();
-            Settings.Formatting = Formatting.Indented;
-            Settings.NullValueHandling = NullValueHandling.Ignore;
-            Settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            Settings = new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+                NullValueHandling = NullValueHandling.Ignore,
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
         }
 
         protected string MachineName

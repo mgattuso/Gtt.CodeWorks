@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gtt.CodeWorks.DataAnnotations\Gtt.CodeWorks.DataAnnotations.csproj" />
+    <ProjectReference Include="..\Gtt.CodeWorks.StateMachines\Gtt.CodeWorks.StateMachines.csproj" />
     <ProjectReference Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
   </ItemGroup>
 

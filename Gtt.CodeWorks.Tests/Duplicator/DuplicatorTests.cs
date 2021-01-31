@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Common.Models;
+using Gtt.CodeWorks;
 using Gtt.CodeWorks.Duplicator;
+using Gtt.Financial.Core.Account;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Stateless;
 
 namespace Gtt.CodeWorks.Tests.Duplicator
 {
@@ -32,6 +37,19 @@ namespace Gtt.CodeWorks.Tests.Duplicator
             c.AddType(typeof(MockRequest));
             c.AddType(typeof(OtherMockRequest));
             c.AddType(typeof(MockResponse));
+            var r = c.Process();
+            Console.WriteLine(r);
+        }
+
+        [TestMethod]
+        public void ServiceTest()
+        {
+            var settings = new CopierSettings();
+            settings.BaseTypesToRemove.Add(typeof(BaseServiceInstance<,>));
+            var c = new Copier(settings);
+            c.LimitOutputToAssemblyOfType(typeof(AccountRequest));
+            c.AddType(typeof(AccountRequest));
+            c.AddType(typeof(AccountResponse));
             var r = c.Process();
             Console.WriteLine(r);
         }
@@ -126,5 +144,72 @@ namespace Common.Models
             public double PrincipalAndInterestCurrency { get; set; }
             public object SomeObject { get; set; }
         }
+    }
+}
+
+namespace Gtt.Financial.Core.Account
+{
+    public class AccountService : BaseServiceInstance<AccountRequest, AccountResponse>
+    {
+        public AccountService(CoreDependencies coreDependencies) : base(coreDependencies)
+        {
+        }
+
+        protected override Task<ServiceResponse<AccountResponse>> Implementation(AccountRequest request, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override Task<string> CreateDistributedLockKey(AccountRequest request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(request.AccountIdentifier.ToString());
+        }
+
+        protected override IDictionary<int, string> DefineErrorCodes()
+        {
+            return NoErrorCodes();
+        }
+
+        public override ServiceAction Action => ServiceAction.Update;
+
+        private StateMachine<AccountState, AccountAction> _stateMachine =
+            new StateMachine<AccountState, AccountAction>(AccountState.Active);
+
+        public enum AccountState
+        {
+            Active,
+            Closed
+        }
+        public enum AccountAction
+        {
+            Open,
+            Close
+        }
+    }
+
+    public class AccountRequest : BaseRequest
+    {
+        public Guid AccountIdentifier { get; set; }
+        public AccountService.AccountAction Action { get; set; }
+
+        public OpenData Open { get; set; }
+        public CloseData Close { get; set; }
+
+        public class OpenData
+        {
+            public decimal InitialBalance { get; set; }
+        }
+
+        public class CloseData
+        {
+
+        }
+    }
+
+    public class AccountResponse
+    {
+        public Guid AccountIdentifier { get; set; }
+        //public AccountService.AccountState State { get; set; }
+        //public AccountService.AccountAction[] Actions { get; set; }
     }
 }
