@@ -489,13 +489,21 @@ namespace Gtt.CodeWorks.Duplicator
             get
             {
                 var t = this;
+                var name = Name;
                 string upperLevel = "";
-                if (t.DeclaredParent != null && !t.IsTemplateType)
+                if (t.FundamentalType.DeclaredParent != null && !t.IsTemplateType)
                 {
-                    upperLevel = t.DeclaredParent != null ? t.DeclaredParent.ClassInheritanceNormalizedName + "." : "";
+                    if (t.IsCollection && !t.Type.IsArray)
+                    {
+                        // SKIP FOR COLLECTIONS OTHER THAN ARRAYS
+                        upperLevel = "";
+                    }
+                    else
+                    {
+                        upperLevel = t.FundamentalType.DeclaredParent != null ? t.FundamentalType.DeclaredParent.ClassInheritanceNormalizedName + "." : "";
+                    }
                 }
 
-                var name = Name;
                 var nname = name.Split('`')[0];
                 if (!HasGenerics) return upperLevel + nname;
                 return $"{upperLevel}{nname}<{ string.Join(",", OrderedGenericInstanceArguments.Select(x => x.Type.PropertyNormalizedName).ToArray())}>";
@@ -506,10 +514,16 @@ namespace Gtt.CodeWorks.Duplicator
         {
             get
             {
+                var t = this;
                 var name = Name;
+                string upperLevel = "";
+                if (t.FundamentalType.DeclaredParent != null && !t.IsTemplateType)
+                {
+                    upperLevel = t.FundamentalType.DeclaredParent != null ? t.FundamentalType.DeclaredParent.ClassInheritanceNormalizedName + "." : "";
+                }
                 var nname = name.Split('`')[0];
-                if (!HasGenerics) return nname;
-                return $"{nname}<{ string.Join(",", OrderedGenericArguments.Select(x => x.TName).ToArray())}>";
+                if (!HasGenerics) return upperLevel+nname;
+                return $"{upperLevel}{nname}<{ string.Join(",", OrderedGenericArguments.Select(x => x.TName).ToArray())}>";
             }
         }
         public Type Type { get; }

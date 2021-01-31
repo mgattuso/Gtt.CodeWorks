@@ -209,7 +209,8 @@ namespace Gtt.Financial.Core.Account
     public class AccountResponse
     {
         public Guid AccountIdentifier { get; set; }
-        //public AccountService.AccountState State { get; set; }
-        //public AccountService.AccountAction[] Actions { get; set; }
+        public AccountService.AccountState State { get; set; }
+        public AccountService.AccountAction[] Actions { get; set; }
+        public List<AccountService.AccountAction> ListOfActions { get; set; }
     }
 }
