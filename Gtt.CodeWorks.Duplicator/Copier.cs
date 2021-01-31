@@ -10,6 +10,7 @@ namespace Gtt.CodeWorks.Duplicator
     public class CopierSettings
     {
         public bool SkipAllOverrides { get; set; } = true;
+        public bool AddAllUsingStatementProcessed { get; set; } = false;
         public List<Type> BaseTypesToRemove { get; } = new List<Type>();
     }
 
@@ -101,7 +102,8 @@ namespace Gtt.CodeWorks.Duplicator
                 }
             }
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder usingSb = new StringBuilder();
+            StringBuilder classesSb = new StringBuilder();
 
             var filteredList = l;
 
@@ -123,34 +125,37 @@ namespace Gtt.CodeWorks.Duplicator
                 filteredList = assemblyList;
             }
 
-
-            var usings = l.Where(x => !string.IsNullOrWhiteSpace(x.Namespace)).Select(x => x.Namespace).Distinct();
-            foreach (var u in usings)
-            {
-                sb.AppendLine($"using {u};");
-            }
-
-            sb.AppendLine();
+            classesSb.AppendLine();
 
             foreach (var n in filteredList.GroupBy(x => x.Namespace))
             {
                 if (!string.IsNullOrWhiteSpace(n.Key))
                 {
-                    sb.AppendLine($"namespace {n.Key} {{");
+                    classesSb.AppendLine($"namespace {n.Key} {{");
                 }
 
                 // WRITE CLASSES
                 foreach (var t in n.Where(x => x.DeclaredParent == null && x.IsWritable).Select(x => x.FundamentalType).Distinct())
                 {
-                    sb.Append(Typewriter(t, l));
+                    classesSb.Append(Typewriter(t, l));
                 }
 
                 if (!string.IsNullOrWhiteSpace(n.Key))
                 {
-                    sb.AppendLine($"}}");
+                    classesSb.AppendLine($"}}");
                 }
             }
 
+            var usings = l.Where(x => (_settings.AddAllUsingStatementProcessed || x.Printed) && !string.IsNullOrWhiteSpace(x.Namespace)).Select(x => x.Namespace).Distinct();
+            foreach (var u in usings)
+            {
+                usingSb.AppendLine($"using {u};");
+            }
+
+            var sb = new StringBuilder();
+            sb.Append(usingSb);
+            sb.AppendLine();
+            sb.Append(classesSb);
             return sb.ToString();
         }
 
@@ -348,7 +353,6 @@ namespace Gtt.CodeWorks.Duplicator
                         t.OrderedGenericInstanceArguments.Add(gmd);
                     }
                 }
-
             }
 
             foreach (var p in t.Type.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public))
@@ -365,8 +369,11 @@ namespace Gtt.CodeWorks.Duplicator
 
             if (t.HierarchyParent != null && !t.HierarchyParent.IgnoreTypeForInheritance)
             {
+                t.HierarchyParent.Printed = true;
                 name = $"{name} : {t.HierarchyParent.ClassInheritanceNormalizedName}";
             }
+
+            t.Printed = true;
 
             switch (t.Format)
             {
@@ -377,6 +384,7 @@ namespace Gtt.CodeWorks.Duplicator
                     {
                         if (_settings.SkipAllOverrides && p.IsOverride) continue;
 
+                        p.Property.Printed = true;
                         string modifiers = $"{{ {(p.Getter || AlwaysGetAndSet ? "get;" : "")} {(p.Setter || AlwaysGetAndSet ? "set;" : "")} }}";
                         string overrideStatement = p.IsOverride ? "override " : "";
                         sb.AppendLine($"public {overrideStatement}{p.Property.ClassInheritanceNormalizedName} {p.Name} {modifiers}");
@@ -540,6 +548,8 @@ namespace Gtt.CodeWorks.Duplicator
                 return result;
             }
         }
+
+        public bool Printed { get; set; }
 
         public bool IgnoreTypeForInheritance { get; set; }
 
