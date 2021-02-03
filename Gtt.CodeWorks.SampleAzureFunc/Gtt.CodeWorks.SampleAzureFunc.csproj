@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Gtt.CodeWorks.Functions.Host\Gtt.CodeWorks.Functions.Host.csproj" />
     <ProjectReference Include="..\Gtt.CodeWorks.SampleServices\Gtt.CodeWorks.SampleServices.csproj" />
+    <ProjectReference Include="..\Gtt.CodeWorks.StateMachines.AzureStorage\Gtt.CodeWorks.StateMachines.AzureStorage.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

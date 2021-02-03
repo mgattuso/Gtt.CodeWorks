@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Gtt.CodeWorks.StateMachines
+namespace Gtt.CodeWorks
 {
     public interface IAuditable
     {

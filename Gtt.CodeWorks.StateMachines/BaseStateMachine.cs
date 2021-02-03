@@ -147,34 +147,36 @@ namespace Gtt.CodeWorks.StateMachines
 
         private async Task StoreState(string source, string destination, string trigger, bool isReentry)
         {
-            var serializedState = JsonConvert.SerializeObject(Data, Settings);
-            SerialNumber = await _stateRepository.StoreStateData(new StateDto
-            {
-                MachineName = MachineName,
-                Identifier = Reference.Identifier,
-                SerializedState = serializedState,
-                Source = source,
-                Destination = destination,
-                Trigger = trigger,
-                IsReentry = isReentry,
-                CreatedBy = MachineName,
-                ModifiedBy = MachineName,
-                Created = Created
-            }, SerialNumber);
+            await Task.CompletedTask;
+            //var serializedState = JsonConvert.SerializeObject(Data, Settings);
+            //SerialNumber = await _stateRepository.StoreStateData(new StateDto
+            //{
+            //    MachineName = MachineName,
+            //    Identifier = Reference.Identifier,
+            //    Source = source,
+            //    Destination = destination,
+            //    Trigger = trigger,
+            //    IsReentry = isReentry,
+            //    CreatedBy = MachineName,
+            //    ModifiedBy = MachineName,
+            //    Created = Created
+            //}, SerialNumber);
         }
 
         protected static async Task<Tuple<TData, long, DateTimeOffset, DateTimeOffset>> LoadData(string identifier,
             string machineName, TData currentData, IStateRepository repository)
         {
-            var stateDto = await repository.RetrieveStateData(identifier, machineName);
-            if (stateDto == null)
+            var stateInformation = await repository.RetrieveStateData<TData, TState>(identifier, machineName);
+            if (stateInformation == null)
             {
                 return Tuple.Create(currentData ?? new TData(), 0L, ServiceClock.CurrentTime(),
                     ServiceClock.CurrentTime());
             }
 
-            var data = JsonConvert.DeserializeObject<TData>(stateDto.SerializedState, Settings);
-            return Tuple.Create(data, stateDto.SequenceNumber, stateDto.Created, stateDto.Modified);
+            return Tuple.Create(stateInformation.Data,
+                                stateInformation.StateMetaData.SequenceNumber,
+                                stateInformation.StateMetaData.Created,
+                                stateInformation.StateMetaData.Modified);
         }
 
         public bool IsNew()
@@ -238,7 +240,7 @@ namespace Gtt.CodeWorks.StateMachines
                 {
                     do
                     {
-                        var st = (TState) si.UnderlyingState;
+                        var st = (TState)si.UnderlyingState;
                         states.Add(st);
                         si = si.Superstate;
                     } while (si != null);
@@ -248,7 +250,7 @@ namespace Gtt.CodeWorks.StateMachines
             }
             catch (Exception)
             {
-                return new[] {_machine.State};
+                return new[] { _machine.State };
             }
         }
     }

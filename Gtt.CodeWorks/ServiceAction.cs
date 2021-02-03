@@ -9,6 +9,7 @@ namespace Gtt.CodeWorks
         Read, //GET
         Create, //POST
         Update, //PUT
-        Delete // DELETE
+        Delete, // DELETE,
+        Stateful
     }
 }

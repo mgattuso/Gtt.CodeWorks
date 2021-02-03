@@ -36,7 +36,7 @@ namespace Gtt.CodeWorks
         private int? _serviceHop;
 
 
-        public async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
+        public virtual async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             StartTime = startTime;
@@ -82,13 +82,32 @@ namespace Gtt.CodeWorks
                 {
                     if (response == null)
                     {
+                        response = await BeforeImplementation(request, cancellationToken);
+                    }
+                }
+                else
+                {
+                    response = TemporaryException("Cancellation Request:BeforeImplementation");
+                }
+
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    if (response == null)
+                    {
                         response = await Implementation(request, cancellationToken);
                     }
                 }
                 else
                 {
-                    response = TemporaryException("Cancellation Requested");
+                    response = TemporaryException("Cancellation Requested:Implementation");
                 }
+            }
+            catch (BusinessLogicException ex)
+            {
+                var errors = new ErrorData(ex.Message); 
+                response = new ServiceResponse<TResponse>(
+                    default(TResponse), 
+                    new ResponseMetaData(this, ex.Result, errors));
             }
             catch (ValidationErrorException ex)
             {
@@ -133,6 +152,12 @@ namespace Gtt.CodeWorks
                     ServiceResult.TransientError,
                     new ErrorData()
                 ));
+        }
+
+        protected virtual Task<ServiceResponse<TResponse>> BeforeImplementation(TRequest request,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult((ServiceResponse<TResponse>)null);
         }
 
         protected ServiceResponse<TResponse> ErrorCode(int code)
@@ -180,6 +205,15 @@ namespace Gtt.CodeWorks
             );
         }
 
+        protected ServiceResponse<TResponse> NotFound()
+        {
+            return new ServiceResponse<TResponse>(default(TResponse),
+                new ResponseMetaData(
+                    this, 
+                    ServiceResult.ResourceNotFound)
+                );
+        }
+
         protected Task<string> NoDistributedLock()
         {
             return Task.FromResult(string.Empty);
@@ -211,6 +245,21 @@ namespace Gtt.CodeWorks
             }
             return new ServiceResponse<TResponse>(response, new ResponseMetaData(this, ServiceResult.Successful, dependencyMetaData));
         }
+
+        protected Task<ServiceResponse<TResponse>> SuccessfulTask(TResponse response, ServiceResult result = ServiceResult.Successful, Dictionary<string, ResponseMetaData> dependencyMetaData = null)
+#pragma warning restore IDE0060 // Remove unused parameter
+        {
+            if (result.Category() != ResultCategory.Successful)
+            {
+                throw new Exception("Cannot return a non-successful result through the success response");
+            }
+            return Task.FromResult(
+                new ServiceResponse<TResponse>(
+                    response, 
+                    new ResponseMetaData(this, ServiceResult.Successful, dependencyMetaData))
+                );
+        }
+
         protected ServiceResponse<TResponse> Created(TResponse response)
         {
             return Successful(response, ServiceResult.Created);

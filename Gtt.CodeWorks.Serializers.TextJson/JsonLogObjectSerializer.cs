@@ -51,10 +51,6 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                     return result;
                 }
             }
-            
-
-            
-            
         }
     }
 }
