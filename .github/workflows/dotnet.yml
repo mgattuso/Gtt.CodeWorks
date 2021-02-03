@@ -69,6 +69,27 @@ jobs:
         PROJECT_FILE_PATH: Gtt.CodeWorks.Duplicator/Gtt.CodeWorks.Duplicator.csproj
         TAG_FORMAT: Gtt.CodeWorks.Duplicator.*
         
+    - name: Deploy Gtt.CodeWorks.AzureStorage Package
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        NUGET_KEY: ${{ secrets.nuget_key }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.AzureStorage/Gtt.CodeWorks.AzureStorage.csproj
+        TAG_FORMAT: Gtt.CodeWorks.AzureStorage.*
+        
+    - name: Deploy Gtt.CodeWorks.StateMachines Package
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        NUGET_KEY: ${{ secrets.nuget_key }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.StateMachines/Gtt.CodeWorks.StateMachines.csproj
+        TAG_FORMAT: Gtt.CodeWorks.StateMachines.*
+        
+    - name: Deploy Gtt.CodeWorks.StateMachines.AzureStorage Package
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        NUGET_KEY: ${{ secrets.nuget_key }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.StateMachines.AzureStorage/Gtt.CodeWorks.StateMachines.AzureStorage.csproj
+        TAG_FORMAT: Gtt.CodeWorks.StateMachines.AzureStorage.*
+        
         
 
     
