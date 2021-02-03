@@ -25,7 +25,7 @@ namespace Gtt.CodeWorks.SampleAzureFunc
             builder.Services.AddTransient<IObjectSerializer, JsonObjectSerializer>();
             builder.Services.AddTransient<IStateRepository>(cfg =>
                 new AzureTableStateRepository(
-                    "DefaultEndpointsProtocol=https;AccountName=gttglobalstorage;AccountKey=O8vyMv4OYSGIU1se/pNnNA+zRzbr/udAGczHtMOANJfr3JTDpv8T0PYhUBwNIm86/42m+xaJYUyzHnoFX883+g==;EndpointSuffix=core.windows.net",
+                    Environment.GetEnvironmentVariable("StateRepository"),
                     cfg.GetService<IObjectSerializer>(),
                     cfg.GetService<ILogger<AzureTableStateRepository>>()
                     ));

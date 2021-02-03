@@ -1,0 +1,32 @@
+### REQUEST SCHEMA
+POST {{host}}/api/meta:request:schema/AccountService
+Content-Type: application/json
+
+### REQUEST EXAMPLE
+POST {{host}}/api/meta:request:schema/AccountService
+Content-Type: application/json
+
+### SAMPLE OPEN
+POST {{host}}/api/call/AccountService
+Content-Type: application/json
+
+{
+  "trigger": "Open",
+  "identifier": "{{$guid}}",
+  "open": {
+    "name": "Test Account",
+    "initialBalance": 50.0
+  }
+}
+
+### SAMPLE UPDATE
+POST {{host}}/api/call/AccountService
+Content-Type: application/json
+
+{
+  "trigger": "Update",
+  "identifier": "{{$guid}}",
+  "update": {
+    "name": "Updated Account"
+  }
+}
