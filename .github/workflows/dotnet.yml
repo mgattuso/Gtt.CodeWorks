@@ -20,8 +20,8 @@ jobs:
         
     - name: Create Local Nuget
       run: |
-        mkdir /local_packages
-        nuget sources add -Name "Local" -Source /local_package
+        mkdir local_packages
+        nuget sources add -Name "Local" -Source local_package
     
     - name: Restore dependencies
       run: dotnet restore
