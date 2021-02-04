@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Gtt.CodeWorks.Validation;
 using Stateless;
 using Stateless.Reflection;
 
@@ -61,6 +62,7 @@ namespace Gtt.CodeWorks.StateMachines
         public override async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
             _identifier = request.Identifier;
+
             if (request.Trigger != null)
             {
                 await Start(request);
@@ -92,7 +94,8 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected override Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken)
         {
-            return Task.FromResult(request.Identifier);
+            var key = (request?.Identifier ?? "").Trim();
+            return Task.FromResult(key);
         }
 
         public override ServiceAction Action => ServiceAction.Stateful;
@@ -139,6 +142,17 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected override Task<ServiceResponse<TResponse>> BeforeImplementation(TRequest request, CancellationToken cancellationToken)
         {
+            if (string.IsNullOrWhiteSpace(_identifier))
+            {
+                var idRequired =  ValidationError(new ValidationErrorData
+                {
+                    ErrorMessage = "The Identifier field is required",
+                    Members = new[] { "Identifier" }
+                });
+
+                return Task.FromResult(idRequired);
+            }
+
             if (request.Trigger == null)
             {
                 if (!IsNew())
