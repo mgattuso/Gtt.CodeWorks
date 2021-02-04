@@ -32,6 +32,12 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     
+    - name: Deploy CodeWorks Package Local
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        PROJECT_FILE_PATH: Gtt.CodeWorks/Gtt.CodeWorks.csproj
+        NUGET_SOURCE: Local
+    
     - name: Deploy CodeWorks Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
