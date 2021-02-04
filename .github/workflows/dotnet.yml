@@ -19,7 +19,7 @@ jobs:
         dotnet-version: 3.1.301
         
     - name: Create Local Nuget
-      run: 
+      run: |
         mkdir /local_packages
         nuget sources add -Name "Local" -Source /local_package
     
