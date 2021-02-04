@@ -61,15 +61,19 @@ namespace Gtt.CodeWorks.StateMachines
 
         public override async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
-            _identifier = request.Identifier;
+            if (!string.IsNullOrWhiteSpace(request.Identifier))
+            {
 
-            if (request.Trigger != null)
-            {
-                await Start(request);
-            }
-            else
-            {
-                await ReadState(request);
+                _identifier = request.Identifier;
+
+                if (request.Trigger != null)
+                {
+                    await Start(request);
+                }
+                else
+                {
+                    await ReadState(request);
+                }
             }
 
             var r = await base.Execute(request, startTime, cancellationToken);
@@ -144,7 +148,7 @@ namespace Gtt.CodeWorks.StateMachines
         {
             if (string.IsNullOrWhiteSpace(_identifier))
             {
-                var idRequired =  ValidationError(new ValidationErrorData
+                var idRequired = ValidationError(new ValidationErrorData
                 {
                     ErrorMessage = "The Identifier field is required",
                     Members = new[] { "Identifier" }
@@ -159,7 +163,7 @@ namespace Gtt.CodeWorks.StateMachines
                 {
                     var response = new TResponse
                     {
-                        Data = _data,
+                        Model = _data,
                         StateMachine = GetStateData()
                     };
 

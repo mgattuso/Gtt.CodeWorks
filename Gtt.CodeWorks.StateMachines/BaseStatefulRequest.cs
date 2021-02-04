@@ -18,7 +18,7 @@ namespace Gtt.CodeWorks.StateMachines
         where TState : struct, IConvertible
         where TData : BaseStateDataModel<TState>
     {
-        public TData Data { get; set; }
+        public TData Model { get; set; }
         public StateMachineData<TState, TTrigger> StateMachine { get; set; }
     }
 

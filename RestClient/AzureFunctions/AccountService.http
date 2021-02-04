@@ -3,7 +3,7 @@ POST {{host}}/api/meta:request:schema/AccountService
 Content-Type: application/json
 
 ### REQUEST EXAMPLE
-POST {{host}}/api/meta:request:schema/AccountService
+POST {{host}}/api/meta:request:example/AccountService
 Content-Type: application/json
 
 ### SAMPLE OPEN
