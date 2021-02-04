@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
@@ -43,7 +44,23 @@ namespace Gtt.CodeWorks.DataAnnotations
 
             foreach (var property in properties)
             {
-                if (property.PropertyType == typeof(string) || property.PropertyType.IsValueType) continue;
+                var alwaysPresent = property.GetCustomAttribute<AlwaysPresentAttribute>();
+                if (property.PropertyType.IsValueType)
+                {
+                    continue;
+                }
+
+                if (property.PropertyType == typeof(string))
+                {
+                    if (alwaysPresent == null) continue;
+                    string sv = property.GetValue(obj) as string;
+                    if (string.IsNullOrWhiteSpace(sv))
+                    {
+                        string prop = property.Name;
+                        result = false;
+                        results.Add(new ValidationResult(alwaysPresent.ErrorMessage ?? $"The {prop} field is required", new [] { property.Name }));
+                    }
+                }
 
                 var value = GetPropertyValue(obj, property.Name);
 
