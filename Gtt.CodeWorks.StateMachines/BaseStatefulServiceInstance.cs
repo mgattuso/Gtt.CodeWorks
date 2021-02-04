@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Stateless;
 using Stateless.Reflection;
 
@@ -49,10 +48,10 @@ namespace Gtt.CodeWorks.StateMachines
             Rules(_machine);
 
             var result = await LoadData(request.Identifier, FullName, _data, _stateRepository);
-            SerialNumber = result.Item2;
-            _data = result.Item1;
-            CreatedDate = result.Item3;
-            ModifiedDate = result.Item4;
+            SerialNumber = result.sequenceNumber;
+            if (result.data != null) _data = result.data;
+            CreatedDate = result.created;
+            ModifiedDate = result.modified;
             if (Status == MachineStatus.Stopped)
             {
                 Status = MachineStatus.DataLoaded;
