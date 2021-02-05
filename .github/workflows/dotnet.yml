@@ -17,6 +17,11 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.301
+        
+    - name: Create Local Nuget
+      run: |
+        mkdir local_packages
+        nuget sources add -Name "Local" -Source local_package
     
     - name: Restore dependencies
       run: dotnet restore

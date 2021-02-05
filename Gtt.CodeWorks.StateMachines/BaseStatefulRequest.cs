@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Gtt.CodeWorks.StateMachines
@@ -8,6 +9,7 @@ namespace Gtt.CodeWorks.StateMachines
     public class BaseStatefulRequest<TTrigger> : BaseRequest where TTrigger : struct, IConvertible
     {
         public TTrigger? Trigger { get; set; }
+        [AlwaysPresent]
         public string Identifier { get; set; }
     }
 
@@ -16,7 +18,7 @@ namespace Gtt.CodeWorks.StateMachines
         where TState : struct, IConvertible
         where TData : BaseStateDataModel<TState>
     {
-        public TData Data { get; set; }
+        public TData Model { get; set; }
         public StateMachineData<TState, TTrigger> StateMachine { get; set; }
     }
 

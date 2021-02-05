@@ -68,7 +68,7 @@ namespace Gtt.CodeWorks.SampleServices
             var response = new AccountResponse
             {
                 StateMachine = GetStateData(),
-                Data = CurrentData
+                Model = CurrentData
             };
 
             return Successful(response);

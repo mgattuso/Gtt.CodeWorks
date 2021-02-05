@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using Gtt.CodeWorks.Validation;
 using Stateless;
 using Stateless.Reflection;
 
@@ -49,10 +49,10 @@ namespace Gtt.CodeWorks.StateMachines
             Rules(_machine);
 
             var result = await LoadData(request.Identifier, FullName, _data, _stateRepository);
-            SerialNumber = result.Item2;
-            _data = result.Item1;
-            CreatedDate = result.Item3;
-            ModifiedDate = result.Item4;
+            SerialNumber = result.sequenceNumber;
+            if (result.data != null) _data = result.data;
+            CreatedDate = result.created;
+            ModifiedDate = result.modified;
             if (Status == MachineStatus.Stopped)
             {
                 Status = MachineStatus.DataLoaded;
@@ -61,14 +61,19 @@ namespace Gtt.CodeWorks.StateMachines
 
         public override async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
-            _identifier = request.Identifier;
-            if (request.Trigger != null)
+            if (!string.IsNullOrWhiteSpace(request.Identifier))
             {
-                await Start(request);
-            }
-            else
-            {
-                await ReadState(request);
+
+                _identifier = request.Identifier;
+
+                if (request.Trigger != null)
+                {
+                    await Start(request);
+                }
+                else
+                {
+                    await ReadState(request);
+                }
             }
 
             var r = await base.Execute(request, startTime, cancellationToken);
@@ -93,7 +98,8 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected override Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken)
         {
-            return Task.FromResult(request.Identifier);
+            var key = (request?.Identifier ?? "").Trim();
+            return Task.FromResult(key);
         }
 
         public override ServiceAction Action => ServiceAction.Stateful;
@@ -140,13 +146,24 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected override Task<ServiceResponse<TResponse>> BeforeImplementation(TRequest request, CancellationToken cancellationToken)
         {
+            if (string.IsNullOrWhiteSpace(_identifier))
+            {
+                var idRequired = ValidationError(new ValidationErrorData
+                {
+                    ErrorMessage = "The Identifier field is required",
+                    Members = new[] { "Identifier" }
+                });
+
+                return Task.FromResult(idRequired);
+            }
+
             if (request.Trigger == null)
             {
                 if (!IsNew())
                 {
                     var response = new TResponse
                     {
-                        Data = _data,
+                        Model = _data,
                         StateMachine = GetStateData()
                     };
 
