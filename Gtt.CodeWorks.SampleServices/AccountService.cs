@@ -15,7 +15,9 @@ namespace Gtt.CodeWorks.SampleServices
         {
             Pending = 0,
             Opened = 10,
-            Closed = 20
+            Closed = 20,
+            Transactable = 30,
+            NonTransactable = 40
         }
 
         public enum Trigger
@@ -79,9 +81,14 @@ namespace Gtt.CodeWorks.SampleServices
 
         protected override void Rules(StateMachine<State, Trigger> machine)
         {
+            machine.Configure(State.Pending).SubstateOf(State.NonTransactable);
             machine.Configure(State.Pending).Permit(Trigger.Open, State.Opened);
+
+            machine.Configure(State.Opened).SubstateOf(State.Transactable);
             machine.Configure(State.Opened).Permit(Trigger.Close, State.Closed);
             machine.Configure(State.Opened).PermitReentry(Trigger.Update);
+
+            machine.Configure(State.Closed).SubstateOf(State.NonTransactable);
             machine.Configure(State.Closed).Permit(Trigger.Reopen, State.Opened);
         }
     }
