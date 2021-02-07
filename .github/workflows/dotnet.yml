@@ -95,6 +95,15 @@ jobs:
         PROJECT_FILE_PATH: Gtt.CodeWorks.StateMachines.AzureStorage/Gtt.CodeWorks.StateMachines.AzureStorage.csproj
         TAG_FORMAT: Gtt.CodeWorks.StateMachines.AzureStorage.*
         
+    - name: Deploy Gtt.CodeWorks.Tokenizer Package
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        NUGET_KEY: ${{ secrets.nuget_key }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.Tokenizer/Gtt.CodeWorks.Tokenizer.csproj
+        TAG_FORMAT: Gtt.CodeWorks.Tokenizer.*
+
+  
+        
         
 
     
