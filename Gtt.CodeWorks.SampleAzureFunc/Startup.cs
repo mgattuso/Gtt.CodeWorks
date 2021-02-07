@@ -6,10 +6,13 @@ using Gtt.CodeWorks.SampleServices;
 using Gtt.CodeWorks.Serializers.TextJson;
 using Gtt.CodeWorks.StateMachines;
 using Gtt.CodeWorks.StateMachines.AzureStorage;
+using Gtt.CodeWorks.Tokenizer;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Tokenize.Client;
 
 [assembly: FunctionsStartup(typeof(Gtt.CodeWorks.SampleAzureFunc.Startup))]
 
@@ -23,6 +26,13 @@ namespace Gtt.CodeWorks.SampleAzureFunc
             builder.Services.AddSingleton<StatefulDependencies>();
             builder.Services.AddApplicationInsightsTelemetry();
             builder.Services.AddTransient<IObjectSerializer, JsonObjectSerializer>();
+
+            builder.Services.Replace(ServiceDescriptor.Transient<ITokenizerService, GttTokenizerService>());
+
+            builder.Services.AddTransient<ITokenizeClient>(cfg => new TokenizeClient(
+                Environment.GetEnvironmentVariable("TokenizerEndpoint"),
+                "codeworks",
+                Environment.GetEnvironmentVariable("TokenizerKey")));
             builder.Services.AddTransient<IStateRepository>(cfg =>
                 new AzureTableStateRepository(
                     Environment.GetEnvironmentVariable("StateRepository"),

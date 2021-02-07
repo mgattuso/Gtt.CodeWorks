@@ -7,15 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Namotion.Reflection;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
-using NJsonSchema;
-using NJsonSchema.Generation;
-using NJsonSchema.Validation;
-using NJsonSchema.Validation.FormatValidators;
 using JsonException = System.Text.Json.JsonException;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -36,7 +28,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
         public Encoding Encoding => Encoding.UTF8;
         public async Task<string> SerializeResponse(ServiceResponse response, Type responseType, HttpDataSerializerOptions options = null)
         {
-            var opts = CreateJsonSerializerOptions(options);
+            var opts = TextJsonSerializerSettings.CreateJsonSerializerOptions(options, _debugMode);
 
             using (var stream = new MemoryStream())
             {
@@ -62,7 +54,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             byte[] message,
             HttpDataSerializerOptions options = null)
         {
-            var opts = CreateJsonSerializerOptions(options);
+            var opts = TextJsonSerializerSettings.CreateJsonSerializerOptions(options, _debugMode);
 
             if (message.Length == 0)
             {
@@ -100,7 +92,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
 
         public async Task<string> SerializeRequest(BaseRequest request, Type requestType, HttpDataSerializerOptions options = null)
         {
-            var opts = CreateJsonSerializerOptions(options);
+            var opts = TextJsonSerializerSettings.CreateJsonSerializerOptions(options, _debugMode);
 
             using (var stream = new MemoryStream())
             {
@@ -117,7 +109,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
 
         public async Task<T> DeserializeResponse<T>(byte[] message, HttpDataSerializerOptions options = null) where T : new()
         {
-            var opts = CreateJsonSerializerOptions(options);
+            var opts = TextJsonSerializerSettings.CreateJsonSerializerOptions(options, _debugMode);
             try
             {
                 using (var ms = new MemoryStream(message))
@@ -133,111 +125,9 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             }
         }
 
-        public Task<IDictionary<string, object>> ValidateSchema(byte[] message, Type type, HttpDataSerializerOptions options = null)
-        {
-            options = options ?? new HttpDataSerializerOptions();
-            string contents = Encoding.UTF8.GetString(message);
-
-            var schema = GetSchema(type, options, options.EnumSerializationMethod == EnumSerializationMethod.String, requireReferenceTypes: false);
-
-            ICollection<ValidationError> errors = schema.Validate(contents, new EnumFormatValidator());
-            IDictionary<string, object> dict = new Dictionary<string, object>();
-            foreach (var err in errors)
-            {
-                RecursivelyGetErrors(dict, err, schema);
-            }
-
-            if (dict.Any())
-            {
-                dict.AddOrAppendValue("errorType", "jsonSchemaValidation", forceArray: false);
-                dict.AddOrAppendValue("schema", schema.ToJson(Formatting.None));
-                _logger.LogTrace(schema.ToJson());
-            }
-
-            return Task.FromResult(dict);
-
-        }
-
-        public async Task<string> SerializeErrorReport(IEnumerable<ErrorCodeData> errors)
-        {
-            var options = CreateJsonSerializerOptions(new HttpDataSerializerOptions());
-            using (var stream = new MemoryStream())
-            {
-                await JsonSerializer.SerializeAsync(stream, errors, options);
-                stream.Position = 0;
-
-                using (var reader = new StreamReader(stream))
-                {
-                    var result = await reader.ReadToEndAsync();
-                    return result;
-                }
-            }
-        }
-
-        public Task<string> SerializeExample(Type t, HttpDataSerializerOptions options = null)
-        {
-            options = options ?? new HttpDataSerializerOptions();
-            var schema = GetSchema(t, options, useStringEnums: true, requireReferenceTypes: true);
-            var sample = schema.ToSampleJson();
-            var json = sample.ToString(Formatting.Indented);
-            return Task.FromResult(json);
-        }
-
-        public Task<string> SerializeSchema(Type t, HttpDataSerializerOptions options = null)
-        {
-            options = options ?? new HttpDataSerializerOptions();
-            var schema = GetSchema(t, options, useStringEnums: false, requireReferenceTypes: false);
-            return Task.FromResult(schema.ToJson(Formatting.Indented));
-        }
-
-        private JsonSchema GetSchema(Type t, HttpDataSerializerOptions options, bool useStringEnums, bool requireReferenceTypes)
-        {
-            var settings = GetSchemaSerializationSettings(useStringEnums);
-            JsonSchema schema = JsonSchema.FromType(t, new JsonSchemaGeneratorSettings
-            {
-                FlattenInheritanceHierarchy = true,
-                AlwaysAllowAdditionalObjectProperties = AllowAdditionalPropertiesForJsonSchemaValidation(options),
-                GenerateEnumMappingDescription = true,
-                ExcludedTypeNames = new[] { "ServiceHop", "serviceHop" },
-                DefaultReferenceTypeNullHandling = requireReferenceTypes ? ReferenceTypeNullHandling.NotNull : ReferenceTypeNullHandling.Null,
-                SerializerSettings = settings,
-                ReflectionService = new CustomReflectionService()
-            });
-            return schema;
-        }
-
-        private JsonSerializerSettings GetSchemaSerializationSettings(bool useStringEnums)
-        {
-            var settings = new JsonSerializerSettings();
-            if (useStringEnums)
-            {
-                settings.Converters.Add(new StringEnumConverter());
-            }
-
-            settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-            return settings;
-        }
-
-        private void RecursivelyGetErrors(IDictionary<string, object> dict, ValidationError err, JsonSchema schema)
-        {
-            if (err is ChildSchemaValidationError child)
-            {
-                foreach (var childError in child.Errors)
-                {
-                    foreach (var ce in childError.Value)
-                    {
-                        dict.AddOrAppendValue($"{err.Path}.{ce.Property}", ce.Kind.ToString());
-                        RecursivelyGetErrors(dict, ce, childError.Key);
-                    }
-                }
-            }
-
-            dict.AddOrAppendValue($"{err.Property}", err.Kind.ToString());
-        }
-
         public async Task<ServiceResponse> DeserializeResponse(Type type, byte[] message, HttpDataSerializerOptions options = null)
         {
-            var opts = CreateJsonSerializerOptions(options);
+            var opts = TextJsonSerializerSettings.CreateJsonSerializerOptions(options, _debugMode);
             try
             {
                 using (var ms = new MemoryStream(message))
@@ -251,68 +141,6 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 _logger.LogError("Cannot deserialize request", ex);
                 throw;
             }
-        }
-
-        private JsonSerializerOptions CreateJsonSerializerOptions(HttpDataSerializerOptions options)
-        {
-            options = options ?? new HttpDataSerializerOptions();
-            var opts = new JsonSerializerOptions
-            {
-                WriteIndented = _debugMode,
-                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                IgnoreNullValues = true,
-                PropertyNameCaseInsensitive = true
-            };
-
-            if (options.EnumSerializationMethod == EnumSerializationMethod.Object)
-                opts.Converters.Add(new JsonEnumConverter());
-            if (options.EnumSerializationMethod == EnumSerializationMethod.String)
-                opts.Converters.Add(new JsonStringEnumConverter());
-
-            return opts;
-        }
-
-        private bool AllowAdditionalPropertiesForJsonSchemaValidation(HttpDataSerializerOptions options)
-        {
-            var allowProps = new[]
-            {
-                JsonValidationStrategy.DefaultAllowAdditionalProperties,
-                JsonValidationStrategy.ForceAllowAdditionalProperties
-            };
-
-            return allowProps.Contains(options.JsonSchemaValidation);
-        }
-    }
-
-    public class EnumFormatValidator : IFormatValidator
-    {
-        public bool IsValid(string value, JTokenType tokenType)
-        {
-            return true;
-        }
-
-        public ValidationErrorKind ValidationErrorKind { get; set; }
-        public string Format => "Enum";
-    }
-
-    public class CustomReflectionService : DefaultReflectionService
-    {
-        public override JsonTypeDescription GetDescription(ContextualType contextualType,
-            ReferenceTypeNullHandling defaultReferenceTypeNullHandling, JsonSchemaGeneratorSettings settings)
-        {
-            return base.GetDescription(contextualType, defaultReferenceTypeNullHandling, settings);
-        }
-
-        public override bool IsNullable(ContextualType contextualType, ReferenceTypeNullHandling defaultReferenceTypeNullHandling)
-        {
-            if (contextualType.GetContextAttribute<AlwaysPresentAttribute>() != null) return false;
-            return base.IsNullable(contextualType, defaultReferenceTypeNullHandling);
-        }
-
-        public override bool IsStringEnum(ContextualType contextualType, JsonSerializerSettings serializerSettings)
-        {
-            return base.IsStringEnum(contextualType, serializerSettings);
         }
     }
 }

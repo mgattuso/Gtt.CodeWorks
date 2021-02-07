@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using Gtt.CodeWorks.Tokenizer;
 using Gtt.CodeWorks.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -32,7 +33,7 @@ namespace Gtt.CodeWorks
         {
             LoggerFactory = new NullLoggerFactory();
             ServiceLogger = NullServiceLogger.Instance;
-            Tokenizer = NullTokenizer.SkipTokenization;
+            Tokenizer = new CodeWorksTokenizer(new NullTokenService());
             RateLimiter = new InMemoryRateLimiter();
             DistributedLockService = new InMemoryDistributedLock();
             EnvironmentResolver = new NonProductionEnvironmentResolver();

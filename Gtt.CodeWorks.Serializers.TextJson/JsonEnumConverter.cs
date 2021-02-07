@@ -1,33 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Gtt.CodeWorks.Serializers.TextJson
 {
-    public class JsonEnumConverter : JsonConverterFactory
-    {
-        public override bool CanConvert(Type typeToConvert)
-        {
-            return typeToConvert.IsEnum;
-        }
-
-        public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
-        {
-            JsonConverter converter = (JsonConverter)Activator.CreateInstance(
-                typeof(JsonEnumConverter<>).MakeGenericType(typeToConvert),
-                BindingFlags.Instance | BindingFlags.Public,
-                binder: null,
-                args: null,
-                culture: null);
-
-            return converter;
-        }
-    }
-
     public class JsonEnumConverter<T> : JsonConverter<T> where T : struct, Enum
     {
         public override bool CanConvert(Type typeToConvert)

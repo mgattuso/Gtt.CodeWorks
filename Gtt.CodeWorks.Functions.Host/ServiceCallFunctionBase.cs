@@ -18,18 +18,21 @@ namespace Gtt.CodeWorks.Functions.Host
         private readonly HttpRequestMessageRunner _runner;
         private readonly IServiceResolver _serviceResolver;
         private readonly IHttpDataSerializer _serializer;
+        private readonly ISerializationSchema _serializationSchema;
         private readonly IChainedServiceResolver _chainedServiceResolver;
         private readonly TelemetryClient _telemetryClient;
 
         protected ServiceCallFunctionBase(HttpRequestMessageRunner runner,
             IServiceResolver serviceResolver,
             IHttpDataSerializer serializer,
+            ISerializationSchema serializationSchema,
             IChainedServiceResolver chainedServiceResolver,
             TelemetryClient telemetryClient)
         {
             _runner = runner;
             _serviceResolver = serviceResolver;
             _serializer = serializer;
+            _serializationSchema = serializationSchema;
             _chainedServiceResolver = chainedServiceResolver;
             _telemetryClient = telemetryClient;
         }
@@ -82,10 +85,10 @@ namespace Gtt.CodeWorks.Functions.Host
                     switch (format)
                     {
                         case "schema":
-                            json = await _serializer.SerializeSchema(serviceInstance.RequestType);
+                            json = await _serializationSchema.SerializeSchema(serviceInstance.RequestType);
                             break;
                         case "example":
-                            json = await _serializer.SerializeExample(serviceInstance.RequestType);
+                            json = await _serializationSchema.SerializeExample(serviceInstance.RequestType);
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(nameof(format));
@@ -95,10 +98,10 @@ namespace Gtt.CodeWorks.Functions.Host
                     switch (format)
                     {
                         case "schema":
-                            json = await _serializer.SerializeSchema(serviceInstance.ResponseType);
+                            json = await _serializationSchema.SerializeSchema(serviceInstance.ResponseType);
                             break;
                         case "example":
-                            json = await _serializer.SerializeExample(serviceInstance.ResponseType);
+                            json = await _serializationSchema.SerializeExample(serviceInstance.ResponseType);
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(nameof(format));
@@ -143,7 +146,7 @@ namespace Gtt.CodeWorks.Functions.Host
                 }
             }
 
-            var payload = await _serializer.SerializeErrorReport(errorsCodes.OrderBy(x => x.Service).ThenBy(x => x.ErrorCode).ToList());
+            var payload = await _serializationSchema.SerializeErrorReport(errorsCodes.OrderBy(x => x.Service).ThenBy(x => x.ErrorCode).ToList());
             dict["Found"] = "true";
             dict["ServiceInstance"] = serviceInstance.Name;
             _telemetryClient.TrackTrace("ListErrors", SeverityLevel.Information, dict);

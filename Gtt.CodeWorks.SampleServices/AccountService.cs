@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Gtt.CodeWorks.StateMachines;
+using Gtt.CodeWorks.Tokenizer;
 using Stateless;
 
 namespace Gtt.CodeWorks.SampleServices
@@ -33,6 +34,7 @@ namespace Gtt.CodeWorks.SampleServices
             public string Name { get; set; }
             public string ClosureNote { get; set; }
             public decimal InitialBalance { get; set; }
+            public TokenString Ssn { get; set; }
         }
 
         public AccountService(CoreDependencies coreDependencies, StatefulDependencies statefulDependencies) : base(coreDependencies, statefulDependencies)
@@ -48,6 +50,7 @@ namespace Gtt.CodeWorks.SampleServices
                     CurrentData.Name = request.Open.Name;
                     CurrentData.InitialBalance = request.Open.InitialBalance ?? 0;
                     CurrentData.OpenDate = DateTimeOffset.Now;
+                    CurrentData.Ssn = request.Open.Ssn;
                     break;
                 case Trigger.Close:
                     CurrentData.ClosureNote = request.Close.ClosureNote;
@@ -97,6 +100,8 @@ namespace Gtt.CodeWorks.SampleServices
         {
             public string Name { get; set; }
             public decimal? InitialBalance { get; set; }
+            [Sensitive(Reveal.Last, lastChars: 4)]
+            public TokenString Ssn { get; set; }
         }
 
         public class CloseData

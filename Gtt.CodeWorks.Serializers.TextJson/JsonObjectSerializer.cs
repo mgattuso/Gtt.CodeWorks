@@ -66,6 +66,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
             opts.Converters.Add(new JsonStringEnumConverter());
+            opts.Converters.Add(new JsonTokenConverterFactory());
             return opts;
         }
     }

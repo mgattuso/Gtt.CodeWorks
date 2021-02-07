@@ -6,6 +6,7 @@ using Gtt.CodeWorks.Clients.HttpClient;
 using Gtt.CodeWorks.DataAnnotations;
 using Gtt.CodeWorks.SampleWeb.Services;
 using Gtt.CodeWorks.Serializers.TextJson;
+using Gtt.CodeWorks.Tokenizer;
 using Gtt.CodeWorks.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -29,7 +30,7 @@ namespace Gtt.CodeWorks.SampleWeb
 
             services.AddTransient<ILogObjectSerializer, JsonLogObjectSerializer>();
             services.AddTransient<IServiceLogger, ServiceLogger>();
-            services.AddTransient<ICodeWorksTokenizer>(cfg => NullTokenizer.SkipTokenization);
+            services.AddTransient<ICodeWorksTokenizer>(cfg => new CodeWorksTokenizer(new NullTokenService()));
             services.AddTransient<IRateLimiter>(cfg => new InMemoryRateLimiter());
             services.AddTransient<IDistributedLockService>(cfg => new InMemoryDistributedLock());
             services.AddTransient<IServiceEnvironmentResolver>(cfg => new NonProductionEnvironmentResolver());

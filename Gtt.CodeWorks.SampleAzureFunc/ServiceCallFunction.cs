@@ -18,9 +18,10 @@ namespace Gtt.CodeWorks.SampleAzureFunc
             HttpRequestMessageRunner runner,
             IServiceResolver serviceResolver,
             IHttpDataSerializer serializer,
+            ISerializationSchema serializationSchema,
             IChainedServiceResolver chainedServiceResolver,
             TelemetryClient telemetryClient)
-            : base(runner, serviceResolver, serializer, chainedServiceResolver, telemetryClient)
+            : base(runner, serviceResolver, serializer, serializationSchema, chainedServiceResolver, telemetryClient)
         {
         }
 

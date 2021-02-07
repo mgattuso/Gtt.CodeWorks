@@ -47,6 +47,18 @@ namespace Gtt.CodeWorks.Tests.Duplicator
             var settings = new CopierSettings();
             settings.BaseTypesToRemove.Add(typeof(BaseServiceInstance<,>));
             var c = new Copier(settings);
+            c.LimitOutputToAssemblyOfType(typeof(TokenRequest));
+            c.AddType(typeof(TokenRequest));
+            var r = c.Process();
+            Console.WriteLine(r);
+        }
+
+        [TestMethod]
+        public void TokenTest()
+        {
+            var settings = new CopierSettings();
+            settings.BaseTypesToRemove.Add(typeof(BaseServiceInstance<,>));
+            var c = new Copier(settings);
             c.LimitOutputToAssemblyOfType(typeof(AccountRequest));
             c.AddType(typeof(AccountRequest));
             c.AddType(typeof(AccountResponse));
@@ -212,5 +224,11 @@ namespace Gtt.Financial.Core.Account
         public AccountService.AccountState State { get; set; }
         public AccountService.AccountAction[] Actions { get; set; }
         public List<AccountService.AccountAction> ListOfActions { get; set; }
+    }
+
+    public class TokenRequest
+    {
+        public TokenString TokenString { get; set; }
+        public TokenDate TokenDate { get; set; }
     }
 }

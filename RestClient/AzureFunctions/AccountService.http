@@ -6,16 +6,26 @@ Content-Type: application/json
 POST {{host}}/api/meta:request:example/AccountService
 Content-Type: application/json
 
+### RESPONSE SCHEMA
+POST {{host}}/api/meta:response:schema/AccountService
+Content-Type: application/json
+
+### RESPONSE EXAMPLE
+POST {{host}}/api/meta:response:example/AccountService
+Content-Type: application/json
+
 ### SAMPLE OPEN
 POST {{host}}/api/call/AccountService
 Content-Type: application/json
+codeworks-prefs-schema-check: None
 
 {
   "trigger": "Open",
   "identifier": "{{$guid}}",
   "open": {
     "name": "Test Account",
-    "initialBalance": 50.0
+    "initialBalance": 50.0,
+    "ssn": "123456789"
   }
 }
 
@@ -25,7 +35,7 @@ Content-Type: application/json
 
 {
   "trigger": "Update",
-  "identifier": "{{$guid}}",
+  "identifier": "c09a437d-7215-4cb2-bcda-00d5f70a7514",
   "update": {
     "name": "Updated Account"
   }

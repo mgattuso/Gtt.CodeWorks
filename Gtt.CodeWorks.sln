@@ -31,9 +31,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.StateMachines
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.Duplicator", "Gtt.CodeWorks.Duplicator\Gtt.CodeWorks.Duplicator.csproj", "{F27C1EC3-1E51-4825-BE36-F9F8B51F3240}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.AzureStorage", "Gtt.CodeWorks.AzureStorage\Gtt.CodeWorks.AzureStorage.csproj", "{CD305BB7-04AD-44AB-BA46-6609391D56CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.AzureStorage", "Gtt.CodeWorks.AzureStorage\Gtt.CodeWorks.AzureStorage.csproj", "{CD305BB7-04AD-44AB-BA46-6609391D56CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.StateMachines.AzureStorage", "Gtt.CodeWorks.StateMachines.AzureStorage\Gtt.CodeWorks.StateMachines.AzureStorage.csproj", "{F6BB09A3-DFE3-437C-AC09-6536C882A56B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.StateMachines.AzureStorage", "Gtt.CodeWorks.StateMachines.AzureStorage\Gtt.CodeWorks.StateMachines.AzureStorage.csproj", "{F6BB09A3-DFE3-437C-AC09-6536C882A56B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Implementations", "Implementations", "{84B21FEC-7841-46F2-B342-1E262393DAB5}"
 EndProject
@@ -110,6 +110,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{A38FD8B7-04CD-4204-9B56-3EBFE6FA7B72} = {84B21FEC-7841-46F2-B342-1E262393DAB5}
 		{7B75FC89-1E6C-4AB9-936B-6CF896AAB2E2} = {84B21FEC-7841-46F2-B342-1E262393DAB5}
+		{9743F254-A478-420A-BECE-19231C5F3352} = {84B21FEC-7841-46F2-B342-1E262393DAB5}
 		{EE26C10F-C32B-49BE-B7C3-F1C805E511BF} = {3BAC12EC-7ACC-48E3-9EF6-1A9A321766C0}
 		{4E8A37F2-7D1E-4879-88AE-BEC0D63087B5} = {84B21FEC-7841-46F2-B342-1E262393DAB5}
 		{28C35213-EA8E-41F3-B75C-46B5619CB909} = {84B21FEC-7841-46F2-B342-1E262393DAB5}

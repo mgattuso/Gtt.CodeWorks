@@ -12,11 +12,16 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
     {
         private readonly IHttpDataSerializer _serializer;
         private readonly IServiceEnvironmentResolver _environmentResolver;
+        private readonly ISerializationSchema _serializationSchema;
 
-        public HttpRequestMessageConverter(IHttpDataSerializer serializer, IServiceEnvironmentResolver environmentResolver)
+        public HttpRequestMessageConverter(
+            IHttpDataSerializer serializer, 
+            IServiceEnvironmentResolver environmentResolver,
+            ISerializationSchema serializationSchema)
         {
             _serializer = serializer;
             _environmentResolver = environmentResolver;
+            _serializationSchema = serializationSchema;
         }
 
         public async Task<BaseRequest> ConvertRequest(Type type, HttpRequestMessage request)
@@ -27,7 +32,7 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
 
             if (ShouldValidateSchema(options))
             {
-                var schemaErrors = await _serializer.ValidateSchema(contents, type, options);
+                var schemaErrors = await _serializationSchema.ValidateSchema(contents, type, options);
 
                 if (schemaErrors.Any())
                 {
