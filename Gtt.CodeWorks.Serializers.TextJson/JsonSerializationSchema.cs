@@ -17,6 +17,13 @@ namespace Gtt.CodeWorks.Serializers.TextJson
 {
     public class JsonSerializationSchema : ISerializationSchema
     {
+        private readonly ILogger<JsonSerializationSchema> _logger;
+
+        public JsonSerializationSchema(ILogger<JsonSerializationSchema> logger)
+        {
+            _logger = logger;
+        }
+
         public JsonSchema GetSchema(Type t, HttpDataSerializerOptions options, bool useStringEnums, bool requireReferenceTypes)
         {
             var settings = GetSchemaSerializationSettings(useStringEnums);
@@ -30,7 +37,8 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 ReflectionService = new CustomReflectionService(),
                 TypeMappers = new List<ITypeMapper>
                 {
-                    new TokenStringTypeMapper()
+                    new TokenStringTypeMapper(),
+                    new TokenDateTypeMapper()
                 }
             });
             
@@ -78,12 +86,16 @@ namespace Gtt.CodeWorks.Serializers.TextJson
         }
 
 
-        public Task<IDictionary<string, object>> ValidateSchema(byte[] message, Type type, ILogger logger, HttpDataSerializerOptions options = null)
+        public Task<IDictionary<string, object>> ValidateSchema(byte[] message, Type type, HttpDataSerializerOptions options = null)
         {
             options = options ?? new HttpDataSerializerOptions();
             string contents = Encoding.UTF8.GetString(message);
 
-            var schema = GetSchema(type, options, options.EnumSerializationMethod == EnumSerializationMethod.String, requireReferenceTypes: false);
+            var schema = GetSchema(
+                type, 
+                options, 
+                options.EnumSerializationMethod == EnumSerializationMethod.String, requireReferenceTypes: 
+                false);
 
             ICollection<ValidationError> errors = schema.Validate(contents, new EnumFormatValidator());
             IDictionary<string, object> dict = new Dictionary<string, object>();
@@ -96,7 +108,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             {
                 dict.AddOrAppendValue("errorType", "jsonSchemaValidation", forceArray: false);
                 dict.AddOrAppendValue("schema", schema.ToJson(Formatting.None));
-                logger.LogTrace(schema.ToJson());
+                _logger.LogTrace(schema.ToJson());
             }
 
             return Task.FromResult(dict);
@@ -132,11 +144,6 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             var sample = schema.ToSampleJson();
             var json = sample.ToString(Formatting.Indented);
             return Task.FromResult(json);
-        }
-
-        public Task<IDictionary<string, object>> ValidateSchema(byte[] contents, Type type, HttpDataSerializerOptions options = null)
-        {
-            throw new NotImplementedException();
         }
     }
 

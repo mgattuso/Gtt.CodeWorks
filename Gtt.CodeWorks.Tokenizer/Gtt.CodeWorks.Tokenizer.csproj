@@ -13,10 +13,11 @@
 
   <ItemGroup>
     <PackageReference Include="Tokenize.Client" Version="0.1.6" />
+    <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks" Version="0.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
+    <ProjectReference Condition=" '$(Configuration)' == 'Debug'" Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
   </ItemGroup>
 
 </Project>
