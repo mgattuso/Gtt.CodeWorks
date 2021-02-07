@@ -22,9 +22,11 @@ namespace Gtt.CodeWorks.StateMachines
         {
             _stateRepository = statefulDependencies.StateRepository;
 
-            _machine = new StateMachine<TState, TTrigger>(() => _data.State, s => _data.State = s);
-            _machine.OnTransitionedAsync(OnTransitionAction);
+            Machine = new StateMachine<TState, TTrigger>(() => _data.State, s => _data.State = s);
+            Machine.OnTransitionCompletedAsync(OnTransitionAction);
         }
+
+        protected StateMachine<TState, TTrigger> Machine { get; }
 
         private async Task OnTransitionAction(StateMachine<TState, TTrigger>.Transition transition)
         {
@@ -38,7 +40,6 @@ namespace Gtt.CodeWorks.StateMachines
         }
 
         private readonly IStateRepository _stateRepository;
-        private readonly StateMachine<TState, TTrigger> _machine;
         private TData _data;
         private string _identifier;
         public long SerialNumber { get; set; }
@@ -46,7 +47,7 @@ namespace Gtt.CodeWorks.StateMachines
 
         public async Task ReadState(TRequest request)
         {
-            Rules(_machine);
+            Rules(Machine);
 
             var result = await LoadData(request.Identifier, FullName, _data, _stateRepository);
             SerialNumber = result.sequenceNumber;
@@ -183,7 +184,7 @@ namespace Gtt.CodeWorks.StateMachines
                 SerialNumber = SerialNumber,
                 Identifier = _identifier,
                 CurrentState = _data.State,
-                AllowedTriggers = _machine.PermittedTriggers.ToArray(),
+                AllowedTriggers = Machine.PermittedTriggers.ToArray(),
                 ActiveStates = GetAllCurrentStates()
             };
         }
@@ -195,17 +196,17 @@ namespace Gtt.CodeWorks.StateMachines
                 throw new BusinessLogicException($"Cannot call {trigger} on {FullName}:{_identifier}", ServiceResult.ConflictingRequest);
             }
 
-            return _machine.FireAsync(trigger);
+            return Machine.FireAsync(trigger);
         }
 
         protected bool CanCallAction(TTrigger action)
         {
-            return _machine.CanFire(action);
+            return Machine.CanFire(action);
         }
 
         protected bool IsInState(TState state)
         {
-            return _machine.IsInState(state);
+            return Machine.IsInState(state);
         }
 
         protected TData CurrentData => _data;
@@ -217,11 +218,11 @@ namespace Gtt.CodeWorks.StateMachines
                 List<TState> states = new List<TState>();
                 StateInfo si;
                 // LOAD INITIAL STATE FROM THE CURRENT STATE
-                si = _machine.GetInfo().States.FirstOrDefault(x => x.UnderlyingState.Equals(_machine.State));
+                si = Machine.GetInfo().States.FirstOrDefault(x => x.UnderlyingState.Equals(Machine.State));
 
                 if (si == null)
                 {
-                    states.Add(_machine.State);
+                    states.Add(Machine.State);
                 }
                 else
                 {
@@ -237,7 +238,7 @@ namespace Gtt.CodeWorks.StateMachines
             }
             catch (Exception)
             {
-                return new[] { _machine.State };
+                return new[] { Machine.State };
             }
         }
 
