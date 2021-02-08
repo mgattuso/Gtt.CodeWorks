@@ -29,6 +29,25 @@ codeworks-prefs-schema-check: None
   }
 }
 
+### PAUSE ACCOUNT
+POST {{host}}/api/call/AccountService
+Content-Type: application/json
+
+{
+  "identifier": "f95a278b-4e8c-4d19-a0ba-60ea88381db4",
+  "trigger": "Pause"
+}
+
+### PAUSE ACCOUNT
+POST {{host}}/api/call/AccountService
+Content-Type: application/json
+
+{
+  "identifier": "f95a278b-4e8c-4d19-a0ba-60ea88381db4",
+  "trigger": "Reopen",
+  "reopen": {}
+}
+
 ### SAMPLE UPDATE
 POST {{host}}/api/call/AccountService
 Content-Type: application/json

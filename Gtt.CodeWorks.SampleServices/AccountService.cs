@@ -17,6 +17,7 @@ namespace Gtt.CodeWorks.SampleServices
             Pending = 0,
             Opened = 10,
             Closed = 20,
+            Paused = 50,
             Transactable = 30,
             NonTransactable = 40
         }
@@ -26,7 +27,8 @@ namespace Gtt.CodeWorks.SampleServices
             Open = 10,
             Reopen = 20,
             Update = 30,
-            Close = 40
+            Close = 40,
+            Pause = 50
         }
 
         public class Data : BaseStateDataModel<State>
@@ -43,40 +45,6 @@ namespace Gtt.CodeWorks.SampleServices
         {
         }
 
-        //protected override async Task<ServiceResponse<AccountResponse>> Implementation(AccountRequest request, CancellationToken cancellationToken)
-        //{
-        //    Debug.Assert(request.Trigger != null, "request.Trigger != null");
-        //    switch (request.Trigger.Value)
-        //    {
-        //        case Trigger.Open:
-        //            CurrentData.Name = request.Open.Name;
-        //            CurrentData.InitialBalance = request.Open.InitialBalance ?? 0;
-        //            CurrentData.OpenDate = DateTimeOffset.Now;
-        //            CurrentData.Ssn = request.Open.Ssn;
-        //            break;
-        //        case Trigger.Close:
-        //            CurrentData.ClosureNote = request.Close.ClosureNote;
-        //            break;
-        //        case Trigger.Reopen:
-        //            CurrentData.ClosedDate = null;
-        //            break;
-        //        case Trigger.Update:
-        //            CurrentData.Name = request.Update.Name;
-        //            break;
-        //        default:
-        //            throw new ArgumentOutOfRangeException();
-        //    }
-
-        //    await FireAsync(request.Trigger.Value);
-        //    var response = new AccountResponse
-        //    {
-        //        StateMachine = GetStateData(),
-        //        Model = CurrentData
-        //    };
-
-        //    return Successful(response);
-        //}
-
         protected override IDictionary<int, string> DefineErrorCodes()
         {
             return NoErrorCodes();
@@ -91,6 +59,7 @@ namespace Gtt.CodeWorks.SampleServices
             machine.Configure(State.Opened)
                 .SubstateOf(State.Transactable)
                 .Permit(Trigger.Close, State.Closed)
+                .Permit(Trigger.Pause, State.Paused)
                 .PermitReentry(Trigger.Update)
                 .OnEntryFromAsync(Trigger.Open, x =>
                 {
@@ -101,8 +70,13 @@ namespace Gtt.CodeWorks.SampleServices
                     return Task.CompletedTask;
                 });
 
-            machine.Configure(State.Closed).SubstateOf(State.NonTransactable);
-            machine.Configure(State.Closed).Permit(Trigger.Reopen, State.Opened);
+            machine.Configure(State.Paused)
+                .SubstateOf(State.NonTransactable)
+                .Permit(Trigger.Reopen, State.Opened);
+
+            machine.Configure(State.Closed)
+                .SubstateOf(State.NonTransactable)
+                .Permit(Trigger.Reopen, State.Opened);
         }
     }
 

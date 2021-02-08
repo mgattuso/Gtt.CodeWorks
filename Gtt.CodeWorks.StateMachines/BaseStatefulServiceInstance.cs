@@ -26,11 +26,11 @@ namespace Gtt.CodeWorks.StateMachines
 
             Machine = new StateMachine<TState, TTrigger>(() => _data.State, s => _data.State = s);
             Machine.OnTransitionCompletedAsync(OnTransitionAction);
-
+            Rules(Machine);
             SetupParameterData();
         }
 
-        private Dictionary<TTrigger, PropertyInfo> _propertyDict = new Dictionary<TTrigger, PropertyInfo>();
+        private readonly Dictionary<TTrigger, PropertyInfo> _propertyDict = new Dictionary<TTrigger, PropertyInfo>();
 
         private void SetupParameterData()
         {
@@ -39,11 +39,15 @@ namespace Gtt.CodeWorks.StateMachines
 
             foreach (var trigger in Enum.GetValues(typeof(TTrigger)))
             {
-                var match = props.FirstOrDefault(x => x.Name == trigger.ToString());
+                var match = props.FirstOrDefault(x => x.Name.Equals(trigger.ToString(), StringComparison.InvariantCultureIgnoreCase));
                 if (match != null)
                 {
                     _propertyDict[(TTrigger)trigger] = match;
-                    Machine.SetTriggerParameters((TTrigger)trigger, match.PropertyType);
+                    Machine.SetTriggerParameters((TTrigger)trigger, typeof(TRequest), match.PropertyType);
+                }
+                else
+                {
+                    Machine.SetTriggerParameters((TTrigger)trigger, typeof(TRequest));
                 }
             }
         }
@@ -64,15 +68,34 @@ namespace Gtt.CodeWorks.StateMachines
         protected override async Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken)
         {
             Debug.Assert(request.Trigger != null, "request.Trigger != null");
+
+            if (!CanCallAction(request.Trigger.Value))
+            {
+                throw new BusinessLogicException($"Cannot call {request.Trigger} on {FullName}:{_identifier}", ServiceResult.ConflictingRequest);
+            }
+
+            var hasKey = _propertyDict.ContainsKey(request.Trigger.Value);
             var p = _propertyDict.GetValueOrDefault(request.Trigger.Value);
             if (p != null)
             {
                 var data = p.GetValue(request);
-                await Machine.FireAsync(new StateMachine<TState, TTrigger>.TriggerWithParameters<object>(request.Trigger.Value), data);
+
+                if (hasKey && data == null)
+                {
+                    return ValidationError(new ValidationErrorData
+                    {   
+                        ErrorMessage = $"{p.Name} payload is required",
+                        Members = new[] { p.Name }
+                    });
+                }
+
+                await Machine.FireAsync(
+                    new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest, object>(request.Trigger.Value), request, data);
             }
             else
             {
-                await Machine.FireAsync(request.Trigger.Value);
+                await Machine.FireAsync(
+                    new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest>(request.Trigger.Value), request);
             }
 
             var response = new TResponse
@@ -92,8 +115,6 @@ namespace Gtt.CodeWorks.StateMachines
 
         public async Task ReadState(TRequest request)
         {
-            Rules(Machine);
-
             var result = await LoadData(request.Identifier, FullName, _data, _stateRepository);
             SerialNumber = result.sequenceNumber;
             if (result.data != null) _data = result.data;
@@ -292,13 +313,23 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected static T As<T>(StateMachine<TState, TTrigger>.Transition transition)
         {
-            if (transition.Parameters == null || transition.Parameters.Length == 0)
+            if (transition.Parameters == null || transition.Parameters.Length < 2)
             {
                 return default(T);
             }
 
-            var v = transition.Parameters[0];
+            var v = transition.Parameters[1];
             return (T)v;
+        }
+        protected static TRequest Request(StateMachine<TState, TTrigger>.Transition transition)
+        {
+            if (transition.Parameters == null || transition.Parameters.Length < 1)
+            {
+                return default(TRequest);
+            }
+
+            var v = transition.Parameters[0];
+            return (TRequest)v;
         }
     }
 
