@@ -43,39 +43,39 @@ namespace Gtt.CodeWorks.SampleServices
         {
         }
 
-        protected override async Task<ServiceResponse<AccountResponse>> Implementation(AccountRequest request, CancellationToken cancellationToken)
-        {
-            Debug.Assert(request.Trigger != null, "request.Trigger != null");
-            switch (request.Trigger.Value)
-            {
-                case Trigger.Open:
-                    CurrentData.Name = request.Open.Name;
-                    CurrentData.InitialBalance = request.Open.InitialBalance ?? 0;
-                    CurrentData.OpenDate = DateTimeOffset.Now;
-                    CurrentData.Ssn = request.Open.Ssn;
-                    break;
-                case Trigger.Close:
-                    CurrentData.ClosureNote = request.Close.ClosureNote;
-                    break;
-                case Trigger.Reopen:
-                    CurrentData.ClosedDate = null;
-                    break;
-                case Trigger.Update:
-                    CurrentData.Name = request.Update.Name;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+        //protected override async Task<ServiceResponse<AccountResponse>> Implementation(AccountRequest request, CancellationToken cancellationToken)
+        //{
+        //    Debug.Assert(request.Trigger != null, "request.Trigger != null");
+        //    switch (request.Trigger.Value)
+        //    {
+        //        case Trigger.Open:
+        //            CurrentData.Name = request.Open.Name;
+        //            CurrentData.InitialBalance = request.Open.InitialBalance ?? 0;
+        //            CurrentData.OpenDate = DateTimeOffset.Now;
+        //            CurrentData.Ssn = request.Open.Ssn;
+        //            break;
+        //        case Trigger.Close:
+        //            CurrentData.ClosureNote = request.Close.ClosureNote;
+        //            break;
+        //        case Trigger.Reopen:
+        //            CurrentData.ClosedDate = null;
+        //            break;
+        //        case Trigger.Update:
+        //            CurrentData.Name = request.Update.Name;
+        //            break;
+        //        default:
+        //            throw new ArgumentOutOfRangeException();
+        //    }
 
-            await FireAsync(request.Trigger.Value);
-            var response = new AccountResponse
-            {
-                StateMachine = GetStateData(),
-                Model = CurrentData
-            };
+        //    await FireAsync(request.Trigger.Value);
+        //    var response = new AccountResponse
+        //    {
+        //        StateMachine = GetStateData(),
+        //        Model = CurrentData
+        //    };
 
-            return Successful(response);
-        }
+        //    return Successful(response);
+        //}
 
         protected override IDictionary<int, string> DefineErrorCodes()
         {
@@ -84,12 +84,22 @@ namespace Gtt.CodeWorks.SampleServices
 
         protected override void Rules(StateMachine<State, Trigger> machine)
         {
-            machine.Configure(State.Pending).SubstateOf(State.NonTransactable);
-            machine.Configure(State.Pending).Permit(Trigger.Open, State.Opened);
+            machine.Configure(State.Pending)
+                .SubstateOf(State.NonTransactable)
+                .Permit(Trigger.Open, State.Opened);
 
-            machine.Configure(State.Opened).SubstateOf(State.Transactable);
-            machine.Configure(State.Opened).Permit(Trigger.Close, State.Closed);
-            machine.Configure(State.Opened).PermitReentry(Trigger.Update);
+            machine.Configure(State.Opened)
+                .SubstateOf(State.Transactable)
+                .Permit(Trigger.Close, State.Closed)
+                .PermitReentry(Trigger.Update)
+                .OnEntryFromAsync(Trigger.Open, x =>
+                {
+                    var data = As<AccountRequest.OpenData>(x);
+                    CurrentData.Name = data.Name;
+                    CurrentData.OpenDate = ServiceClock.CurrentTime();
+                    CurrentData.Ssn = data.Ssn;
+                    return Task.CompletedTask;
+                });
 
             machine.Configure(State.Closed).SubstateOf(State.NonTransactable);
             machine.Configure(State.Closed).Permit(Trigger.Reopen, State.Opened);

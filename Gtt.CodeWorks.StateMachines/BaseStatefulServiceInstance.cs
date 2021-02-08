@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,6 +26,26 @@ namespace Gtt.CodeWorks.StateMachines
 
             Machine = new StateMachine<TState, TTrigger>(() => _data.State, s => _data.State = s);
             Machine.OnTransitionCompletedAsync(OnTransitionAction);
+
+            SetupParameterData();
+        }
+
+        private Dictionary<TTrigger, PropertyInfo> _propertyDict = new Dictionary<TTrigger, PropertyInfo>();
+
+        private void SetupParameterData()
+        {
+            Type t = typeof(TRequest);
+            var props = t.GetProperties();
+
+            foreach (var trigger in Enum.GetValues(typeof(TTrigger)))
+            {
+                var match = props.FirstOrDefault(x => x.Name == trigger.ToString());
+                if (match != null)
+                {
+                    _propertyDict[(TTrigger)trigger] = match;
+                    Machine.SetTriggerParameters((TTrigger)trigger, match.PropertyType);
+                }
+            }
         }
 
         protected StateMachine<TState, TTrigger> Machine { get; }
@@ -37,6 +59,29 @@ namespace Gtt.CodeWorks.StateMachines
 
             await StoreState(_identifier, transition.Source.ToString(), transition.Destination.ToString(),
                 transition.Trigger.ToString(), transition.IsReentry);
+        }
+
+        protected override async Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken)
+        {
+            Debug.Assert(request.Trigger != null, "request.Trigger != null");
+            var p = _propertyDict.GetValueOrDefault(request.Trigger.Value);
+            if (p != null)
+            {
+                var data = p.GetValue(request);
+                await Machine.FireAsync(new StateMachine<TState, TTrigger>.TriggerWithParameters<object>(request.Trigger.Value), data);
+            }
+            else
+            {
+                await Machine.FireAsync(request.Trigger.Value);
+            }
+
+            var response = new TResponse
+            {
+                StateMachine = GetStateData(),
+                Model = CurrentData
+            };
+
+            return Successful(response);
         }
 
         private readonly IStateRepository _stateRepository;
@@ -244,6 +289,17 @@ namespace Gtt.CodeWorks.StateMachines
 
         public DateTimeOffset CreatedDate { get; private set; }
         public DateTimeOffset ModifiedDate { get; private set; }
+
+        protected static T As<T>(StateMachine<TState, TTrigger>.Transition transition)
+        {
+            if (transition.Parameters == null || transition.Parameters.Length == 0)
+            {
+                return default(T);
+            }
+
+            var v = transition.Parameters[0];
+            return (T)v;
+        }
     }
 
     public enum MachineStatus
