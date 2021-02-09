@@ -4,6 +4,7 @@ using System.Text;
 using Gtt.CodeWorks.Functions.Host;
 using Gtt.CodeWorks.SampleServices;
 using Gtt.CodeWorks.Serializers.TextJson;
+using Gtt.CodeWorks.Services;
 using Gtt.CodeWorks.StateMachines;
 using Gtt.CodeWorks.StateMachines.AzureStorage;
 using Gtt.CodeWorks.Tokenizer;
@@ -28,6 +29,7 @@ namespace Gtt.CodeWorks.SampleAzureFunc
             builder.Services.AddTransient<IObjectSerializer, JsonObjectSerializer>();
 
             builder.Services.Replace(ServiceDescriptor.Transient<ITokenizerService, GttTokenizerService>());
+            builder.Services.Replace(ServiceDescriptor.Transient<IStateDiagram, StatelessStateDiagram>());
 
             builder.Services.AddTransient<ITokenizeClient>(cfg => new TokenizeClient(
                 Environment.GetEnvironmentVariable("TokenizerEndpoint"),

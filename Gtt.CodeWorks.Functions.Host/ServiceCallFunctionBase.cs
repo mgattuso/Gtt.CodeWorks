@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
+using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using Gtt.CodeWorks.Clients.HttpRequest;
+using Gtt.CodeWorks.Services;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Azure.WebJobs;
@@ -21,12 +24,14 @@ namespace Gtt.CodeWorks.Functions.Host
         private readonly ISerializationSchema _serializationSchema;
         private readonly IChainedServiceResolver _chainedServiceResolver;
         private readonly TelemetryClient _telemetryClient;
+        private readonly IStateDiagram _stateDiagram;
 
         protected ServiceCallFunctionBase(HttpRequestMessageRunner runner,
             IServiceResolver serviceResolver,
             IHttpDataSerializer serializer,
             ISerializationSchema serializationSchema,
             IChainedServiceResolver chainedServiceResolver,
+            IStateDiagram stateDiagram,
             TelemetryClient telemetryClient)
         {
             _runner = runner;
@@ -35,6 +40,7 @@ namespace Gtt.CodeWorks.Functions.Host
             _serializationSchema = serializationSchema;
             _chainedServiceResolver = chainedServiceResolver;
             _telemetryClient = telemetryClient;
+            _stateDiagram = stateDiagram;
         }
 
         public virtual Task<HttpResponseMessage> Execute(
@@ -46,7 +52,22 @@ namespace Gtt.CodeWorks.Functions.Host
             switch (action)
             {
                 case "call":
-                    return CallAction(request, service, cancellationToken);
+                    if (request.Method == HttpMethod.Post)
+                    {
+                        return CallAction(request, service, cancellationToken);
+                    }
+                    else
+                    {
+                        var msg = new HttpResponseMessage(HttpStatusCode.NotFound)
+                        {
+                            Content = new StringContent("Use POST method to call service")
+                        };
+                        return Task.FromResult(msg);
+                    }
+                case "meta:state:diagram":
+                    return StateDiagram(request, service, cancellationToken);
+                case "meta:state:diagram:view":
+                    return StateDiagramView(request, service, cancellationToken);
                 case "meta:errors":
                     return ErrorsAction(service, cancellationToken);
                 case "meta:request:schema":
@@ -60,6 +81,39 @@ namespace Gtt.CodeWorks.Functions.Host
             }
 
             throw new NotImplementedException();
+        }
+
+        private async Task<HttpResponseMessage> StateDiagram(HttpRequestMessage request, string service, CancellationToken cancellationToken)
+        {
+            IServiceInstance serviceInstance = _serviceResolver.GetInstanceByName(service);
+            var d = await _stateDiagram.GetDiagram(serviceInstance);
+
+            var msg = new HttpResponseMessage(HttpStatusCode.OK);
+            if (string.IsNullOrWhiteSpace(d.contentType))
+            {
+                msg.Content = new StringContent(d.diagram, Encoding.UTF8);
+            }
+            else
+            {
+                msg.Content = new StringContent(d.diagram, Encoding.UTF8, d.contentType);
+            }
+            return msg;
+        }
+
+        private async Task<HttpResponseMessage> StateDiagramView(HttpRequestMessage request, string service, CancellationToken cancellationToken)
+        {
+            IServiceInstance serviceInstance = _serviceResolver.GetInstanceByName(service);
+            var d = await _stateDiagram.GetDiagram(serviceInstance);
+
+            var diagram = d.diagram.Replace("rankdir=\"LR\"", "rankdir=\"TB\"");
+
+            var encoder = UrlEncoder.Default;
+            var url = "https://dreampuf.github.io/GraphvizOnline/#" + encoder.Encode(diagram);
+
+            var msg = new HttpResponseMessage(HttpStatusCode.Redirect);
+            msg.Headers.Add("location", url);
+
+            return msg;
         }
 
         private async Task<HttpResponseMessage> SchemaActions(string service, string model, string format)
@@ -152,7 +206,7 @@ namespace Gtt.CodeWorks.Functions.Host
             _telemetryClient.TrackTrace("ListErrors", SeverityLevel.Information, dict);
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content =  new StringContent(payload, _serializer.Encoding, _serializer.ContentType)
+                Content = new StringContent(payload, _serializer.Encoding, _serializer.ContentType)
             };
         }
 

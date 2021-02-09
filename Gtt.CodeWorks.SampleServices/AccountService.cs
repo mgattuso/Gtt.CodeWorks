@@ -68,7 +68,12 @@ namespace Gtt.CodeWorks.SampleServices
                     CurrentData.OpenDate = ServiceClock.CurrentTime();
                     CurrentData.Ssn = data.Ssn;
                     return Task.CompletedTask;
-                });
+                }, "Open Account")
+                .OnEntryFromAsync(new StateMachine<State, Trigger>.TriggerWithParameters<AccountRequest, AccountRequest.UpdateData>(Trigger.Update), (request, data) =>
+                {
+                    CurrentData.Name = data.Name;
+                    return Task.CompletedTask;
+                }, "Update Account");
 
             machine.Configure(State.Paused)
                 .SubstateOf(State.NonTransactable)

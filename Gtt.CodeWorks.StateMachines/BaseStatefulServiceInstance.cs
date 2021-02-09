@@ -8,12 +8,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Gtt.CodeWorks.Validation;
 using Stateless;
+using Stateless.Graph;
 using Stateless.Reflection;
 
 namespace Gtt.CodeWorks.StateMachines
 {
     public abstract class BaseStatefulServiceInstance<TRequest, TResponse, TState, TTrigger, TData>
-        : BaseServiceInstance<TRequest, TResponse>
+        : BaseServiceInstance<TRequest, TResponse>, IStatefulServiceInstance
         where TRequest : BaseStatefulRequest<TTrigger>, new()
         where TResponse : BaseStatefulResponse<TState, TTrigger, TData>, new()
         where TState : struct, IConvertible
@@ -23,7 +24,7 @@ namespace Gtt.CodeWorks.StateMachines
         protected BaseStatefulServiceInstance(CoreDependencies coreDependencies, StatefulDependencies statefulDependencies) : base(coreDependencies)
         {
             _stateRepository = statefulDependencies.StateRepository;
-
+            _data = new TData();
             Machine = new StateMachine<TState, TTrigger>(() => _data.State, s => _data.State = s);
             Machine.OnTransitionCompletedAsync(OnTransitionAction);
             Rules(Machine);
@@ -330,6 +331,12 @@ namespace Gtt.CodeWorks.StateMachines
 
             var v = transition.Parameters[0];
             return (TRequest)v;
+        }
+
+        public (string diagram, string contentType) Diagram()
+        {
+            var d = UmlDotGraph.Format(Machine.GetInfo());
+            return (d, "text/vnd.graphviz");
         }
     }
 

@@ -5,6 +5,7 @@ using System.Text;
 using Gtt.CodeWorks.Clients.HttpRequest;
 using Gtt.CodeWorks.DataAnnotations;
 using Gtt.CodeWorks.Serializers.TextJson;
+using Gtt.CodeWorks.Services;
 using Gtt.CodeWorks.Tokenizer;
 using Gtt.CodeWorks.Validation;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +36,7 @@ namespace Gtt.CodeWorks.Functions.Host
         public static IServiceCollection ConfigureCoreDependencies(this IServiceCollection services)
         {
             services.AddTransient<ITokenizerService, NullTokenService>();
+            services.AddTransient<IStateDiagram, NullStateDiagram>();
             services.AddTransient<ICodeWorksTokenizer, CodeWorksTokenizer>();
             services.AddTransient<IRateLimiter>(cfg => new InMemoryRateLimiter());
             services.AddTransient<IDistributedLockService>(cfg => new InMemoryDistributedLock());
