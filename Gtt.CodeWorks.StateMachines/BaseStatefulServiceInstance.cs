@@ -116,7 +116,7 @@ namespace Gtt.CodeWorks.StateMachines
 
         public async Task ReadState(TRequest request)
         {
-            var result = await LoadData(request.Identifier, FullName, _data, _stateRepository);
+            var result = await LoadData(request.Identifier, FullName, _data, _stateRepository, request?.Get?.Version);
             SerialNumber = result.sequenceNumber;
             if (result.data != null) _data = result.data;
             CreatedDate = result.created;
@@ -177,9 +177,10 @@ namespace Gtt.CodeWorks.StateMachines
             string identifier,
             string machineName,
             TData currentData,
-            IStateRepository repository)
+            IStateRepository repository,
+            long? version)
         {
-            var stateInformation = await repository.RetrieveStateData<TData, TState>(identifier, machineName);
+            var stateInformation = await repository.RetrieveStateData<TData, TState>(identifier, machineName, version);
             if (stateInformation == null)
             {
                 return (currentData ?? new TData(), 0L, ServiceClock.CurrentTime(),

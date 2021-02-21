@@ -10,7 +10,7 @@ namespace Gtt.CodeWorks.StateMachines
             where TData : BaseStateDataModel<TState>
             where TState : struct, IConvertible;
 
-        Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName)
+        Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName, long? version)
             where TData : BaseStateDataModel<TState>
             where TState : struct, IConvertible;
     }

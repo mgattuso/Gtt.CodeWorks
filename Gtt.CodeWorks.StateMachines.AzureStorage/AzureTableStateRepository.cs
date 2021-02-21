@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Gtt.CodeWorks.AzureStorage;
 using Microsoft.Extensions.Logging;
@@ -101,13 +102,30 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
             return nextSequenceNumber;
         }
 
-        public async Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible
+        public async Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName, long? version) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible
         {
             var tableName = machineName.Replace(".", "");
             var table = await GetTable($"State{tableName}");
 
+            version = version == 0 ? null : version;
+
             string partitionKey = identifier;
-            var data = await table.GetEntity<StateDataTable>(partitionKey, "current");
+
+            if (version < 0)
+            {
+                var q = TableOperation.Retrieve(partitionKey, "current", new List<string>() { "SequenceNumber" });
+                var res = await table.ExecuteAsync(q);
+                var te = res.Result as DynamicTableEntity;
+                if (te != null)
+                {
+                    long? current = te.Properties["SequenceNumber"].Int64Value;
+                    version = current.HasValue ? current + version : version;
+                }
+            }
+
+            
+            string versionToRetrieve = version?.ToString() ?? "current";
+            var data = await table.GetEntity<StateDataTable>(partitionKey, versionToRetrieve);
 
             if (data == null)
             {

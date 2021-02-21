@@ -24,7 +24,7 @@ namespace Gtt.CodeWorks.StateMachines
 
         public async Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible
         {
-            var existingEntry = await RetrieveStateData<TData, TState>(metaData.Identifier, metaData.MachineName);
+            var existingEntry = await RetrieveStateData<TData, TState>(metaData.Identifier, metaData.MachineName, sequenceNumber: null);
             long sequenceNumber = existingEntry?.StateMetaData?.SequenceNumber ?? 0;
             if (sequenceNumber != currentSequenceNumber)
             {
@@ -37,11 +37,6 @@ namespace Gtt.CodeWorks.StateMachines
             copyOfMetaData.SequenceNumber = nextSequenceNumber;
             _data[Tuple.Create(nextSequenceNumber, metaData.Identifier, metaData.MachineName)] = Tuple.Create(copyOfMetaData, copyOfData);
             return nextSequenceNumber;
-        }
-
-        public Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible
-        {
-            return RetrieveStateData<TData, TState>(identifier, machineName, null);
         }
 
         public async Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName, long? sequenceNumber) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible

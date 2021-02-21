@@ -11,6 +11,12 @@ namespace Gtt.CodeWorks.StateMachines
         public TTrigger? Trigger { get; set; }
         [AlwaysPresent]
         public string Identifier { get; set; }
+        public GetData Get { get; set; }
+
+        public class GetData
+        {
+            public long? Version { get; set; }
+        }
     }
 
     public class BaseStatefulResponse<TState, TTrigger, TData>
