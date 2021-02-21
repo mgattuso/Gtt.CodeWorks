@@ -2,6 +2,14 @@
 POST {{host}}/api/meta:request:schema/AccountService
 Content-Type: application/json
 
+### REQUEST DIAGRAM
+POST {{host}}/api/meta:state:diagram/AccountService
+Content-Type: application/json
+
+### REQUEST DIAGRAM
+POST {{host}}/api/meta:state:diagram:view/AccountService
+Content-Type: application/json
+
 ### REQUEST EXAMPLE
 POST {{host}}/api/meta:request:example/AccountService
 Content-Type: application/json
@@ -25,7 +33,7 @@ codeworks-prefs-schema-check: None
   "open": {
     "name": "Test Account",
     "initialBalance": 50.0,
-    "ssn": "123456789"
+    "ssn": "123456785"
   }
 }
 
@@ -34,7 +42,7 @@ POST {{host}}/api/call/AccountService
 Content-Type: application/json
 
 {
-  "identifier": "f95a278b-4e8c-4d19-a0ba-60ea88381db4",
+  "identifier": "fc2472bf-f05c-49e1-b092-8e3f28cef9fc",
   "trigger": "Pause"
 }
 
@@ -43,7 +51,7 @@ POST {{host}}/api/call/AccountService
 Content-Type: application/json
 
 {
-  "identifier": "f95a278b-4e8c-4d19-a0ba-60ea88381db4",
+  "identifier": "fc2472bf-f05c-49e1-b092-8e3f28cef9fc",
   "trigger": "Reopen",
   "reopen": {}
 }
@@ -54,8 +62,16 @@ Content-Type: application/json
 
 {
   "trigger": "Update",
-  "identifier": "c09a437d-7215-4cb2-bcda-00d5f70a7514",
+  "identifier": "fc2472bf-f05c-49e1-b092-8e3f28cef9fc",
   "update": {
-    "name": "Updated Account"
+    "name": "Updated Account {{$timestamp}}"
   }
+}
+
+### SAMPLE UPDATE
+POST {{host}}/api/call/AccountService
+Content-Type: application/json
+
+{
+  "identifier": "fc2472bf-f05c-49e1-b092-8e3f28cef9fc"
 }

@@ -21,10 +21,12 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
             _logger = logger;
         }
 
-        public async Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible
+        public async Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data) 
+            where TData : BaseStateDataModel<TState> 
+            where TState : struct, IConvertible
         {
             var tableName = metaData.MachineName.Replace(".", "");
-            var table = await GetTable($"State{tableName}");
+            var table = await GetTable($"S{tableName}");
 
             string partitionKey = metaData.Identifier;
 
@@ -56,6 +58,7 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
             currentMarker.Destination = metaData.Destination;
             currentMarker.IsReentry = metaData.IsReentry;
             currentMarker.Trigger = metaData.Trigger;
+            currentMarker.CorrelationId = metaData.CorrelationId.ToString();
             currentMarker.UpdateAuditable(metaData);
 
             var record = new StateDataTable
@@ -69,7 +72,8 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
                 IsReentry = metaData.IsReentry,
                 SequenceNumber = nextSequenceNumber,
                 SerializedState = serializedState,
-                Trigger = metaData.Trigger
+                Trigger = metaData.Trigger,
+                CorrelationId = metaData.CorrelationId.ToString()
             }.UpdateAuditable(metaData);
 
             try
