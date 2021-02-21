@@ -114,7 +114,7 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected async Task LoadData(string identifier, Guid correlationId)
         {
-            var storedData = await _stateRepository.RetrieveStateData<ThirdPartyStateData, State>(identifier, MachineName);
+            var storedData = await _stateRepository.RetrieveStateData<ThirdPartyStateData, State>(identifier, MachineName, null);
             if (storedData != null)
             {
                 _data = storedData.Data;
