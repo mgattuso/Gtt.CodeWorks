@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Gtt.CodeWorks.Functions.Host;
+using Gtt.CodeWorks.JWT;
 using Gtt.CodeWorks.SampleServices;
 using Gtt.CodeWorks.Serializers.TextJson;
 using Gtt.CodeWorks.Services;
@@ -30,6 +31,9 @@ namespace Gtt.CodeWorks.SampleAzureFunc
 
             builder.Services.Replace(ServiceDescriptor.Transient<ITokenizerService, GttTokenizerService>());
             builder.Services.Replace(ServiceDescriptor.Transient<IStateDiagram, StatelessStateDiagram>());
+
+            builder.Services.AddTransient<IUserResolver, DummyUserResolver>();
+            builder.Services.AddTransient<IUserResolverSecret>(cfg => new UserResolverSecretBasic("ABC123"));
 
             builder.Services.AddTransient<ITokenizeClient>(cfg => new TokenizeClient(
                 Environment.GetEnvironmentVariable("TokenizerEndpoint"),

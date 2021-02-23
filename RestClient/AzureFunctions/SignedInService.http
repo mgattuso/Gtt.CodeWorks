@@ -1,38 +1,39 @@
 ### REQUEST SCHEMA
-POST {{host}}/api/meta:request:schema/ThirdPartyService
+POST {{host}}/api/meta:request:schema/SignedInService
 Content-Type: application/json
 
 ### REQUEST DIAGRAM
-POST {{host}}/api/meta:state:diagram/AccountService
+POST {{host}}/api/meta:state:diagram/SignedInService
 Content-Type: application/json
 
 ### REQUEST DIAGRAM
-POST {{host}}/api/meta:state:diagram:view/AccountService
+POST {{host}}/api/meta:state:diagram:view/SignedInService
 Content-Type: application/json
 
 ### REQUEST EXAMPLE
-POST {{host}}/api/meta:request:example/ThirdPartyService
+POST {{host}}/api/meta:request:example/SignedInService
 Content-Type: application/json
 
 ### RESPONSE SCHEMA
-POST {{host}}/api/meta:response:schema/AccountService
+POST {{host}}/api/meta:response:schema/SignedInService
 Content-Type: application/json
 
 ### RESPONSE EXAMPLE
-POST {{host}}/api/meta:response:example/AccountService
+POST {{host}}/api/meta:response:example/SignedInService
 Content-Type: application/json
 
-### SAMPLE OPEN
-POST {{host}}/api/call/ThirdPartyService
+### SAMPLE CALL
+POST {{host}}/api/call/SignedInService
 Content-Type: application/json
 codeworks-prefs-schema-check: None
 
 {
-  "correlationId": "{{$guid}}"
+  "correlationId": "{{$guid}}",
+  "authToken": "C"
 }
 
 ### PAUSE ACCOUNT
-POST {{host}}/api/call/AccountService
+POST {{host}}/api/call/SignedInService
 Content-Type: application/json
 
 {
@@ -41,7 +42,7 @@ Content-Type: application/json
 }
 
 ### PAUSE ACCOUNT
-POST {{host}}/api/call/AccountService
+POST {{host}}/api/call/SignedInService
 Content-Type: application/json
 
 {
@@ -51,7 +52,7 @@ Content-Type: application/json
 }
 
 ### SAMPLE UPDATE
-POST {{host}}/api/call/AccountService
+POST {{host}}/api/call/SignedInService
 Content-Type: application/json
 
 {
@@ -63,7 +64,7 @@ Content-Type: application/json
 }
 
 ### SAMPLE UPDATE
-POST {{host}}/api/call/AccountService
+POST {{host}}/api/call/SignedInService
 Content-Type: application/json
 
 {

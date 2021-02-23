@@ -5,33 +5,45 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Gtt.CodeWorks.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Gtt.CodeWorks.Middleware
 {
     public class AuthenticationMiddleware : IServiceMiddleware
     {
+        private readonly ILogger<AuthenticationMiddleware> _logger;
         private readonly IUserResolver _userResolver;
 
-        public AuthenticationMiddleware(IUserResolver userResolver)
+        public AuthenticationMiddleware(IUserResolver userResolver, ILogger<AuthenticationMiddleware> logger)
         {
-            _userResolver = userResolver;
+            _logger = logger;
+            if (userResolver == null)
+            {
+                _logger.LogWarning("No userResolver providing using NullUserResolver");
+            }
+            _userResolver = userResolver ?? NullUserResolver.Instance;
         }
 
         public async Task<ServiceResponse> OnRequest<TReq>(IServiceInstance service, TReq request, CancellationToken cancellationToken) where TReq : BaseRequest, new()
         {
-
-
             if (service is IAuthenticatedServiceInstance authService)
             {
-                var userResult = await _userResolver.GetUserOrDefault(request.AuthToken, request.CorrelationId, cancellationToken);
+                UserResolverResult userResult = await _userResolver.GetUserOrDefault(request.AuthToken, request.CorrelationId, cancellationToken);
+                _logger.LogTrace($"AuthToken:{request.AuthToken}, CorrelationId:{request.CorrelationId}");
 
-                if (authService.AllowAnonymous || authService.MustBeInRoles?.Length == 0)
+                if (authService.AllowAnonymous && (authService.MustBeInRoles == null ||
+                    authService.MustBeInRoles.Length == 0) && authService.UserIsAuthorized(userResult.User))
                 {
                     return this.ContinuePipeline();
                 }
 
                 switch (userResult.Status)
                 {
+                    case UserAuthStatus.NoUser:
+                        return new ServiceResponse(new ResponseMetaData(
+                            service,
+                            ServiceResult.NotAuthenticated));
+
                     case UserAuthStatus.Expired:
                         return new ServiceResponse(new ResponseMetaData(
                             service,
@@ -64,8 +76,8 @@ namespace Gtt.CodeWorks.Middleware
                                     ServiceResult.NotAuthorized));
                             }
 
-                            var lowerRoles = authService.MustBeInRoles.Where(x => x != null).Select(x => x.ToLowerInvariant().Trim());
-                            var lowerUserRoles = authService.MustBeInRoles.Where(x => x != null).Select(x => x.ToLowerInvariant().Trim());
+                            var lowerRoles = authService.MustBeInRoles.Where(x => x != null).Select(x => x.ToLowerInvariant().Trim()).ToArray();
+                            var lowerUserRoles = userResult.User.Roles.Where(x => x != null).Select(x => x.ToLowerInvariant().Trim()).ToArray();
 
                             if (!lowerUserRoles.Intersect(lowerRoles).Any())
                             {

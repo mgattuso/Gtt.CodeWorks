@@ -24,7 +24,7 @@ namespace Gtt.CodeWorks
             _pipeline.Add(new RateLimiterMiddleware(coreDependencies.RateLimiter));
             _pipeline.Add(new TokenizationMiddleware(coreDependencies.Tokenizer, coreDependencies.EnvironmentResolver));
             _pipeline.Add(new LoggingMiddleware(coreDependencies.ServiceLogger));
-            _pipeline.Add(new AuthenticationMiddleware(coreDependencies.UserResolver));
+            _pipeline.Add(new AuthenticationMiddleware(coreDependencies.UserResolver, coreDependencies.LoggerFactory.CreateLogger<AuthenticationMiddleware>()));
             _pipeline.Add(new DistributedLockMiddleware<TRequest>(coreDependencies.DistributedLockService, CreateDistributedLockKey));
             _pipeline.Add(new ValidationMiddleware(coreDependencies.RequestValidator));
             _logger = coreDependencies.LoggerFactory.CreateLogger(GetType());
@@ -315,8 +315,8 @@ namespace Gtt.CodeWorks
             return 0;
         }
 
-        public bool AllowAnonymous => true;
-        public string[] MustBeInRoles => new string[0];
+        public virtual bool AllowAnonymous => true;
+        public virtual string[] MustBeInRoles => new string[0];
         public virtual bool UserIsAuthorized(UserInformation user)
         {
             return true;
