@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 namespace Gtt.CodeWorks
 {
     public abstract class BaseServiceInstance<TRequest, TResponse>
-        : IServiceInstance<TRequest, TResponse>
+        : IServiceInstance<TRequest, TResponse>, IAuthenticatedServiceInstance
         where TRequest : BaseRequest, new() where TResponse : new()
     {
         private readonly IList<IServiceMiddleware> _pipeline = new List<IServiceMiddleware>();
@@ -24,6 +24,7 @@ namespace Gtt.CodeWorks
             _pipeline.Add(new RateLimiterMiddleware(coreDependencies.RateLimiter));
             _pipeline.Add(new TokenizationMiddleware(coreDependencies.Tokenizer, coreDependencies.EnvironmentResolver));
             _pipeline.Add(new LoggingMiddleware(coreDependencies.ServiceLogger));
+            _pipeline.Add(new AuthenticationMiddleware(coreDependencies.UserResolver));
             _pipeline.Add(new DistributedLockMiddleware<TRequest>(coreDependencies.DistributedLockService, CreateDistributedLockKey));
             _pipeline.Add(new ValidationMiddleware(coreDependencies.RequestValidator));
             _logger = coreDependencies.LoggerFactory.CreateLogger(GetType());
@@ -104,9 +105,9 @@ namespace Gtt.CodeWorks
             }
             catch (BusinessLogicException ex)
             {
-                var errors = new ErrorData(ex.Message); 
+                var errors = new ErrorData(ex.Message);
                 response = new ServiceResponse<TResponse>(
-                    default(TResponse), 
+                    default(TResponse),
                     new ResponseMetaData(this, ex.Result, errors));
             }
             catch (ValidationErrorException ex)
@@ -209,7 +210,7 @@ namespace Gtt.CodeWorks
         {
             return new ServiceResponse<TResponse>(default(TResponse),
                 new ResponseMetaData(
-                    this, 
+                    this,
                     ServiceResult.ResourceNotFound)
                 );
         }
@@ -255,7 +256,7 @@ namespace Gtt.CodeWorks
             }
             return Task.FromResult(
                 new ServiceResponse<TResponse>(
-                    response, 
+                    response,
                     new ResponseMetaData(this, ServiceResult.Successful, dependencyMetaData))
                 );
         }
@@ -314,6 +315,13 @@ namespace Gtt.CodeWorks
             return 0;
         }
 
+        public bool AllowAnonymous => true;
+        public string[] MustBeInRoles => new string[0];
+        public virtual bool UserIsAuthorized(UserInformation user)
+        {
+            return true;
+        }
+
         protected abstract Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken);
         protected abstract Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken);
         protected abstract IDictionary<int, string> DefineErrorCodes();
@@ -326,6 +334,7 @@ namespace Gtt.CodeWorks
         public int? ServiceHop => _serviceHop;
 
         public IEnumerable<KeyValuePair<int, string>> AllErrorCodes() => DefineErrorCodes() ?? new Dictionary<int, string>();
+        public UserInformation User { get; set; }
 
         public abstract ServiceAction Action { get; }
         public async Task<ServiceResponse> Execute(BaseRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)

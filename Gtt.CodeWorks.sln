@@ -37,6 +37,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.StateMachines
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Implementations", "Implementations", "{84B21FEC-7841-46F2-B342-1E262393DAB5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.JWT", "Gtt.CodeWorks.JWT\Gtt.CodeWorks.JWT.csproj", "{06C0AF1E-1C0C-47A9-8C1E-925408B4CE10}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -103,6 +105,10 @@ Global
 		{F6BB09A3-DFE3-437C-AC09-6536C882A56B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F6BB09A3-DFE3-437C-AC09-6536C882A56B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F6BB09A3-DFE3-437C-AC09-6536C882A56B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06C0AF1E-1C0C-47A9-8C1E-925408B4CE10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06C0AF1E-1C0C-47A9-8C1E-925408B4CE10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06C0AF1E-1C0C-47A9-8C1E-925408B4CE10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06C0AF1E-1C0C-47A9-8C1E-925408B4CE10}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -118,6 +124,7 @@ Global
 		{A4F67136-6E7F-4B55-899F-1D32AD7E584E} = {3BAC12EC-7ACC-48E3-9EF6-1A9A321766C0}
 		{CD305BB7-04AD-44AB-BA46-6609391D56CE} = {84B21FEC-7841-46F2-B342-1E262393DAB5}
 		{F6BB09A3-DFE3-437C-AC09-6536C882A56B} = {84B21FEC-7841-46F2-B342-1E262393DAB5}
+		{06C0AF1E-1C0C-47A9-8C1E-925408B4CE10} = {84B21FEC-7841-46F2-B342-1E262393DAB5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AFE85099-AE5F-4C27-8750-56E5A26AE1B6}

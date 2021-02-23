@@ -140,6 +140,24 @@ namespace Gtt.CodeWorks
             ResultOutcome.Successful, 
             ResultCategory.Successful, 
             httpStatusCode: (int)HttpStatusCode.Accepted)]
-        Queued = 11
+        Queued = 11,
+
+        /// <summary>
+        /// Resource is not allowed due to caller being unauthorized
+        /// </summary>
+        [ServiceResultMetadata(
+            ResultOutcome.Failed,
+            ResultCategory.SystemError,
+            httpStatusCode: (int)HttpStatusCode.Unauthorized)]
+        NotAuthenticated = 12,
+
+        /// <summary>
+        /// Resource is not allowed due to caller being unauthorized
+        /// </summary>
+        [ServiceResultMetadata(
+            ResultOutcome.Failed,
+            ResultCategory.SystemError,
+            httpStatusCode: (int)HttpStatusCode.Forbidden)]
+        NotAuthorized = 13
     }
 }

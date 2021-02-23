@@ -24,5 +24,13 @@ namespace Gtt.CodeWorks
         Type RequestType { get; }
         Type ResponseType { get; }
         IEnumerable<KeyValuePair<int, string>> AllErrorCodes();
+        UserInformation User { get; set; }
+    }
+
+    public interface IAuthenticatedServiceInstance
+    {
+        bool AllowAnonymous { get; }
+        string[] MustBeInRoles { get; }
+        bool UserIsAuthorized(UserInformation user);
     }
 }

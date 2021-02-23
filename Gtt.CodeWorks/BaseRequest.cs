@@ -8,6 +8,7 @@ namespace Gtt.CodeWorks
     {
         public Guid CorrelationId { get; set; }
         public Guid? SessionId { get; set; }
+        public string AuthToken { get; set; }
     }
 
     public abstract class BaseIdentifiableRequest<T> : BaseRequest

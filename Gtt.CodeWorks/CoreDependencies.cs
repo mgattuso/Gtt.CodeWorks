@@ -1,5 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Gtt.CodeWorks.Services;
 using Gtt.CodeWorks.Tokenizer;
 using Gtt.CodeWorks.Validation;
 using Microsoft.Extensions.Logging;
@@ -17,7 +21,8 @@ namespace Gtt.CodeWorks
             IDistributedLockService distributedLockService,
             IServiceEnvironmentResolver environmentResolver,
             IRequestValidator requestValidator,
-            IChainedServiceResolver chainedServiceResolver)
+            IChainedServiceResolver chainedServiceResolver, 
+            IUserResolver userResolver)
         {
             LoggerFactory = loggerFactory;
             ServiceLogger = serviceLogger;
@@ -27,6 +32,7 @@ namespace Gtt.CodeWorks
             EnvironmentResolver = environmentResolver;
             RequestValidator = requestValidator;
             ChainedServiceResolver = chainedServiceResolver;
+            UserResolver = userResolver;
         }
 
         private CoreDependencies()
@@ -39,6 +45,7 @@ namespace Gtt.CodeWorks
             EnvironmentResolver = new NonProductionEnvironmentResolver();
             RequestValidator = NullRequestValidator.Instance;
             ChainedServiceResolver = new DefaultChainedServiceResolver(LoggerFactory.CreateLogger<DefaultChainedServiceResolver>());
+            UserResolver = NullUserResolver.Instance;
         }
 
         public IServiceLogger ServiceLogger { get; }
@@ -49,7 +56,22 @@ namespace Gtt.CodeWorks
         public IServiceEnvironmentResolver EnvironmentResolver { get; }
         public IRequestValidator RequestValidator { get; }
         public IChainedServiceResolver ChainedServiceResolver { get; }
+        public IUserResolver UserResolver { get; }
         public static CoreDependencies NullDependencies => new CoreDependencies();
 
+    }
+
+    public class NullUserResolver : IUserResolver
+    {
+        private NullUserResolver()
+        {
+            
+        }
+        public Task<UserResolverResult> GetUserOrDefault(string authToken, Guid correlationId, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new UserResolverResult(UserAuthStatus.NoUser));
+        }
+
+        public static NullUserResolver Instance => new NullUserResolver();
     }
 }

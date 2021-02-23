@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.0.1</Version>
+    <Authors>Michael Gattuso</Authors>
+    <Company>GTT</Company>
+    <Product>Codeworks</Product>
+    <Copyright>2021</Copyright>
+    <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JWT" Version="8.1.0" />
+    <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks" Version="0.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Condition=" '$(Configuration)' == 'Debug'" Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
+  </ItemGroup>
+
+</Project>
