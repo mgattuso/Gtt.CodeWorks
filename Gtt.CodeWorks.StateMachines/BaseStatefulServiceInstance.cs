@@ -105,6 +105,7 @@ namespace Gtt.CodeWorks.StateMachines
                 Model = CurrentData
             };
 
+            ModifyResponse(response);
             return Successful(response);
         }
 
@@ -213,6 +214,11 @@ namespace Gtt.CodeWorks.StateMachines
             return SerialNumber == 0;
         }
 
+        protected virtual void ModifyResponse(TResponse response)
+        {
+            return;
+        }
+
         protected override Task<ServiceResponse<TResponse>> BeforeImplementation(TRequest request, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(_identifier))
@@ -241,6 +247,8 @@ namespace Gtt.CodeWorks.StateMachines
 
                 return Task.FromResult(NotFound());
             }
+
+            SetData(request.Trigger.Value, request, CurrentData);
 
             return Task.FromResult((ServiceResponse<TResponse>)null);
         }
@@ -312,6 +320,11 @@ namespace Gtt.CodeWorks.StateMachines
 
         public DateTimeOffset CreatedDate { get; private set; }
         public DateTimeOffset ModifiedDate { get; private set; }
+
+        protected virtual void SetData(TTrigger trigger, TRequest request, TData data)
+        {
+            
+        }
 
         protected static T As<T>(StateMachine<TState, TTrigger>.Transition transition)
         {

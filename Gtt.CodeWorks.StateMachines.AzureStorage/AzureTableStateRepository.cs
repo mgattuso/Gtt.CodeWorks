@@ -105,7 +105,7 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
         public async Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName, long? version) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible
         {
             var tableName = machineName.Replace(".", "");
-            var table = await GetTable($"State{tableName}");
+            var table = await GetTable($"S{tableName}");
 
             version = version == 0 ? null : version;
 
