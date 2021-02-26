@@ -325,6 +325,7 @@ namespace Gtt.CodeWorks
         protected abstract Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken);
         protected abstract Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken);
         protected abstract IDictionary<int, string> DefineErrorCodes();
+        protected ILogger Logger => _logger;
 
         public string Name => GetType().Name;
         public string FullName => GetType().FullName?.Replace("+", ".") ?? GetType().Name;

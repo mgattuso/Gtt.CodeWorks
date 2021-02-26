@@ -28,10 +28,12 @@ namespace Gtt.CodeWorks.StateMachines
             Machine = new StateMachine<TState, TTrigger>(() => _data.State, s => _data.State = s);
             Machine.OnTransitionCompletedAsync(OnTransitionAction);
             Rules(Machine);
+            RegisterTriggerActions(_registrationFactory);
             SetupParameterData();
         }
 
         private readonly Dictionary<TTrigger, PropertyInfo> _propertyDict = new Dictionary<TTrigger, PropertyInfo>();
+        private readonly RegistrationFactory _registrationFactory = new RegistrationFactory();
 
         private void SetupParameterData()
         {
@@ -66,7 +68,7 @@ namespace Gtt.CodeWorks.StateMachines
                 transition.Trigger.ToString(), transition.IsReentry);
         }
 
-        protected override async Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken)
+        protected sealed override async Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken)
         {
             Debug.Assert(request.Trigger != null, "request.Trigger != null");
 
@@ -84,7 +86,7 @@ namespace Gtt.CodeWorks.StateMachines
                 if (hasKey && data == null)
                 {
                     return ValidationError(new ValidationErrorData
-                    {   
+                    {
                         ErrorMessage = $"{p.Name} payload is required",
                         Members = new[] { p.Name }
                     });
@@ -128,7 +130,7 @@ namespace Gtt.CodeWorks.StateMachines
             }
         }
 
-        public override async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
+        public sealed override async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
             if (!string.IsNullOrWhiteSpace(request.Identifier))
             {
@@ -142,6 +144,17 @@ namespace Gtt.CodeWorks.StateMachines
                 else
                 {
                     await ReadState(request);
+                }
+            }
+
+            foreach (var trigger in _registrationFactory.Triggers)
+            {
+                if (request.Trigger != null && trigger.Trigger.Equals(request.Trigger.Value))
+                {
+                    if (trigger.States.Length == 0 || trigger.States.Any(IsInState))
+                    {
+                        await trigger.Execute(request, cancellationToken);
+                    }
                 }
             }
 
@@ -169,6 +182,11 @@ namespace Gtt.CodeWorks.StateMachines
         {
             var key = (request?.Identifier ?? "").Trim();
             return Task.FromResult(key);
+        }
+
+        protected virtual void RegisterTriggerActions(RegistrationFactory register)
+        {
+
         }
 
         public override ServiceAction Action => ServiceAction.Stateful;
@@ -248,8 +266,6 @@ namespace Gtt.CodeWorks.StateMachines
                 return Task.FromResult(NotFound());
             }
 
-            SetData(request.Trigger.Value, request, CurrentData);
-
             return Task.FromResult((ServiceResponse<TResponse>)null);
         }
 
@@ -321,11 +337,6 @@ namespace Gtt.CodeWorks.StateMachines
         public DateTimeOffset CreatedDate { get; private set; }
         public DateTimeOffset ModifiedDate { get; private set; }
 
-        protected virtual void SetData(TTrigger trigger, TRequest request, TData data)
-        {
-            
-        }
-
         protected static T As<T>(StateMachine<TState, TTrigger>.Transition transition)
         {
             if (transition.Parameters == null || transition.Parameters.Length < 2)
@@ -336,6 +347,14 @@ namespace Gtt.CodeWorks.StateMachines
             var v = transition.Parameters[1];
             return (T)v;
         }
+
+        protected T As<T>(TRequest request)
+        {
+            Debug.Assert(request.Trigger != null, "request.Trigger != null");
+            var data = _propertyDict[request.Trigger.Value];
+            return (T)data.GetValue(request);
+        }
+
         protected static TRequest Request(StateMachine<TState, TTrigger>.Transition transition)
         {
             if (transition.Parameters == null || transition.Parameters.Length < 1)
@@ -351,6 +370,69 @@ namespace Gtt.CodeWorks.StateMachines
         {
             var d = UmlDotGraph.Format(Machine.GetInfo());
             return (d, "text/vnd.graphviz");
+        }
+
+        public class OnTriggerAction
+        {
+            private Func<TRequest, CancellationToken, Task> _action;
+            private readonly List<TState> _states = new List<TState>();
+
+            public OnTriggerAction(TTrigger trigger, TState[] whenInStates = null)
+            {
+                Trigger = trigger;
+                if (whenInStates?.Length > 0)
+                {
+                    _states = whenInStates.ToList();
+                }
+            }
+
+            public TTrigger Trigger { get; }
+            public TState[] States => _states?.ToArray() ?? new TState[0];
+
+            public OnTriggerAction Do(Func<TRequest, CancellationToken, Task> action)
+            {
+                _action = action;
+                return this;
+            }
+
+            public OnTriggerAction WhenInState(params TState[] states)
+            {
+                if (states?.Length > 0)
+                {
+                    foreach (var state in states)
+                    {
+                        _states.Add(state);
+                    }
+                }
+
+                return this;
+            }
+
+            public Task Execute(TRequest request, CancellationToken cancellationToken)
+            {
+                return _action(request, cancellationToken);
+            }
+        }
+
+        public class RegistrationFactory
+        {
+            private readonly List<OnTriggerAction> _triggers = new List<OnTriggerAction>();
+
+            public OnTriggerAction OnTrigger(TTrigger trigger)
+            {
+                var ta = new OnTriggerAction(trigger);
+                _triggers.Add(ta);
+                return ta;
+            }
+
+            public OnTriggerAction OnTrigger(TTrigger trigger, params TState[] whenInStates)
+            {
+                var ta = new OnTriggerAction(trigger, whenInStates);
+                _triggers.Add(ta);
+                return ta;
+            }
+
+            internal List<OnTriggerAction> Triggers => _triggers;
         }
     }
 

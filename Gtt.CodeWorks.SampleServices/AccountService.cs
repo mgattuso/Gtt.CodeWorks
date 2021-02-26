@@ -45,6 +45,29 @@ namespace Gtt.CodeWorks.SampleServices
         {
         }
 
+        protected override void RegisterTriggerActions(RegistrationFactory register)
+        {
+            register.OnTrigger(Trigger.Open)
+                .WhenInState(State.Closed)
+                .Do((req, ct) =>
+                {
+                    var data = As<AccountRequest.OpenData>(req);
+                    CurrentData.Name = data.Name;
+                    CurrentData.OpenDate = ServiceClock.CurrentTime();
+                    CurrentData.Ssn = data.Ssn;
+                    CurrentData.InitialBalance = req.Open.InitialBalance.GetValueOrDefault(0);
+                    return Task.CompletedTask;
+                });
+
+            register.OnTrigger(Trigger.Update)
+                .Do((req, ct) =>
+                {
+                    var data = As<AccountRequest.UpdateData>(req);
+                    CurrentData.Name = data.Name;
+                    return Task.CompletedTask;
+                });
+        }
+
         protected override IDictionary<int, string> DefineErrorCodes()
         {
             return NoErrorCodes();
@@ -60,20 +83,7 @@ namespace Gtt.CodeWorks.SampleServices
                 .SubstateOf(State.Transactable)
                 .Permit(Trigger.Close, State.Closed)
                 .Permit(Trigger.Pause, State.Paused)
-                .PermitReentry(Trigger.Update)
-                .OnEntryFromAsync(Trigger.Open, x =>
-                {
-                    var data = As<AccountRequest.OpenData>(x);
-                    CurrentData.Name = data.Name;
-                    CurrentData.OpenDate = ServiceClock.CurrentTime();
-                    CurrentData.Ssn = data.Ssn;
-                    return Task.CompletedTask;
-                }, "Open Account")
-                .OnEntryFromAsync(new StateMachine<State, Trigger>.TriggerWithParameters<AccountRequest, AccountRequest.UpdateData>(Trigger.Update), (request, data) =>
-                {
-                    CurrentData.Name = data.Name;
-                    return Task.CompletedTask;
-                }, "Update Account");
+                .PermitReentry(Trigger.Update);
 
             machine.Configure(State.Paused)
                 .SubstateOf(State.NonTransactable)
