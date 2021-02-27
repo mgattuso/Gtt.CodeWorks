@@ -38,7 +38,7 @@ namespace Gtt.CodeWorks.StateMachines
             Rules(Machine);
             RegisterTriggerActions(_registrationFactory);
             SetupParameterData();
-            
+
         }
 
         private readonly Dictionary<TTrigger, PropertyInfo> _propertyDict = new Dictionary<TTrigger, PropertyInfo>();
@@ -104,16 +104,23 @@ namespace Gtt.CodeWorks.StateMachines
                 var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
                 if (registrationResponse != null) return registrationResponse;
 
-                await Machine.FireAsync(
-                    new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest, object>(request.Trigger.Value), request, data);
+                if (SetErrorCodeOnResponse != null)
+                {
+                    await Machine.FireAsync(
+                        new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest, object>(request.Trigger.Value), request, data);
+                }
             }
             else
             {
                 var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
                 if (registrationResponse != null) return registrationResponse;
 
-                await Machine.FireAsync(
-                    new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest>(request.Trigger.Value), request);
+                if (SetErrorCodeOnResponse != null)
+                {
+                    await Machine.FireAsync(
+                        new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest>(request.Trigger.Value),
+                        request);
+                }
             }
 
             var response = new TResponse
@@ -137,6 +144,7 @@ namespace Gtt.CodeWorks.StateMachines
                 }
             }
 
+            response.Model = CurrentData;
             ModifyResponse(response);
             return Result(result, response, errorData);
         }
@@ -281,7 +289,13 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected virtual void ModifyResponse(TResponse response)
         {
-            return;
+
+        }
+
+        protected override void BeforeResponse(ServiceResponse<TResponse> response)
+        {
+            response.Data.Model = CurrentData;
+            base.BeforeResponse(response);
         }
 
         protected override Task<ServiceResponse<TResponse>> BeforeImplementation(TRequest request, CancellationToken cancellationToken)

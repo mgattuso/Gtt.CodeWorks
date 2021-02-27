@@ -142,7 +142,13 @@ namespace Gtt.CodeWorks
                 }
             }
 
+            BeforeResponse(response);
             return response;
+        }
+
+        protected virtual void BeforeResponse(ServiceResponse<TResponse> response)
+        {
+            
         }
 
         protected ServiceResponse<TResponse> TemporaryException(string reason)
