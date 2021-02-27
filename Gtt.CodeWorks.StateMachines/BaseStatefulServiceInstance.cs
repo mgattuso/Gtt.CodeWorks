@@ -141,7 +141,6 @@ namespace Gtt.CodeWorks.StateMachines
 
             response.Model = CurrentData;
             response.StateMachine = GetStateData();
-            ModifyResponse(response);
             return Result(result, response, errorData);
         }
 
@@ -283,15 +282,16 @@ namespace Gtt.CodeWorks.StateMachines
             return SerialNumber == 0;
         }
 
-        protected virtual void ModifyResponse(TResponse response)
+        protected virtual void ModifyResponse(ServiceResponse<TResponse> response)
         {
 
         }
 
-        protected override void BeforeResponse(ServiceResponse<TResponse> response)
+        protected sealed override void BeforeResponse(ServiceResponse<TResponse> response)
         {
             response.Data.Model = CurrentData;
             response.Data.StateMachine = GetStateData();
+            ModifyResponse(response);
             base.BeforeResponse(response);
         }
 
