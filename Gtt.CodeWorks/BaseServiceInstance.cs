@@ -169,7 +169,7 @@ namespace Gtt.CodeWorks
                 return new ServiceResponse<TResponse>(default(TResponse),
                     new ResponseMetaData(
                         this,
-                        ServiceResult.PermanentError,
+                        ServiceResult.ValidationError,
                         new ErrorData(msg, code.ToString())
                     )
                 );

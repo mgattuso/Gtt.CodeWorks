@@ -64,16 +64,9 @@ namespace Gtt.CodeWorks.SampleServices
                 .Do(async (req, ct) =>
                 {
                     await Task.CompletedTask;
-                    if (true)
-                    {
-                        return Continue();
-                    }
-                    else
-                    {
-                        var data = As<AccountRequest.UpdateData>(req);
-                        CurrentData.Name = data.Name;
-                        return ErrorCode(100);
-                    }
+                    var data = As<AccountRequest.UpdateData>(req);
+                    CurrentData.Name = data.Name;
+                    return ErrorCode(100);
                 });
         }
 
