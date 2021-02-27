@@ -11,7 +11,7 @@ namespace Gtt.CodeWorks.Validation
             
         }
 
-        public ValidationAttempt Validate<T>(T request) where T : BaseRequest
+        public ValidationAttempt Validate<T>(T request, string prefix = null)
         {
             return ValidationAttempt.Success;
         }

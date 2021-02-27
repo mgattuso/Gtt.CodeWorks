@@ -29,7 +29,7 @@ namespace Gtt.CodeWorks.DataAnnotations
             }
         }
 
-        public ValidationAttempt Validate<T>(T request) where T : BaseRequest
+        public ValidationAttempt Validate<T>(T request, string prefix = null)
         {
             var context = new ValidationContext(request, serviceProvider: _serviceProvider, items: null);
             var results = new List<ValidationResult>();
@@ -41,10 +41,12 @@ namespace Gtt.CodeWorks.DataAnnotations
                 return ValidationAttempt.Success;
             }
 
+            prefix = !string.IsNullOrWhiteSpace(prefix) ? prefix.Trim()+"." : "";
+
             var ve = ValidationErrorResponse.Member(results.Select(x => new ValidationErrorData()
             {
                 ErrorMessage = x.ErrorMessage,
-                Members = x.MemberNames.Select(ToCamelCase)
+                Members = x.MemberNames.Select(m => ToCamelCase(prefix+m))
             }).ToArray());
             return ValidationAttempt.Unsuccessful(ve);
         }

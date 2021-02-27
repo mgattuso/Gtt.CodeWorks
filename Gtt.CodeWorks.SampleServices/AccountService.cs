@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
@@ -64,13 +65,15 @@ namespace Gtt.CodeWorks.SampleServices
                 {
                     var data = As<AccountRequest.UpdateData>(req);
                     CurrentData.Name = data.Name;
-                    return Task.CompletedTask;
+                    return Task.FromResult(ErrorCode(100));
                 });
         }
 
         protected override IDictionary<int, string> DefineErrorCodes()
         {
-            return NoErrorCodes();
+            return AddErrorCodes(
+                (100, "No something was provided")
+            );
         }
 
         protected override void Rules(StateMachine<State, Trigger> machine)
@@ -104,6 +107,7 @@ namespace Gtt.CodeWorks.SampleServices
 
         public class OpenData
         {
+            [Required]
             public string Name { get; set; }
             public decimal? InitialBalance { get; set; }
             [Sensitive(Reveal.Last, lastChars: 4)]
@@ -117,6 +121,7 @@ namespace Gtt.CodeWorks.SampleServices
 
         public class UpdateData
         {
+            [Required]
             public string Name { get; set; }
         }
 

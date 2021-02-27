@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Gtt.CodeWorks.Middleware;
+using Gtt.CodeWorks.StateMachines.Middleware;
 using Gtt.CodeWorks.Validation;
 using Stateless;
 using Stateless.Graph;
@@ -24,12 +26,19 @@ namespace Gtt.CodeWorks.StateMachines
         protected BaseStatefulServiceInstance(CoreDependencies coreDependencies, StatefulDependencies statefulDependencies) : base(coreDependencies)
         {
             _stateRepository = statefulDependencies.StateRepository;
+
+            var existingValidation = PipeLine.FirstOrDefault(x => typeof(ValidationMiddleware) == x.GetType());
+            var idx = PipeLine.IndexOf(existingValidation);
+            PipeLine.RemoveAt(idx);
+            PipeLine.Insert(idx, new StateMachineValidatorMiddleware<TTrigger>(coreDependencies.RequestValidator));
+
             _data = new TData();
             Machine = new StateMachine<TState, TTrigger>(() => _data.State, s => _data.State = s);
             Machine.OnTransitionCompletedAsync(OnTransitionAction);
             Rules(Machine);
             RegisterTriggerActions(_registrationFactory);
             SetupParameterData();
+            
         }
 
         private readonly Dictionary<TTrigger, PropertyInfo> _propertyDict = new Dictionary<TTrigger, PropertyInfo>();
@@ -92,11 +101,17 @@ namespace Gtt.CodeWorks.StateMachines
                     });
                 }
 
+                var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
+                if (registrationResponse != null) return registrationResponse;
+
                 await Machine.FireAsync(
                     new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest, object>(request.Trigger.Value), request, data);
             }
             else
             {
+                var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
+                if (registrationResponse != null) return registrationResponse;
+
                 await Machine.FireAsync(
                     new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest>(request.Trigger.Value), request);
             }
@@ -147,19 +162,35 @@ namespace Gtt.CodeWorks.StateMachines
                 }
             }
 
+            var r = await base.Execute(request, startTime, cancellationToken);
+            return r;
+        }
+
+        private async Task<ServiceResponse<TResponse>> ExecuteRegistrations(TRequest request, CancellationToken cancellationToken)
+        {
             foreach (var trigger in _registrationFactory.Triggers)
             {
                 if (request.Trigger != null && trigger.Trigger.Equals(request.Trigger.Value))
                 {
                     if (trigger.States.Length == 0 || trigger.States.Any(IsInState))
                     {
-                        await trigger.Execute(request, cancellationToken);
+                        var t = trigger.Execute(request, cancellationToken);
+
+                        if (t is Task<ServiceResponse<TResponse>> tr)
+                        {
+                            var sr = await tr;
+                            if (sr != null)
+                            {
+                                return sr;
+                            }
+                        }
+
+                        await t;
                     }
                 }
             }
 
-            var r = await base.Execute(request, startTime, cancellationToken);
-            return r;
+            return null;
         }
 
         private async Task StoreState(string identifier, string source, string destination, string trigger, bool isReentry)

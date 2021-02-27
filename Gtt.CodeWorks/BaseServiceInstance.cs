@@ -346,5 +346,7 @@ namespace Gtt.CodeWorks
 
         public Type RequestType => typeof(TRequest);
         public Type ResponseType => typeof(ServiceResponse<TResponse>);
+
+        protected IList<IServiceMiddleware> PipeLine => _pipeline;
     }
 }

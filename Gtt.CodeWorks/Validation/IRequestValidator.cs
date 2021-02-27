@@ -2,6 +2,6 @@
 {
     public interface IRequestValidator
     {
-        ValidationAttempt Validate<T>(T request) where T : BaseRequest;
+        ValidationAttempt Validate<T>(T request, string prefix = null);
     }
 }
