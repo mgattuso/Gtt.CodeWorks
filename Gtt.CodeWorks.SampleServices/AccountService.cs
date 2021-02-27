@@ -61,12 +61,12 @@ namespace Gtt.CodeWorks.SampleServices
                 });
 
             register.OnTrigger(Trigger.Update)
-                .DoThen(async (req, ct) =>
+                .Do(async (req, ct) =>
                 {
                     await Task.CompletedTask;
                     var data = As<AccountRequest.UpdateData>(req);
                     CurrentData.Name = data.Name;
-                    return ErrorCode(100);
+                    SetErrorCodeOnResponse = 100;
                 });
         }
 

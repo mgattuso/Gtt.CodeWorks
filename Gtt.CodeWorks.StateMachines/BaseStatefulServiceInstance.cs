@@ -122,8 +122,23 @@ namespace Gtt.CodeWorks.StateMachines
                 Model = CurrentData
             };
 
+            ServiceResult result = ServiceResult.Successful;
+            ErrorData errorData = null;
+
+
+            if (SetErrorCodeOnResponse != null)
+            {
+                result = ServiceResult.ValidationError;
+                errorData = GetErrorData(SetErrorCodeOnResponse.Value);
+                if (errorData == null)
+                {
+                    Debug.Assert(SetErrorCodeOnResponse != null, nameof(SetErrorCodeOnResponse) + " != null");
+                    return ErrorCode(SetErrorCodeOnResponse.Value);
+                }
+            }
+
             ModifyResponse(response);
-            return Successful(response);
+            return Result(result, response, errorData);
         }
 
         private readonly IStateRepository _stateRepository;
@@ -221,6 +236,7 @@ namespace Gtt.CodeWorks.StateMachines
         }
 
         public override ServiceAction Action => ServiceAction.Stateful;
+        protected int? SetErrorCodeOnResponse { get; set; }
 
         protected abstract void Rules(StateMachine<TState, TTrigger> machine);
         protected async Task<(TData data, long sequenceNumber, DateTimeOffset created, DateTimeOffset modified)> LoadData(

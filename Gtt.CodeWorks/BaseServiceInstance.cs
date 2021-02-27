@@ -161,16 +161,29 @@ namespace Gtt.CodeWorks
             return Task.FromResult((ServiceResponse<TResponse>)null);
         }
 
-        protected ServiceResponse<TResponse> ErrorCode(int code)
+        protected ErrorData GetErrorData(int code)
         {
             var codes = DefineErrorCodes() ?? _acceptableErrors ?? new Dictionary<int, string>();
             if (codes.TryGetValue(code, out var msg))
             {
+                return new ErrorData(msg, code.ToString());
+            }
+
+            return null;
+        }
+
+        protected ServiceResponse<TResponse> ErrorCode(int code)
+        {
+            var error = GetErrorData(code);
+
+            if (error != null)
+            {
+
                 return new ServiceResponse<TResponse>(default(TResponse),
                     new ResponseMetaData(
                         this,
                         ServiceResult.ValidationError,
-                        new ErrorData(msg, code.ToString())
+                        error
                     )
                 );
             }
@@ -259,6 +272,11 @@ namespace Gtt.CodeWorks
                     response,
                     new ResponseMetaData(this, ServiceResult.Successful, dependencyMetaData))
                 );
+        }
+
+        protected ServiceResponse<TResponse> Result(ServiceResult result, TResponse response, ErrorData errorData = null)
+        {
+            return new ServiceResponse<TResponse>(response, new ResponseMetaData(this, result, errorData));
         }
 
         protected ServiceResponse<TResponse> Created(TResponse response)
