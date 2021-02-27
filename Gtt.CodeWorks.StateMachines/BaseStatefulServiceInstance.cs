@@ -378,6 +378,10 @@ namespace Gtt.CodeWorks.StateMachines
             var v = transition.Parameters[1];
             return (T)v;
         }
+        protected ServiceResponse<TResponse> Continue()
+        {
+            return null;
+        }
 
         protected T As<T>(TRequest request)
         {
@@ -421,6 +425,11 @@ namespace Gtt.CodeWorks.StateMachines
             public TState[] States => _states?.ToArray() ?? new TState[0];
 
             public OnTriggerAction Do(Func<TRequest, CancellationToken, Task> action)
+            {
+                _action = action;
+                return this;
+            }
+            public OnTriggerAction Do(Func<TRequest, CancellationToken, Task<ServiceResponse<TResponse>>> action)
             {
                 _action = action;
                 return this;
