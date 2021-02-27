@@ -58,7 +58,7 @@ namespace Gtt.CodeWorks
             ResponseCreated = ServiceClock.CurrentTime();
             DurationMs = (long)(ResponseCreated - startTime).TotalMilliseconds;
             ServiceName = service.FullName;
-            Errors = error.ToDictionary();
+            Errors = error?.ToDictionary();
         }
 
         public ResponseMetaData(

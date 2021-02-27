@@ -289,6 +289,10 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected sealed override void BeforeResponse(ServiceResponse<TResponse> response)
         {
+            if (response.Data == null)
+            {
+                response.Data = new TResponse();
+            }
             response.Data.Model = CurrentData;
             response.Data.StateMachine = GetStateData();
             ModifyResponse(response);
@@ -329,7 +333,7 @@ namespace Gtt.CodeWorks.StateMachines
                 SerialNumber = SerialNumber,
                 Identifier = _identifier,
                 CurrentState = _data.State,
-                AllowedTriggers = Machine.PermittedTriggers.ToArray(),
+                AllowedTriggers = Machine?.PermittedTriggers?.ToArray() ?? new TTrigger[0],
                 ActiveStates = GetAllCurrentStates()
             };
         }
@@ -358,6 +362,11 @@ namespace Gtt.CodeWorks.StateMachines
 
         private TState[] GetAllCurrentStates()
         {
+            if (Machine == null)
+            {
+                return new TState[0];
+            }
+
             try
             {
                 List<TState> states = new List<TState>();

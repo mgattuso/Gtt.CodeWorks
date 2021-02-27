@@ -7,7 +7,7 @@
             Data = data;
         }
 
-        public TResponse Data { get; }
+        public TResponse Data { get; set; }
     }
 
     public class ServiceResponse
