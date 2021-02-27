@@ -429,7 +429,7 @@ namespace Gtt.CodeWorks.StateMachines
                 _action = action;
                 return this;
             }
-            public OnTriggerAction Do(Func<TRequest, CancellationToken, Task<ServiceResponse<TResponse>>> action)
+            public OnTriggerAction DoThen(Func<TRequest, CancellationToken, Task<ServiceResponse<TResponse>>> action)
             {
                 _action = action;
                 return this;

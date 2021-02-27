@@ -61,7 +61,7 @@ namespace Gtt.CodeWorks.SampleServices
                 });
 
             register.OnTrigger(Trigger.Update)
-                .Do(async (req, ct) =>
+                .DoThen(async (req, ct) =>
                 {
                     await Task.CompletedTask;
                     var data = As<AccountRequest.UpdateData>(req);
