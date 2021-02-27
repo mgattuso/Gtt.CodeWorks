@@ -123,12 +123,7 @@ namespace Gtt.CodeWorks.StateMachines
                 }
             }
 
-            var response = new TResponse
-            {
-                StateMachine = GetStateData(),
-                Model = CurrentData
-            };
-
+            var response = new TResponse();
             ServiceResult result = ServiceResult.Successful;
             ErrorData errorData = null;
 
@@ -145,6 +140,7 @@ namespace Gtt.CodeWorks.StateMachines
             }
 
             response.Model = CurrentData;
+            response.StateMachine = GetStateData();
             ModifyResponse(response);
             return Result(result, response, errorData);
         }
@@ -295,6 +291,7 @@ namespace Gtt.CodeWorks.StateMachines
         protected override void BeforeResponse(ServiceResponse<TResponse> response)
         {
             response.Data.Model = CurrentData;
+            response.Data.StateMachine = GetStateData();
             base.BeforeResponse(response);
         }
 
@@ -315,12 +312,7 @@ namespace Gtt.CodeWorks.StateMachines
             {
                 if (!IsNew())
                 {
-                    var response = new TResponse
-                    {
-                        Model = _data,
-                        StateMachine = GetStateData()
-                    };
-
+                    var response = new TResponse();
                     return SuccessfulTask(response);
                 }
 
