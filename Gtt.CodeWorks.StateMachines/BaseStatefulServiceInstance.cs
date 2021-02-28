@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Gtt.CodeWorks.Middleware;
 using Gtt.CodeWorks.StateMachines.Middleware;
 using Gtt.CodeWorks.Validation;
+using Microsoft.Extensions.Logging;
 using Stateless;
 using Stateless.Graph;
 using Stateless.Reflection;
@@ -23,9 +24,45 @@ namespace Gtt.CodeWorks.StateMachines
         where TTrigger : struct, IConvertible
         where TData : BaseStateDataModel<TState>, new()
     {
+        static BaseStatefulServiceInstance()
+        {
+            var properties = typeof(TRequest).GetTypeInfo().DeclaredProperties.ToArray();
+            List<PropertyInfo> unexpected = new List<PropertyInfo>();
+            foreach (var p in properties)
+            {
+                if (p.Name.Equals("debug", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    _debugProperty = p; 
+                    continue;
+                }
+
+                bool found = false;
+                foreach (TTrigger trigger in Enum.GetValues(typeof(TTrigger)))
+                {
+                    if (p.Name.Equals(trigger.ToString(), StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        _triggerProperties[trigger] = p;
+                        found = true;
+                    }
+                }
+
+                if (!found)
+                {
+                    unexpected.Add(p);
+                }
+            }
+
+            _unexpectedProperties = unexpected.ToArray();
+        }
+
+        private static readonly PropertyInfo[] _unexpectedProperties;
+        private static readonly Dictionary<TTrigger, PropertyInfo> _triggerProperties = new Dictionary<TTrigger, PropertyInfo>();
+        private static PropertyInfo _debugProperty;
+
         protected BaseStatefulServiceInstance(CoreDependencies coreDependencies, StatefulDependencies statefulDependencies) : base(coreDependencies)
         {
             _stateRepository = statefulDependencies.StateRepository;
+            _currentEnvironment = coreDependencies.EnvironmentResolver.Environment;
 
             var existingValidation = PipeLine.FirstOrDefault(x => typeof(ValidationMiddleware) == x.GetType());
             var idx = PipeLine.IndexOf(existingValidation);
@@ -41,25 +78,19 @@ namespace Gtt.CodeWorks.StateMachines
 
         }
 
-        private readonly Dictionary<TTrigger, PropertyInfo> _propertyDict = new Dictionary<TTrigger, PropertyInfo>();
         private readonly RegistrationFactory _registrationFactory = new RegistrationFactory();
         private int? _forceErrorCode = null;
         private ErrorAction? _forceErrorAction = null;
+        private readonly CodeWorksEnvironment _currentEnvironment;
 
         private void SetupParameterData()
         {
-            Type t = typeof(TRequest);
-            var props = t.GetProperties();
-
-            foreach (var trigger in Enum.GetValues(typeof(TTrigger)))
+            foreach (TTrigger trigger in Enum.GetValues(typeof(TTrigger)))
             {
-                var match = props.FirstOrDefault(x => x.Name.Equals(trigger.ToString(), StringComparison.InvariantCultureIgnoreCase));
-                if (match != null)
+                if (_triggerProperties.ContainsKey(trigger))
                 {
-                    _propertyDict[(TTrigger)trigger] = match;
-                    Machine.SetTriggerParameters((TTrigger)trigger, typeof(TRequest), match.PropertyType);
-                }
-                else
+                    Machine.SetTriggerParameters((TTrigger)trigger, typeof(TRequest), _triggerProperties[trigger].PropertyType);
+                } else
                 {
                     Machine.SetTriggerParameters((TTrigger)trigger, typeof(TRequest));
                 }
@@ -88,8 +119,8 @@ namespace Gtt.CodeWorks.StateMachines
                 throw new BusinessLogicException($"Cannot call {request.Trigger} on {FullName}:{_identifier}", ServiceResult.ConflictingRequest);
             }
 
-            var hasKey = _propertyDict.ContainsKey(request.Trigger.Value);
-            var p = _propertyDict.GetValueOrDefault(request.Trigger.Value);
+            var hasKey = _triggerProperties.ContainsKey(request.Trigger.Value);
+            var p = _triggerProperties.GetValueOrDefault(request.Trigger.Value);
             if (p != null)
             {
                 var data = p.GetValue(request);
@@ -308,6 +339,23 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected override Task<ServiceResponse<TResponse>> BeforeImplementation(TRequest request, CancellationToken cancellationToken)
         {
+            if (_unexpectedProperties != null && _unexpectedProperties.Any())
+            {
+                throw new Exception($"Unexpected properties found on {request.GetType().Name}. Unexpected: {string.Join(",", _unexpectedProperties.Select(x => x.Name))}");
+            }
+            try
+            {
+                if (_currentEnvironment == CodeWorksEnvironment.Production && _debugProperty != null &&
+                    !_debugProperty.PropertyType.IsValueType && _debugProperty.CanWrite)
+                {
+                    _debugProperty.SetValue(request, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, $"Cannot remove debug data for {request.CorrelationId}");
+            }
+
             if (string.IsNullOrWhiteSpace(_identifier))
             {
                 var idRequired = ValidationError(new ValidationErrorData
@@ -424,7 +472,7 @@ namespace Gtt.CodeWorks.StateMachines
         protected T As<T>(TRequest request)
         {
             Debug.Assert(request.Trigger != null, "request.Trigger != null");
-            var data = _propertyDict[request.Trigger.Value];
+            var data = _triggerProperties[request.Trigger.Value];
             return (T)data.GetValue(request);
         }
 

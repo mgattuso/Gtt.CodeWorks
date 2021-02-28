@@ -42,7 +42,7 @@ POST {{host}}/api/call/AccountService
 Content-Type: application/json
 
 {
-  "identifier": "fc2472bf-f05c-49e1-b092-8e3f28cef9fc",
+  "identifier": "05df85d0-1b7c-4008-b904-0a0992c27523",
   "trigger": "Pause"
 }
 
@@ -51,7 +51,7 @@ POST {{host}}/api/call/AccountService
 Content-Type: application/json
 
 {
-  "identifier": "fc2472bf-f05c-49e1-b092-8e3f28cef9fc",
+  "identifier": "05df85d0-1b7c-4008-b904-0a0992c27523",
   "trigger": "Reopen",
   "reopen": {}
 }
@@ -59,13 +59,15 @@ Content-Type: application/json
 ### SAMPLE UPDATE
 POST {{host}}/api/call/AccountService
 Content-Type: application/json
+codeworks-prefs-schema-check: None
 
 {
   "trigger": "Update",
-  "identifier": "fc2472bf-f05c-49e1-b092-8e3f28cef9fc",
+  "identifier": "4b23e5c4-e086-45e1-8d9f-9cc49694f7f7",
   "update": {
-    "name": "Updated Account {{$timestamp}}"
-  }
+    "name": "Test"
+  },
+  "correlationId": "{{$guid}}"
 }
 
 ### SAMPLE UPDATE

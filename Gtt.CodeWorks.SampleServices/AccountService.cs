@@ -105,6 +105,7 @@ namespace Gtt.CodeWorks.SampleServices
         public CloseData Close { get; set; }
         public UpdateData Update { get; set; }
         public ReopenData Reopen { get; set; }
+        public DebugData Debug { get; set; }
 
         public class OpenData
         {
@@ -129,6 +130,11 @@ namespace Gtt.CodeWorks.SampleServices
         public class ReopenData
         {
 
+        }
+
+        public class DebugData
+        {
+            public string Test { get; set; }
         }
     }
 
