@@ -66,7 +66,7 @@ namespace Gtt.CodeWorks.SampleServices
                     await Task.CompletedTask;
                     var data = As<AccountRequest.UpdateData>(req);
                     CurrentData.Name = data.Name;
-                    SetErrorCodeOnResponse = 100;
+                    SetErrorCode(100, ErrorAction.AllowTrigger);
                 });
         }
 

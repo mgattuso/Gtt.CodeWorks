@@ -43,6 +43,8 @@ namespace Gtt.CodeWorks.StateMachines
 
         private readonly Dictionary<TTrigger, PropertyInfo> _propertyDict = new Dictionary<TTrigger, PropertyInfo>();
         private readonly RegistrationFactory _registrationFactory = new RegistrationFactory();
+        private int? _forceErrorCode = null;
+        private ErrorAction? _forceErrorAction = null;
 
         private void SetupParameterData()
         {
@@ -104,7 +106,7 @@ namespace Gtt.CodeWorks.StateMachines
                 var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
                 if (registrationResponse != null) return registrationResponse;
 
-                if (SetErrorCodeOnResponse == null)
+                if (_forceErrorAction == null || _forceErrorAction == ErrorAction.AllowTrigger)
                 {
                     await Machine.FireAsync(
                         new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest, object>(request.Trigger.Value), request, data);
@@ -115,7 +117,7 @@ namespace Gtt.CodeWorks.StateMachines
                 var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
                 if (registrationResponse != null) return registrationResponse;
 
-                if (SetErrorCodeOnResponse == null)
+                if (_forceErrorAction == null || _forceErrorAction == ErrorAction.AllowTrigger)
                 {
                     await Machine.FireAsync(
                         new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest>(request.Trigger.Value),
@@ -128,14 +130,14 @@ namespace Gtt.CodeWorks.StateMachines
             ErrorData errorData = null;
 
 
-            if (SetErrorCodeOnResponse != null)
+            if (_forceErrorCode != null)
             {
                 result = ServiceResult.ValidationError;
-                errorData = GetErrorData(SetErrorCodeOnResponse.Value);
+                errorData = GetErrorData(_forceErrorCode.Value);
                 if (errorData == null)
                 {
-                    Debug.Assert(SetErrorCodeOnResponse != null, nameof(SetErrorCodeOnResponse) + " != null");
-                    return ErrorCode(SetErrorCodeOnResponse.Value);
+                    Debug.Assert(_forceErrorCode != null, nameof(_forceErrorCode) + " != null");
+                    return ErrorCode(_forceErrorCode.Value);
                 }
             }
 
@@ -239,7 +241,12 @@ namespace Gtt.CodeWorks.StateMachines
         }
 
         public override ServiceAction Action => ServiceAction.Stateful;
-        protected int? SetErrorCodeOnResponse { get; set; }
+
+        protected void SetErrorCode(int errorCode, ErrorAction errorAction)
+        {
+            _forceErrorCode = errorCode;
+            _forceErrorAction = errorAction;
+        }
 
         protected abstract void Rules(StateMachine<TState, TTrigger> machine);
         protected async Task<(TData data, long sequenceNumber, DateTimeOffset created, DateTimeOffset modified)> LoadData(
@@ -512,5 +519,11 @@ namespace Gtt.CodeWorks.StateMachines
         Stopped,
         DataLoaded,
         Started
+    }
+
+    public enum ErrorAction
+    {
+        PreventTrigger,
+        AllowTrigger
     }
 }
