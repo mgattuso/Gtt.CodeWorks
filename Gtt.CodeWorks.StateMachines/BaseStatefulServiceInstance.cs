@@ -104,7 +104,7 @@ namespace Gtt.CodeWorks.StateMachines
                 var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
                 if (registrationResponse != null) return registrationResponse;
 
-                if (SetErrorCodeOnResponse != null)
+                if (SetErrorCodeOnResponse == null)
                 {
                     await Machine.FireAsync(
                         new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest, object>(request.Trigger.Value), request, data);
@@ -115,7 +115,7 @@ namespace Gtt.CodeWorks.StateMachines
                 var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
                 if (registrationResponse != null) return registrationResponse;
 
-                if (SetErrorCodeOnResponse != null)
+                if (SetErrorCodeOnResponse == null)
                 {
                     await Machine.FireAsync(
                         new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest>(request.Trigger.Value),
