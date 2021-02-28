@@ -27,4 +27,18 @@ namespace Gtt.CodeWorks
         {
         }
     }
+
+    public class ServiceCallException<TResponse> : ServiceCallException
+        where TResponse : ServiceResponse
+    {
+        public TResponse Response { get; set; }
+
+        public ServiceCallException(TResponse response) : base(response.MetaData)
+        {
+        }
+
+        protected ServiceCallException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+    }
 }
