@@ -493,6 +493,10 @@ namespace Gtt.CodeWorks.StateMachines
             return (d, "text/vnd.graphviz");
         }
 
+        public Type StateType => typeof(TState);
+        public Type TriggerType => typeof(TTrigger);
+        public Type DataType => typeof(TData);
+
         public class OnTriggerAction
         {
             private Func<TRequest, CancellationToken, Task> _action;
