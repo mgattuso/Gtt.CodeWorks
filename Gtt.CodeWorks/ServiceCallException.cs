@@ -35,6 +35,7 @@ namespace Gtt.CodeWorks
 
         public ServiceCallException(TResponse response) : base(response.MetaData)
         {
+            Response = response;
         }
 
         protected ServiceCallException(SerializationInfo info, StreamingContext context) : base(info, context)
