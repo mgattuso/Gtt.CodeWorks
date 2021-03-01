@@ -1,0 +1,8 @@
+POST {{host}}/api/call/ConfirmValidationService
+Accept: application/json
+codeworks-prefs-schema-check: None
+
+{
+    "password": "abc",
+    "confirmPassword": "xyz"
+}

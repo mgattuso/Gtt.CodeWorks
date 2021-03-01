@@ -84,22 +84,27 @@ namespace Gtt.CodeWorks.Validation
         public Dictionary<string, object> ToDictionary()
         {
             Dictionary<string, object> errors = new Dictionary<string, object>();
-            if (GlobalErrors.Any())
-            {
-                errors[""] = GlobalErrors.ToArray();
-            }
+            List<string> globalErrors = GlobalErrors ?? new List<string>();
 
             if (MemberErrors.Any())
             {
                 foreach (var error in MemberErrors)
                 {
-                    foreach (var member in error.Members)
+                    if (!error.Members.Any())
                     {
-                        errors.AddOrAppendValue(member, error.ErrorMessage, forceArray: true);
+                        globalErrors.Add(error.ErrorMessage);
+                    }
+                    else
+                    {
+                        foreach (var member in error.Members)
+                        {
+                            errors.AddOrAppendValue(member, error.ErrorMessage, forceArray: true);
+                        }
                     }
                 }
             }
 
+            errors[""] = globalErrors.ToArray();
             return errors;
         }
     }
