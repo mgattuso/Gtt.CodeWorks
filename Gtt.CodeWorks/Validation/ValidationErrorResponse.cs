@@ -104,7 +104,11 @@ namespace Gtt.CodeWorks.Validation
                 }
             }
 
-            errors[""] = globalErrors.ToArray();
+            if (globalErrors.Any())
+            {
+                errors[""] = globalErrors.ToArray();
+            }
+
             return errors;
         }
     }
