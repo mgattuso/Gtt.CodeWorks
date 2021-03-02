@@ -9,6 +9,10 @@
     {
         public string CreateName(string collectionProperty, int index, string memberProperty)
         {
+            if (string.IsNullOrWhiteSpace(memberProperty))
+            {
+                return $"{collectionProperty}.{index}";
+            }
             return $"{collectionProperty}.{index}.{memberProperty}";
         }
     }
@@ -17,6 +21,11 @@
     {
         public string CreateName(string collectionProperty, int index, string memberProperty)
         {
+            if (string.IsNullOrWhiteSpace(memberProperty))
+            {
+                return $"{collectionProperty}[{index}]";
+            }
+
             return $"{collectionProperty}[{index}].{memberProperty}";
         }
     }
@@ -25,6 +34,10 @@
     {
         public string CreateName(string collectionProperty, int index, string memberProperty)
         {
+            if (string.IsNullOrWhiteSpace(memberProperty))
+            {
+                return $"{collectionProperty}";
+            }
             return $"{collectionProperty}.{memberProperty}";
         }
     }
