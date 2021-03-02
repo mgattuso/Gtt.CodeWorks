@@ -49,6 +49,11 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
 
             var serializedState = await _objectSerializer.Serialize(data);
 
+            if (serializedState.Length > 28_000)
+            {
+                throw new Exception("Serialized data is > 28,000 chars");
+            }
+
             currentMarker.PartitionKey = partitionKey;
             currentMarker.RowKey = "current";
             currentMarker.SequenceNumber = nextSequenceNumber;

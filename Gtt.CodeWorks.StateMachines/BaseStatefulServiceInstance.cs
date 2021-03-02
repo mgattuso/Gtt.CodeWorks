@@ -248,6 +248,7 @@ namespace Gtt.CodeWorks.StateMachines
         {
             SerialNumber = await _stateRepository.StoreStateData<TData, TState>(new StateDto
             {
+                CorrelationId = CorrelationId,
                 MachineName = FullName,
                 Identifier = identifier,
                 Source = source,

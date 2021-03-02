@@ -11,10 +11,11 @@ namespace Gtt.CodeWorks.Serializers.TextJson
 {
     public class JsonObjectSerializer : IObjectSerializer
     {
-        private bool _debugMode = true;
+        private readonly bool _debugMode;
 
-        public JsonObjectSerializer()
+        public JsonObjectSerializer(bool debugMode)
         {
+            _debugMode = debugMode;
         }
 
         public async Task<string> Serialize(Type t, object obj)
