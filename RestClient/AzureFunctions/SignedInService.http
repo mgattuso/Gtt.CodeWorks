@@ -29,7 +29,7 @@ codeworks-prefs-schema-check: None
 
 {
   "correlationId": "{{$guid}}",
-  "authToken": "C"
+  "authToken": "D"
 }
 
 ### PAUSE ACCOUNT

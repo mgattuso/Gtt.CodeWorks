@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Gtt.CodeWorks.DataAnnotations;
 
 namespace Gtt.CodeWorks.SampleServices
 {
@@ -39,6 +40,12 @@ namespace Gtt.CodeWorks.SampleServices
 
         [Required, Compare("Password")]
         public string ConfirmPassword { get; set; }
+
+        [RegexForCollection("([a-z0-9-_]+)")]
+        public string[] Roles { get; set; }
+
+        [RegularExpression("([a-z0-9-_]+)")]
+        public string Role { get; set; }
     }
 
     public class ConfirmValidationResponse

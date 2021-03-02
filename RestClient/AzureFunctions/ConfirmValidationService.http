@@ -4,5 +4,6 @@ codeworks-prefs-schema-check: None
 
 {
     "password": "abc",
-    "confirmPassword": "xyz"
+    "confirmPassword": "xyz",
+    "roles": []
 }

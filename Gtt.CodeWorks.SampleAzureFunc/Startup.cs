@@ -27,7 +27,7 @@ namespace Gtt.CodeWorks.SampleAzureFunc
             builder.Services.ConfigureCodeWorksAll<TimeService>("Gtt.CodeWorks.SampleServices");
             builder.Services.AddSingleton<StatefulDependencies>();
             builder.Services.AddApplicationInsightsTelemetry();
-            builder.Services.AddTransient<IObjectSerializer, JsonObjectSerializer>();
+            builder.Services.AddTransient<IObjectSerializer>(cfg => new JsonObjectSerializer(false));
 
             builder.Services.Replace(ServiceDescriptor.Transient<ITokenizerService, GttTokenizerService>());
             builder.Services.Replace(ServiceDescriptor.Transient<IStateDiagram, StatelessStateDiagram>());
