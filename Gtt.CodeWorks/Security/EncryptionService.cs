@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
@@ -17,14 +18,14 @@ namespace Gtt.CodeWorks.Security
             _hashKey = hashKey;
         }
 
-        public async Task<EncryptedData> Encrypt(string str)
+        public async Task<EncryptedData> Encrypt(EncryptionStrength strength, string str)
         {
             if (string.IsNullOrWhiteSpace(str))
             {
-                return new EncryptedData {IsEmpty = true};
+                return new EncryptedData { IsEmpty = true };
             }
 
-            var hash = await Hash(str, false);
+            var hash = await Hash(strength, str, false);
 
             var ekey = _encryptionKey;
 
@@ -62,7 +63,7 @@ namespace Gtt.CodeWorks.Security
             return decrypted;
         }
 
-        public async Task<string> Hash(string source, bool caseInsensitive)
+        public async Task<string> Hash(EncryptionStrength strength, string source, bool caseInsensitive)
         {
             await Task.CompletedTask;
             var hkey = _hashKey;
@@ -72,7 +73,17 @@ namespace Gtt.CodeWorks.Security
                 source = source?.ToUpperInvariant();
             }
 
-            return HmacSha256Hash.GetHash(source, hkey);
+            switch (strength)
+            {
+                case EncryptionStrength.Sha256:
+                    return HmacSha256Hash.GetHash(source, hkey);
+                case EncryptionStrength.Sha512:
+                    return HmacSha512Hash.GetHash(source, hkey);
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(strength), strength, null);
+            }
+
         }
 
         public int RandomNumber(int startInclusive, int endExclusive)
@@ -86,29 +97,42 @@ namespace Gtt.CodeWorks.Security
                 RngCryptoServiceProvider.GetBytes(_uint32Buffer);
                 uint rand = BitConverter.ToUInt32(_uint32Buffer, 0);
 
-                long max = (1 + (long) uint.MaxValue);
+                long max = (1 + (long)uint.MaxValue);
                 long remainder = max % diff;
                 if (rand < max - remainder)
                 {
-                    return (int) (startInclusive + (rand % diff));
+                    return (int)(startInclusive + (rand % diff));
                 }
             }
         }
 
-        public async Task<string> CreateKey()
+        public Task<string> GenerateRandomKey(EncryptionStrength strength, bool alphaNumericOnly = true)
         {
-            await Task.CompletedTask;
-            var hmac = new HMACSHA256();
-            for (int i = 0; i < 100; i++)
+            switch (strength)
             {
-                string key = Convert.ToBase64String(hmac.Key);
-                if (!key.Contains("/"))
-                {
-                    return key;
-                }
-            }
+                case EncryptionStrength.Sha256:
+                    var hmac256 = new HMACSHA256();
+                    string key256 = Convert.ToBase64String(hmac256.Key);
+                    if (alphaNumericOnly)
+                    {
+                        key256 = string.Join("", key256.Where(char.IsLetterOrDigit));
+                    }
+                    return Task.FromResult(key256);
 
-            throw new Exception("Could not generate an acceptable key");
+                case EncryptionStrength.Sha512:
+                    var hmac512 = new HMACSHA512();
+                    string key512 = Convert.ToBase64String(hmac512.Key);
+                    if (alphaNumericOnly)
+                    {
+                        key512 = string.Join("", key512.Where(char.IsLetterOrDigit));
+
+                    }
+
+                    return Task.FromResult(key512);
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(strength), strength, null);
+            }
         }
     }
 }
