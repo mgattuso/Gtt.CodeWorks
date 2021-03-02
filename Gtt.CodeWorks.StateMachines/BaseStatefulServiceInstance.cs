@@ -364,6 +364,10 @@ namespace Gtt.CodeWorks.StateMachines
                 return Task.FromResult(idRequired);
             }
 
+            Rules(Machine);
+            RegisterTriggerActions(_registrationFactory);
+            SetupParameterData();
+
             if (request.Trigger == null)
             {
                 if (!IsNew())
@@ -374,10 +378,6 @@ namespace Gtt.CodeWorks.StateMachines
 
                 return Task.FromResult(NotFound());
             }
-
-            Rules(Machine);
-            RegisterTriggerActions(_registrationFactory);
-            SetupParameterData();
 
             return Task.FromResult((ServiceResponse<TResponse>)null);
         }
