@@ -28,13 +28,23 @@ namespace Gtt.CodeWorks.Middleware
         {
             if (service is IAuthenticatedServiceInstance authService)
             {
-                UserResolverResult userResult = await _userResolver.GetUserOrDefault(request.AuthToken, request.CorrelationId, cancellationToken);
-                _logger.LogTrace($"AuthToken:{request.AuthToken}, CorrelationId:{request.CorrelationId}");
-
-                if (authService.AllowAnonymous && (authService.MustBeInRoles == null ||
-                    authService.MustBeInRoles.Length == 0) && authService.UserIsAuthorized(userResult.User))
+                if (string.IsNullOrWhiteSpace(request.AuthToken) && authService.AllowAnonymous)
                 {
+                    _logger.LogTrace("No AuthToken provided and service allows anonymous. Continuing");
                     return this.ContinuePipeline();
+                }
+
+                _logger.LogTrace($"Found AuthToken:{request.AuthToken}, CorrelationId:{request.CorrelationId}");
+                UserResolverResult userResult = await _userResolver.GetUserOrDefault(request.AuthToken, request.CorrelationId, cancellationToken);
+
+                _logger.LogTrace($"Token Decrypted as: {userResult?.User?.Username} Status: {userResult?.Status}, CorrelationId:{request.CorrelationId}");
+
+                if (userResult == null)
+                {
+                    _logger.LogTrace("Could not decrypt token successfully");
+                    return new ServiceResponse(new ResponseMetaData(
+                        service,
+                        ServiceResult.NotAuthenticated));
                 }
 
                 switch (userResult.Status)
@@ -58,6 +68,12 @@ namespace Gtt.CodeWorks.Middleware
                         if (userResult.User == null)
                         {
                             throw new Exception("UserAuthStatus is valid but no user is provided");
+                        }
+
+                        if (authService.AllowAnonymous)
+                        {
+                            service.User = userResult.User;
+                            return this.ContinuePipeline();
                         }
 
                         if (!authService.UserIsAuthorized(userResult.User))

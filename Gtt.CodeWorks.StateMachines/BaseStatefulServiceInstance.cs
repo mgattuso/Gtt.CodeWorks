@@ -72,10 +72,6 @@ namespace Gtt.CodeWorks.StateMachines
             _data = new TData();
             Machine = new StateMachine<TState, TTrigger>(() => _data.State, s => _data.State = s);
             Machine.OnTransitionCompletedAsync(OnTransitionAction);
-            Rules(Machine);
-            RegisterTriggerActions(_registrationFactory);
-            SetupParameterData();
-
         }
 
         private readonly RegistrationFactory _registrationFactory = new RegistrationFactory();
@@ -378,6 +374,10 @@ namespace Gtt.CodeWorks.StateMachines
 
                 return Task.FromResult(NotFound());
             }
+
+            Rules(Machine);
+            RegisterTriggerActions(_registrationFactory);
+            SetupParameterData();
 
             return Task.FromResult((ServiceResponse<TResponse>)null);
         }
