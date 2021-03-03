@@ -10,6 +10,15 @@ namespace Gtt.CodeWorks
         bool IsAuthorized(UserInformation user);
     }
 
+    public static class AccessPolicy
+    {
+        public static IAccessPolicy AllowAnonymous() => new AllowAnonymousAccessPolicy();
+        public static IAccessPolicy LoggedIn() => new LoggedInAccessPolicy();
+        public static IAccessPolicy InRole(params string[] roles) => new InRoleAccessPolicy(roles);
+        public static IAccessPolicy InternalOnly(IServiceInstance instance, bool allowAlwaysNonProd = true) => new InternalOnlyAccessPolicy(instance.CurrentEnvironment, allowAlwaysNonProd);
+        public static IAccessPolicy Custom(Func<UserInformation, bool> selection) => new CustomAccessPolicy(selection);
+    }
+
     public class CustomAccessPolicy : IAccessPolicy
     {
         private readonly Func<UserInformation, bool> _selection;
@@ -61,9 +70,9 @@ namespace Gtt.CodeWorks
         private readonly bool _allowAccessInNonProd;
         private readonly CodeWorksEnvironment _environment;
 
-        public InternalOnlyAccessPolicy(bool allowAccessInNonProd, CodeWorksEnvironment environment)
+        public InternalOnlyAccessPolicy(CodeWorksEnvironment environment, bool allowAlwaysNonProd = true)
         {
-            _allowAccessInNonProd = allowAccessInNonProd;
+            _allowAccessInNonProd = allowAlwaysNonProd;
             _environment = environment;
         }
         public bool IsAuthorized(UserInformation user)

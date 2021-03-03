@@ -25,6 +25,7 @@ namespace Gtt.CodeWorks
         Type ResponseType { get; }
         IEnumerable<KeyValuePair<int, string>> AllErrorCodes();
         UserInformation User { get; set; }
+        CodeWorksEnvironment CurrentEnvironment { get; }
     }
 
     public interface IAuthenticatedServiceInstance

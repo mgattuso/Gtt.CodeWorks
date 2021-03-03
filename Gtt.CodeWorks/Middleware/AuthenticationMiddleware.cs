@@ -28,7 +28,8 @@ namespace Gtt.CodeWorks.Middleware
         {
             if (service is IAuthenticatedServiceInstance authService)
             {
-                if (string.IsNullOrWhiteSpace(request.AuthToken) && authService.AccessPolicy.IsAuthorized(null))
+                var accessPolicy = authService.AccessPolicy ?? AccessPolicy.AllowAnonymous();
+                if (string.IsNullOrWhiteSpace(request.AuthToken) && accessPolicy.IsAuthorized(null))
                 {
                     _logger.LogTrace("No AuthToken provided and service allows non users to access. Continuing");
                     return this.ContinuePipeline();
@@ -70,7 +71,7 @@ namespace Gtt.CodeWorks.Middleware
                             throw new Exception("UserAuthStatus is valid but no user is provided");
                         }
 
-                        if (authService.AccessPolicy.IsAuthorized(userResult.User))
+                        if (accessPolicy.IsAuthorized(userResult.User))
                         {
                             service.User = userResult.User;
                             return this.ContinuePipeline();

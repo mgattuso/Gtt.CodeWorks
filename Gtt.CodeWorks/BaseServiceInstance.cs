@@ -21,6 +21,7 @@ namespace Gtt.CodeWorks
 
         protected BaseServiceInstance(CoreDependencies coreDependencies)
         {
+            CurrentEnvironment = coreDependencies.EnvironmentResolver.Environment;
             _pipeline.Add(new RateLimiterMiddleware(coreDependencies.RateLimiter));
             _pipeline.Add(new TokenizationMiddleware(coreDependencies.Tokenizer, coreDependencies.EnvironmentResolver));
             _pipeline.Add(new LoggingMiddleware(coreDependencies.ServiceLogger));
@@ -342,6 +343,7 @@ namespace Gtt.CodeWorks
         protected abstract Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken);
         protected abstract Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken);
         protected abstract IDictionary<int, string> DefineErrorCodes();
+        public CodeWorksEnvironment CurrentEnvironment { get; }
 
         public virtual IAccessPolicy AccessPolicy => new AllowAnonymousAccessPolicy();
         protected ILogger Logger => _logger;
