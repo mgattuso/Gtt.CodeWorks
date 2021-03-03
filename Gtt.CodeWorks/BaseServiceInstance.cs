@@ -11,7 +11,10 @@ using Microsoft.Extensions.Logging;
 namespace Gtt.CodeWorks
 {
     public abstract class BaseServiceInstance<TRequest, TResponse>
-        : IServiceInstance<TRequest, TResponse>, IAuthenticatedServiceInstance
+        : IServiceInstance<TRequest, TResponse>, 
+            IAuthenticatedServiceInstance,
+            ILocalServiceInstance,
+            ILocalServiceInstance<TRequest, TResponse>
         where TRequest : BaseRequest, new() where TResponse : new()
     {
         private readonly IList<IServiceMiddleware> _pipeline = new List<IServiceMiddleware>();
@@ -37,6 +40,19 @@ namespace Gtt.CodeWorks
         private Guid? _sessionId;
         private int? _serviceHop;
 
+        public virtual Task<ServiceResponse<TResponse>> ExecuteLocal(TRequest request,
+            CancellationToken cancellationToken)
+        {
+            return Execute(request, ServiceClock.CurrentTime(), cancellationToken);
+        }
+
+        public virtual Task<ServiceResponse<TResponse>> ExecuteLazyLocal(TRequest request,
+            CancellationToken cancellationToken)
+        {
+            var cached = GetCachedResponse<TResponse>();
+            if (cached != null) return Task.FromResult(cached);
+            return Execute(request, ServiceClock.CurrentTime(), cancellationToken);
+        }
 
         public virtual async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
@@ -72,7 +88,9 @@ namespace Gtt.CodeWorks
                 {
                     if (!middleware.IgnoreExceptions)
                     {
-                        return PermanentError(ex);
+                        var errorResponse = PermanentError(ex);
+                        StoredResponse = errorResponse;
+                        return errorResponse;
                     }
                 }
             }
@@ -138,12 +156,15 @@ namespace Gtt.CodeWorks
                 {
                     if (!middleware.IgnoreExceptions)
                     {
-                        return PermanentError(ex);
+                        var errorResponse = PermanentError(ex);
+                        StoredResponse = errorResponse;
+                        return errorResponse;
                     }
                 }
             }
 
             BeforeResponse(response);
+            StoredResponse = response;
             return response;
         }
 
@@ -344,6 +365,7 @@ namespace Gtt.CodeWorks
         protected abstract Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken);
         protected abstract IDictionary<int, string> DefineErrorCodes();
         public CodeWorksEnvironment CurrentEnvironment { get; }
+        ServiceResponse ILocalServiceInstance.StoredResponse => StoredResponse;
 
         public virtual IAccessPolicy AccessPolicy => new AllowAnonymousAccessPolicy();
         protected ILogger Logger => _logger;
@@ -368,5 +390,19 @@ namespace Gtt.CodeWorks
         public Type ResponseType => typeof(ServiceResponse<TResponse>);
 
         protected IList<IServiceMiddleware> PipeLine => _pipeline;
+        protected ServiceResponse<TResponse> StoredResponse { get; private set; }
+
+        protected ServiceResponse<TOtherResponse> GetCachedResponse<TOtherResponse>() where TOtherResponse : new()
+        {
+            var r = _chainedServiceResolver
+                .AllInstances()
+                .LastOrDefault(x => x.ResponseType == typeof(ServiceResponse<TOtherResponse>));
+            if (r is ILocalServiceInstance li)
+            {
+                return li.StoredResponse as ServiceResponse<TOtherResponse>;
+            }
+
+            return null;
+        }
     }
 }

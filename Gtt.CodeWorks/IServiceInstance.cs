@@ -11,6 +11,21 @@ namespace Gtt.CodeWorks
     {
     }
 
+    public interface ILocalServiceInstance : IServiceInstance
+    {
+        ServiceResponse StoredResponse { get; }
+    }
+    public interface ILocalServiceInstance<in TRequest, TResponse> : IServiceInstance
+        where TRequest : BaseRequest, new() where TResponse : new()
+    {
+
+        Task<ServiceResponse<TResponse>> ExecuteLazyLocal(TRequest request,
+            CancellationToken cancellationToken);
+
+        Task<ServiceResponse<TResponse>> ExecuteLocal(TRequest request,
+            CancellationToken cancellationToken);
+    }
+
     public interface IServiceInstance
     {
         string Name { get; }

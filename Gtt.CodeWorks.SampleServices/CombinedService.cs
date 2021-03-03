@@ -23,12 +23,15 @@ namespace Gtt.CodeWorks.SampleServices
 
         protected override async Task<ServiceResponse<CombinedResponse>> Implementation(CombinedRequest request, CancellationToken cancellationToken)
         {
-            var time = await _timeService.Execute(new TimeRequest(), ServiceClock.CurrentTime(), cancellationToken);
-            var sum = await _sumService.Execute(new SumRequest
+            var time = await _timeService.ExecuteLazyLocal(new TimeRequest(), cancellationToken);
+            var sum = await _sumService.ExecuteLocal(new SumRequest
             {
                 Number1 = request.Number1,
                 Number2 = request.Number2
-            }, ServiceClock.CurrentTime(), cancellationToken);
+            }, cancellationToken);
+
+            var cached = await _timeService.ExecuteLazyLocal(new TimeRequest(), cancellationToken);
+            
 
             var response = new CombinedResponse
             {
