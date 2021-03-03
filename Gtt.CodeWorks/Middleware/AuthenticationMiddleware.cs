@@ -28,9 +28,9 @@ namespace Gtt.CodeWorks.Middleware
         {
             if (service is IAuthenticatedServiceInstance authService)
             {
-                if (string.IsNullOrWhiteSpace(request.AuthToken) && authService.AllowAnonymous)
+                if (string.IsNullOrWhiteSpace(request.AuthToken) && authService.AccessPolicy.IsAuthorized(null))
                 {
-                    _logger.LogTrace("No AuthToken provided and service allows anonymous. Continuing");
+                    _logger.LogTrace("No AuthToken provided and service allows non users to access. Continuing");
                     return this.ContinuePipeline();
                 }
 
@@ -70,42 +70,16 @@ namespace Gtt.CodeWorks.Middleware
                             throw new Exception("UserAuthStatus is valid but no user is provided");
                         }
 
-                        if (authService.AllowAnonymous)
+                        if (authService.AccessPolicy.IsAuthorized(userResult.User))
                         {
                             service.User = userResult.User;
                             return this.ContinuePipeline();
                         }
 
-                        if (!authService.UserIsAuthorized(userResult.User))
-                        {
-                            return new ServiceResponse(new ResponseMetaData(
-                                service,
-                                ServiceResult.NotAuthorized));
-                        }
+                        return new ServiceResponse(new ResponseMetaData(
+                            service,
+                            ServiceResult.NotAuthorized));
 
-                        if (authService.MustBeInRoles != null && authService.MustBeInRoles.Length > 0)
-                        {
-                            if (userResult.User.Roles == null || userResult.User.Roles.Length == 0)
-                            {
-                                return new ServiceResponse(new ResponseMetaData(
-                                    service,
-                                    ServiceResult.NotAuthorized));
-                            }
-
-                            var lowerRoles = authService.MustBeInRoles.Where(x => x != null).Select(x => x.ToLowerInvariant().Trim()).ToArray();
-                            var lowerUserRoles = userResult.User.Roles.Where(x => x != null).Select(x => x.ToLowerInvariant().Trim()).ToArray();
-
-                            if (!lowerUserRoles.Intersect(lowerRoles).Any())
-                            {
-                                return new ServiceResponse(new ResponseMetaData(
-                                    service,
-                                    ServiceResult.NotAuthorized));
-                            }
-                        }
-
-                        service.User = userResult.User;
-
-                        break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(userResult.Status), $"{userResult.Status} is not handled by AuthenticationMiddleware.OnRequest");
                 }

@@ -29,8 +29,6 @@ namespace Gtt.CodeWorks
 
     public interface IAuthenticatedServiceInstance
     {
-        bool AllowAnonymous { get; }
-        string[] MustBeInRoles { get; }
-        bool UserIsAuthorized(UserInformation user);
+        IAccessPolicy AccessPolicy { get; }
     }
 }

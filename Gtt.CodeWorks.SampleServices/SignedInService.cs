@@ -29,7 +29,7 @@ namespace Gtt.CodeWorks.SampleServices
             return NoErrorCodes();
         }
 
-        public override bool AllowAnonymous => false;
+        public override IAccessPolicy AccessPolicy => new LoggedInAccessPolicy();
 
         public override ServiceAction Action => ServiceAction.Read;
     }

@@ -148,7 +148,7 @@ namespace Gtt.CodeWorks
 
         protected virtual void BeforeResponse(ServiceResponse<TResponse> response)
         {
-            
+
         }
 
         protected ServiceResponse<TResponse> TemporaryException(string reason)
@@ -339,18 +339,12 @@ namespace Gtt.CodeWorks
             return 0;
         }
 
-        public virtual bool AllowAnonymous => true;
-        public virtual string[] MustBeInRoles => new string[0];
-        public virtual bool UserIsAuthorized(UserInformation user)
-        {
-            return true;
-        }
-
         protected abstract Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken);
         protected abstract Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken);
         protected abstract IDictionary<int, string> DefineErrorCodes();
-        protected ILogger Logger => _logger;
 
+        public virtual IAccessPolicy AccessPolicy => new AllowAnonymousAccessPolicy();
+        protected ILogger Logger => _logger;
         public string Name => GetType().Name;
         public string FullName => GetType().FullName?.Replace("+", ".") ?? GetType().Name;
         public DateTimeOffset StartTime { get; private set; }
