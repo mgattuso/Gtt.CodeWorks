@@ -253,7 +253,9 @@ namespace Gtt.CodeWorks.StateMachines
                 IsReentry = isReentry,
                 CreatedBy = FullName,
                 ModifiedBy = FullName,
-                Created = CreatedDate
+                Created = CreatedDate,
+                Username = User?.Username,
+                UserIdentifier = User?.UserIdentifier
             }, SerialNumber, _data);
         }
 

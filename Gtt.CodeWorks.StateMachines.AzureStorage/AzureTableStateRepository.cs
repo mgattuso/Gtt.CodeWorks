@@ -65,6 +65,8 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
             currentMarker.IsReentry = metaData.IsReentry;
             currentMarker.Trigger = metaData.Trigger;
             currentMarker.CorrelationId = metaData.CorrelationId.ToString();
+            currentMarker.UserIdentifier = metaData.UserIdentifier;
+            currentMarker.Username = metaData.Username;
             currentMarker.UpdateAuditable(metaData);
 
             var record = new StateDataTable
@@ -79,6 +81,8 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
                 SequenceNumber = nextSequenceNumber,
                 SerializedState = serializedState,
                 Trigger = metaData.Trigger,
+                UserIdentifier = metaData.UserIdentifier,
+                Username = metaData.Username,
                 CorrelationId = metaData.CorrelationId.ToString()
             }.UpdateAuditable(metaData);
 
@@ -146,6 +150,9 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
                 IsReentry = data.IsReentry,
                 SequenceNumber = data.SequenceNumber,
                 Trigger = data.Trigger,
+                Username = data.Username,
+                UserIdentifier = data.UserIdentifier,
+                CorrelationId = data.CorrelationId.ToGuid()
             }.UpdateAuditable(data);
 
             var obj = await _objectSerializer.Deserialize<TData>(data.SerializedState);

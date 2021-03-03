@@ -11,5 +11,7 @@ namespace Gtt.CodeWorks.StateMachines
         public string Trigger { get; set; }
         public bool IsReentry { get; set; }
         public string MachineName { get; set; }
+        public string UserIdentifier { get; set; }
+        public string Username { get; set; }
     }
 }
