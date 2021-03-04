@@ -49,8 +49,23 @@ namespace Gtt.CodeWorks
         public virtual Task<ServiceResponse<TResponse>> ExecuteLazyLocal(TRequest request,
             CancellationToken cancellationToken)
         {
-            var cached = GetCachedResponse<TResponse>();
-            if (cached != null) return Task.FromResult(cached);
+            var cached = GetCachedResponse<TRequest, TResponse>();
+            if (cached != null)
+            {
+                _logger.LogDebug($"Found cached version for {cached.MetaData.ServiceName} {_correlationId}");
+                return Task.FromResult(cached);
+            }
+            return Execute(request, ServiceClock.CurrentTime(), cancellationToken);
+        }
+
+        public Task<ServiceResponse<TResponse>> ExecuteLazyLocal(TRequest request, Func<TRequest, bool> predicate, CancellationToken cancellationToken)
+        {
+            var cached = GetCachedResponse<TRequest, TResponse>(predicate);
+            if (cached != null)
+            {
+                _logger.LogDebug($"Found cached version matching predicate for {cached.MetaData.ServiceName} {_correlationId}");
+                return Task.FromResult(cached);
+            }
             return Execute(request, ServiceClock.CurrentTime(), cancellationToken);
         }
 
@@ -365,8 +380,6 @@ namespace Gtt.CodeWorks
         protected abstract Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken);
         protected abstract IDictionary<int, string> DefineErrorCodes();
         public CodeWorksEnvironment CurrentEnvironment { get; }
-        ServiceResponse ILocalServiceInstance.StoredResponse => StoredResponse;
-
         public virtual IAccessPolicy AccessPolicy => new AllowAnonymousAccessPolicy();
         protected ILogger Logger => _logger;
         public string Name => GetType().Name;
@@ -382,6 +395,7 @@ namespace Gtt.CodeWorks
         public abstract ServiceAction Action { get; }
         public async Task<ServiceResponse> Execute(BaseRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
+            StoredRequest = request;
             var result = await Execute((TRequest)request, startTime, cancellationToken);
             return result;
         }
@@ -390,19 +404,32 @@ namespace Gtt.CodeWorks
         public Type ResponseType => typeof(ServiceResponse<TResponse>);
 
         protected IList<IServiceMiddleware> PipeLine => _pipeline;
-        protected ServiceResponse<TResponse> StoredResponse { get; private set; }
 
-        protected ServiceResponse<TOtherResponse> GetCachedResponse<TOtherResponse>() where TOtherResponse : new()
+        protected BaseRequest StoredRequest { get; private set; }
+        BaseRequest ILocalServiceInstance.StoredRequest => StoredRequest;
+        protected ServiceResponse<TResponse> StoredResponse { get; private set; }
+        ServiceResponse ILocalServiceInstance.StoredResponse => StoredResponse;
+
+        protected ServiceResponse<TOtherResponse> GetCachedResponse<TOtherRequest, TOtherResponse>(Func<TOtherRequest, bool> predicate = null)
+            where TOtherRequest : BaseRequest, new()
+            where TOtherResponse : new()
         {
-            var r = _chainedServiceResolver
-                .AllInstances()
-                .LastOrDefault(x => x.ResponseType == typeof(ServiceResponse<TOtherResponse>));
-            if (r is ILocalServiceInstance li)
+            var matches = _chainedServiceResolver.GetCurrentCallChain()
+                .OfType<ILocalServiceInstance>()
+                .Where(x => x.StoredResponse != null && x.ResponseType == typeof(ServiceResponse<TOtherResponse>));
+
+            if (predicate != null)
             {
-                return li.StoredResponse as ServiceResponse<TOtherResponse>;
+                matches = matches.Where(x =>
+                {
+                    var req = x.StoredRequest as TOtherRequest;
+                    if (req == null) return false;
+                    return predicate(req);
+                });
             }
 
-            return null;
+            var lastMatch = matches.LastOrDefault();
+            return lastMatch?.StoredResponse as ServiceResponse<TOtherResponse>;
         }
     }
 }

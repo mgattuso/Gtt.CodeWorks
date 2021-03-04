@@ -30,8 +30,13 @@ namespace Gtt.CodeWorks.SampleServices
                 Number2 = request.Number2
             }, cancellationToken);
 
-            var cached = await _timeService.ExecuteLazyLocal(new TimeRequest(), cancellationToken);
-            
+            var cachedTime = await _timeService.ExecuteLazyLocal(new TimeRequest(), cancellationToken);
+            var cachedSum = await _sumService.ExecuteLazyLocal(new SumRequest(), cancellationToken);
+            var noCachedSum = await _sumService.ExecuteLazyLocal(new SumRequest
+            {
+                Number1 = request.Number1 * 2,
+                Number2 = request.Number2 * 2
+            }, x => x.Number1 == request.Number1, cancellationToken);
 
             var response = new CombinedResponse
             {
