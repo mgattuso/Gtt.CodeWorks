@@ -32,7 +32,7 @@ namespace Gtt.CodeWorks.StateMachines
             {
                 if (p.Name.Equals("debug", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    _debugProperty = p; 
+                    _debugProperty = p;
                     continue;
                 }
 
@@ -86,7 +86,8 @@ namespace Gtt.CodeWorks.StateMachines
                 if (_triggerProperties.ContainsKey(trigger))
                 {
                     Machine.SetTriggerParameters((TTrigger)trigger, typeof(TRequest), _triggerProperties[trigger].PropertyType);
-                } else
+                }
+                else
                 {
                     Machine.SetTriggerParameters((TTrigger)trigger, typeof(TRequest));
                 }
@@ -194,6 +195,21 @@ namespace Gtt.CodeWorks.StateMachines
 
         public sealed override async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
+            var derivedIdentifier = DeriveIdentifier(request);
+            if (!string.IsNullOrWhiteSpace(derivedIdentifier))
+            {
+                request.Identifier = derivedIdentifier;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Identifier))
+            {
+                return ValidationError(new ValidationErrorData
+                {
+                    ErrorMessage = "Identifier is required",
+                    Members = new[] { "Identifier" }
+                });
+            }
+
             if (!string.IsNullOrWhiteSpace(request.Identifier))
             {
 
@@ -206,6 +222,10 @@ namespace Gtt.CodeWorks.StateMachines
                 else
                 {
                     await ReadState(request);
+                    if (Status == MachineStatus.Stopped)
+                    {
+                        return NotFound();
+                    }
                 }
             }
 
@@ -332,6 +352,10 @@ namespace Gtt.CodeWorks.StateMachines
             }
             response.Data.Model = CurrentData;
             response.Data.StateMachine = GetStateData();
+            if (response.MetaData.Result == ServiceResult.ResourceNotFound)
+            {
+                response.Data = null;
+            }
             ModifyResponse(response);
             base.BeforeResponse(response);
         }
@@ -417,6 +441,11 @@ namespace Gtt.CodeWorks.StateMachines
         }
 
         protected virtual bool SaveStateHistory => true;
+
+        protected virtual string DeriveIdentifier(TRequest request)
+        {
+            return null;
+        }
 
         protected TData CurrentData => _data;
 
