@@ -41,7 +41,7 @@ namespace Gtt.CodeWorks.StateMachines
                     SequenceNumber = _sequenceNumber,
                     Identifier = _identifier,
                     CorrelationId = _correlationId
-                }, _sequenceNumber, _data);
+                }, _sequenceNumber, _data, saveHistory: true);
                 _sequenceNumber = nextSequenceNumber;
                 _modified = ServiceClock.CurrentTime();
             });

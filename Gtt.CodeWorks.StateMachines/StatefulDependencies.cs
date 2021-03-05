@@ -22,7 +22,7 @@ namespace Gtt.CodeWorks.StateMachines
     {
         private Dictionary<Tuple<long, string, string>, Tuple<StateDto, object>> _data = new Dictionary<Tuple<long, string, string>, Tuple<StateDto, object>>();
 
-        public async Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible
+        public async Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data, bool saveHistory) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible
         {
             var existingEntry = await RetrieveStateData<TData, TState>(metaData.Identifier, metaData.MachineName, sequenceNumber: null);
             long sequenceNumber = existingEntry?.StateMetaData?.SequenceNumber ?? 0;

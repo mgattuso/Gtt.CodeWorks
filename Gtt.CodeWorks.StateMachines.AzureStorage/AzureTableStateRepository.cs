@@ -22,7 +22,7 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
             _logger = logger;
         }
 
-        public async Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data) 
+        public async Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data, bool saveHistory) 
             where TData : BaseStateDataModel<TState> 
             where TState : struct, IConvertible
         {
@@ -90,9 +90,14 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
             {
                 TableBatchOperation batch = new TableBatchOperation
                 {
-                    TableOperation.Insert(record),
                     TableOperation.InsertOrReplace(currentMarker)
                 };
+
+                if (saveHistory)
+                {
+                    batch.Add(TableOperation.Insert(record));
+                }
+
                 await table.ExecuteBatchAsync(batch);
             }
             catch (StorageException ex)

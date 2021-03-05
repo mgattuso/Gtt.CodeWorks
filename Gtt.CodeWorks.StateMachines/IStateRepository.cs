@@ -6,7 +6,7 @@ namespace Gtt.CodeWorks.StateMachines
 {
     public interface IStateRepository
     {
-        Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data)
+        Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data, bool saveHistory)
             where TData : BaseStateDataModel<TState>
             where TState : struct, IConvertible;
 

@@ -256,7 +256,7 @@ namespace Gtt.CodeWorks.StateMachines
                 Created = CreatedDate,
                 Username = User?.Username,
                 UserIdentifier = User?.UserIdentifier
-            }, SerialNumber, _data);
+            }, SerialNumber, _data, saveHistory: SaveStateHistory);
         }
 
         protected override Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken)
@@ -415,6 +415,8 @@ namespace Gtt.CodeWorks.StateMachines
         {
             return Machine.IsInState(state);
         }
+
+        protected virtual bool SaveStateHistory => true;
 
         protected TData CurrentData => _data;
 
