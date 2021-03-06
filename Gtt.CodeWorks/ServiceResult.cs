@@ -158,6 +158,12 @@ namespace Gtt.CodeWorks
             ResultOutcome.Failed,
             ResultCategory.SystemError,
             httpStatusCode: (int)HttpStatusCode.Forbidden)]
-        NotAuthorized = 13
+        NotAuthorized = 13,
+
+        [ServiceResultMetadata(
+            ResultOutcome.Failed,
+            ResultCategory.SystemError,
+            httpStatusCode: (int)HttpStatusCode.NotImplemented)]
+        NotImplemented = 14
     }
 }

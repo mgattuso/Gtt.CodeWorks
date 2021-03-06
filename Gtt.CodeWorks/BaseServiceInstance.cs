@@ -137,6 +137,12 @@ namespace Gtt.CodeWorks
                     response = TemporaryException("Cancellation Requested:Implementation");
                 }
             }
+            catch (NotImplementedException ex)
+            {
+                response = new ServiceResponse<TResponse>(
+                    default(TResponse),
+                    new ResponseMetaData(this, ServiceResult.NotImplemented));
+            }
             catch (BusinessLogicException ex)
             {
                 var errors = new ErrorData(ex.Message);

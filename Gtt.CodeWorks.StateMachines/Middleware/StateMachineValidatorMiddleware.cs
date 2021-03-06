@@ -36,6 +36,16 @@ namespace Gtt.CodeWorks.StateMachines.Middleware
                 return Task.FromResult(this.ContinuePipeline());
             }
 
+            var matchValue = match.GetValue(stateMachineRequest);
+
+            if (matchValue == null)
+            {
+                return 
+                    Task.FromResult(
+                        new ServiceResponse(new ResponseMetaData(service, ServiceResult.ValidationError, new ErrorData("Is required", match.Name)))
+                    );
+            }
+
             var validationResult = _requestValidator.Validate(match.GetValue(stateMachineRequest), match.Name);
             if (validationResult.IsValid)
             {

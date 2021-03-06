@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 using Gtt.CodeWorks.StateMachines;
 using Stateless;
@@ -38,15 +39,20 @@ namespace Gtt.CodeWorks.SampleServices
                 .PermitReentry(Trigger.AnEvent);
         }
 
-        protected override string DeriveIdentifier(DerivedIdRequest request)
+        protected override (Trigger Trigger, Func<DerivedIdRequest, string> Func)? DeriveIdentifier()
         {
-            return Guid.NewGuid().ToString();
+            return (Trigger.AnEvent, request => request.AnEvent.Message + Guid.NewGuid());
         }
     }
 
     public class DerivedIdRequest : BaseStatefulRequest<DerivedIdService.Trigger>
     {
-
+        public AnEventData AnEvent { get; set; }
+        public class AnEventData
+        {
+            [Required]
+            public string Message { get; set; }
+        }
     }
 
     public class DerivedIdResponse : BaseStatefulResponse<DerivedIdService.State, DerivedIdService.Trigger,

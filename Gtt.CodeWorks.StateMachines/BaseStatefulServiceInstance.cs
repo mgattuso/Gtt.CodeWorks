@@ -193,44 +193,9 @@ namespace Gtt.CodeWorks.StateMachines
             }
         }
 
-        public sealed override async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
+        public sealed override Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
-            var derivedIdentifier = DeriveIdentifier(request);
-            if (!string.IsNullOrWhiteSpace(derivedIdentifier))
-            {
-                request.Identifier = derivedIdentifier;
-            }
-
-            if (string.IsNullOrWhiteSpace(request.Identifier))
-            {
-                return ValidationError(new ValidationErrorData
-                {
-                    ErrorMessage = "Identifier is required",
-                    Members = new[] { "Identifier" }
-                });
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.Identifier))
-            {
-
-                _identifier = request.Identifier;
-
-                if (request.Trigger != null)
-                {
-                    await Start(request);
-                }
-                else
-                {
-                    await ReadState(request);
-                    if (Status == MachineStatus.Stopped)
-                    {
-                        return NotFound();
-                    }
-                }
-            }
-
-            var r = await base.Execute(request, startTime, cancellationToken);
-            return r;
+            return base.Execute(request, startTime, cancellationToken);
         }
 
         private async Task<ServiceResponse<TResponse>> ExecuteRegistrations(TRequest request, CancellationToken cancellationToken)
@@ -360,7 +325,7 @@ namespace Gtt.CodeWorks.StateMachines
             base.BeforeResponse(response);
         }
 
-        protected override Task<ServiceResponse<TResponse>> BeforeImplementation(TRequest request, CancellationToken cancellationToken)
+        protected override async Task<ServiceResponse<TResponse>> BeforeImplementation(TRequest request, CancellationToken cancellationToken)
         {
             if (_unexpectedProperties != null && _unexpectedProperties.Any())
             {
@@ -379,6 +344,34 @@ namespace Gtt.CodeWorks.StateMachines
                 Logger.LogWarning(ex, $"Cannot remove debug data for {request.CorrelationId}");
             }
 
+            var derivedIdFunction = DeriveIdentifier();
+            if (derivedIdFunction != null && request.Trigger != null && request.Trigger.Equals(derivedIdFunction.Value.Trigger))
+            {
+                try
+                {
+                    string derivedIdentifier = derivedIdFunction.Value.Func(request);
+                    if (!string.IsNullOrWhiteSpace(derivedIdentifier))
+                    {
+                        if (!string.IsNullOrWhiteSpace(request.Identifier))
+                        {
+                            Logger.LogInformation($"Request Identifier {request.Identifier} is being replaced by derived identifier {derivedIdentifier} for request correlationId: {request.CorrelationId}");
+                        }
+
+                        _identifier = derivedIdentifier;
+                        request.Identifier = derivedIdentifier;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, $"Could not derive identifier for correlationId:{request.CorrelationId}");
+
+                    return new ServiceResponse<TResponse>(
+                        default(TResponse),
+                        new ResponseMetaData(this, ServiceResult.PermanentError,
+                            new ErrorData("Could not derive identifier from provided data")));
+                }
+            }
+
             if (string.IsNullOrWhiteSpace(_identifier))
             {
                 var idRequired = ValidationError(new ValidationErrorData
@@ -387,7 +380,20 @@ namespace Gtt.CodeWorks.StateMachines
                     Members = new[] { "Identifier" }
                 });
 
-                return Task.FromResult(idRequired);
+                return idRequired;
+            }
+
+            if (request.Trigger != null)
+            {
+                await Start(request);
+            }
+            else
+            {
+                await ReadState(request);
+                if (Status == MachineStatus.Stopped)
+                {
+                    return NotFound();
+                }
             }
 
             Rules(Machine);
@@ -399,13 +405,13 @@ namespace Gtt.CodeWorks.StateMachines
                 if (!IsNew())
                 {
                     var response = new TResponse();
-                    return SuccessfulTask(response);
+                    return Successful(response);
                 }
 
-                return Task.FromResult(NotFound());
+                return NotFound();
             }
 
-            return Task.FromResult((ServiceResponse<TResponse>)null);
+            return null;
         }
 
         protected StateMachineData<TState, TTrigger> GetStateData()
@@ -442,7 +448,7 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected virtual bool SaveStateHistory => true;
 
-        protected virtual string DeriveIdentifier(TRequest request)
+        protected virtual (TTrigger Trigger, Func<TRequest, string> Func)? DeriveIdentifier()
         {
             return null;
         }
