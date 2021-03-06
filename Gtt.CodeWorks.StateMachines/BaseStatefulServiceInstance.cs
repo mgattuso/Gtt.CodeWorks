@@ -346,6 +346,8 @@ namespace Gtt.CodeWorks.StateMachines
                 Logger.LogWarning(ex, $"Cannot remove debug data for {request.CorrelationId}");
             }
 
+            _identifier = request.Identifier;
+
             var derivedIdFunction = DeriveIdentifier();
             if (derivedIdFunction != null && request.Trigger != null && request.Trigger.Equals(derivedIdFunction.Value.Trigger))
             {
