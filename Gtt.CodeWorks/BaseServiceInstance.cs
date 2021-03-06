@@ -139,6 +139,7 @@ namespace Gtt.CodeWorks
             }
             catch (NotImplementedException ex)
             {
+                _logger.LogInformation(ex, $"Call path is not implemented: {request.CorrelationId}");
                 response = new ServiceResponse<TResponse>(
                     default(TResponse),
                     new ResponseMetaData(this, ServiceResult.NotImplemented));

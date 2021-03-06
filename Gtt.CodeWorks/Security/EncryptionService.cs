@@ -18,14 +18,14 @@ namespace Gtt.CodeWorks.Security
             _hashKey = hashKey;
         }
 
-        public async Task<EncryptedData> Encrypt(EncryptionStrength strength, string str)
+        public EncryptedData Encrypt(EncryptionStrength strength, string str)
         {
             if (string.IsNullOrWhiteSpace(str))
             {
                 return new EncryptedData { IsEmpty = true };
             }
 
-            var hash = await Hash(strength, str, false);
+            var hash = Hash(strength, str, false);
 
             var ekey = _encryptionKey;
 
@@ -46,10 +46,8 @@ namespace Gtt.CodeWorks.Security
             }
         }
 
-        public async Task<string> Decrypt(string str)
+        public string Decrypt(string str)
         {
-            await Task.CompletedTask;
-
             byte[] ivPlusMessage = Convert.FromBase64String(str);
             byte[] message = new byte[ivPlusMessage.Length - 16];
             byte[] iv = new byte[16];
@@ -63,9 +61,8 @@ namespace Gtt.CodeWorks.Security
             return decrypted;
         }
 
-        public async Task<string> Hash(EncryptionStrength strength, string source, bool caseInsensitive)
+        public string Hash(EncryptionStrength strength, string source, bool caseInsensitive)
         {
-            await Task.CompletedTask;
             var hkey = _hashKey;
 
             if (caseInsensitive)
@@ -83,7 +80,6 @@ namespace Gtt.CodeWorks.Security
                 default:
                     throw new ArgumentOutOfRangeException(nameof(strength), strength, null);
             }
-
         }
 
         public int RandomNumber(int startInclusive, int endExclusive)
@@ -106,7 +102,7 @@ namespace Gtt.CodeWorks.Security
             }
         }
 
-        public Task<string> GenerateRandomKey(EncryptionStrength strength, bool alphaNumericOnly = true)
+        public string GenerateRandomKey(EncryptionStrength strength, bool alphaNumericOnly = true)
         {
             switch (strength)
             {
@@ -117,7 +113,7 @@ namespace Gtt.CodeWorks.Security
                     {
                         key256 = string.Join("", key256.Where(char.IsLetterOrDigit));
                     }
-                    return Task.FromResult(key256);
+                    return key256;
 
                 case EncryptionStrength.Sha512:
                     var hmac512 = new HMACSHA512();
@@ -128,7 +124,7 @@ namespace Gtt.CodeWorks.Security
 
                     }
 
-                    return Task.FromResult(key512);
+                    return key512;
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(strength), strength, null);
