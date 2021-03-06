@@ -63,6 +63,8 @@ namespace Gtt.CodeWorks.StateMachines
         {
             _stateRepository = statefulDependencies.StateRepository;
             _currentEnvironment = coreDependencies.EnvironmentResolver.Environment;
+            CreatedDate = ServiceClock.CurrentTime();
+            ModifiedDate = CreatedDate;
 
             var existingValidation = PipeLine.FirstOrDefault(x => typeof(ValidationMiddleware) == x.GetType());
             var idx = PipeLine.IndexOf(existingValidation);
@@ -422,7 +424,9 @@ namespace Gtt.CodeWorks.StateMachines
                 Identifier = _identifier,
                 CurrentState = _data.State,
                 AllowedTriggers = Machine?.PermittedTriggers?.ToArray() ?? new TTrigger[0],
-                ActiveStates = GetAllCurrentStates()
+                ActiveStates = GetAllCurrentStates(),
+                Created = CreatedDate,
+                Modified = ModifiedDate
             };
         }
 

@@ -28,5 +28,7 @@ namespace Gtt.CodeWorks.StateMachines
         public TState CurrentState { get; set; }
         public TState[] ActiveStates { get; set; }
         public TTrigger[] AllowedTriggers { get; set; }
+        public DateTimeOffset Created { get; set; }
+        public DateTimeOffset Modified { get; set; }
     }
 }
