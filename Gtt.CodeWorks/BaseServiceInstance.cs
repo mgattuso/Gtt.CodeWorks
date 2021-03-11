@@ -185,7 +185,11 @@ namespace Gtt.CodeWorks
                 }
             }
 
-            BeforeResponse(response);
+            if (response !=null && response.Data != null)
+            {
+                BeforeResponse(response);
+            }
+
             StoredResponse = response;
             return response;
         }
