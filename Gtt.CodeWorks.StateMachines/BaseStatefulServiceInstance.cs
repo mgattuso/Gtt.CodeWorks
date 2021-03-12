@@ -535,6 +535,7 @@ namespace Gtt.CodeWorks.StateMachines
 
         public (string diagram, string contentType) Diagram()
         {
+            Rules(Machine);
             var d = UmlDotGraph.Format(Machine.GetInfo());
             return (d, "text/vnd.graphviz");
         }
