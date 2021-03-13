@@ -156,7 +156,6 @@ namespace Gtt.CodeWorks.Clients.HttpClient
         {
             public string ServiceName { get; set; }
             public Guid CorrelationId { get; set; }
-            public ServiceResult ServiceResult { get; set; }
             public ServiceResult Result { get; set; }
             public long DurationMs { get; set; }
             public DateTimeOffset ResponseCreated { get; set; }
