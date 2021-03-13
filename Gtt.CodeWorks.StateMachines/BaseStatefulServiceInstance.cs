@@ -374,7 +374,7 @@ namespace Gtt.CodeWorks.StateMachines
                     return new ServiceResponse<TResponse>(
                         default(TResponse),
                         new ResponseMetaData(this, ServiceResult.PermanentError,
-                           message: "Could not derive identifier from provided data"));
+                           exceptionMessage: "Could not derive identifier from provided data"));
                 }
             }
 

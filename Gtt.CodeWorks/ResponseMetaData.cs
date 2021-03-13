@@ -23,7 +23,8 @@ namespace Gtt.CodeWorks
             ServiceResult result,
             IDictionary<int, string> errorCodes = null,
             IDictionary<string, string[]> validationErrors = null,
-            string message = "",
+            string publicMessage = "",
+            string exceptionMessage = "",
             Dictionary<string, ResponseMetaData> dependencies = null
             ) : this(
             service.FullName,
@@ -33,7 +34,8 @@ namespace Gtt.CodeWorks
             responseCreated: null,
             errorCodes: errorCodes,
             validationErrors: validationErrors,
-            message: message,
+            publicMessage: publicMessage,
+            exceptionMessage: exceptionMessage,
             dependencies: dependencies)
         {
 
@@ -47,7 +49,8 @@ namespace Gtt.CodeWorks
             DateTimeOffset? responseCreated = null,
             IDictionary<int, string> errorCodes = null,
             IDictionary<string, string[]> validationErrors = null,
-            string message = "",
+            string publicMessage = "",
+            string exceptionMessage = "",
             Dictionary<string, ResponseMetaData> dependencies = null
         )
         {
@@ -55,7 +58,7 @@ namespace Gtt.CodeWorks
             CorrelationId = correlationId;
             Result = serviceResult;
             DurationMs = durationMs;
-            Message = string.IsNullOrWhiteSpace(message) ? null : message.Trim();
+            PublicMessage = string.IsNullOrWhiteSpace(publicMessage) ? null : publicMessage.Trim();
             Dependencies = dependencies;
             ErrorCodes = errorCodes?.ToDictionary(k => k.Key.ToString(), v => v.Value);
             ValidationErrors = validationErrors;
@@ -75,7 +78,8 @@ namespace Gtt.CodeWorks
         public DateTimeOffset ResponseCreated { get; }
         public IDictionary<string, string> ErrorCodes { get; }
         public IDictionary<string, string[]> ValidationErrors { get; }
-        public string Message { get; }
+        public string PublicMessage { get; }
+        public string ExceptionMessage { get; set; }
         public IDictionary<string, ResponseMetaData> Dependencies { get; }
     }
 }

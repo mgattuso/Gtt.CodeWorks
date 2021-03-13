@@ -148,7 +148,7 @@ namespace Gtt.CodeWorks
             {
                 response = new ServiceResponse<TResponse>(
                     default(TResponse),
-                    new ResponseMetaData(this, ex.Result, message: ex.ToString()));
+                    new ResponseMetaData(this, ex.Result, exceptionMessage: ex.ToString()));
             }
             catch (ValidationErrorException ex)
             {
@@ -204,7 +204,7 @@ namespace Gtt.CodeWorks
                 new ResponseMetaData(
                     this,
                     ServiceResult.TransientError,
-                    message: reason
+                    publicMessage: reason
                 ));
         }
 
@@ -247,7 +247,7 @@ namespace Gtt.CodeWorks
                 new ResponseMetaData(
                     this,
                     ServiceResult.PermanentError,
-                    message: $"An unexpected error code {code} was returned"
+                    publicMessage: $"An unexpected error code {code} was returned"
                 ));
         }
 
@@ -257,7 +257,7 @@ namespace Gtt.CodeWorks
                 new ResponseMetaData(
                     this,
                     ServiceResult.TransientError,
-                    message: ex.ToString()
+                    exceptionMessage: ex.ToString()
                 ));
         }
 
@@ -267,7 +267,7 @@ namespace Gtt.CodeWorks
                 new ResponseMetaData(
                     this,
                     ServiceResult.PermanentError,
-                    message: ex.ToString()
+                    exceptionMessage: ex.ToString()
                 )
             );
         }

@@ -69,7 +69,7 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
                             (long)(ServiceClock.CurrentTime() - start).TotalMilliseconds,
                             ServiceClock.CurrentTime(),
                             validationErrors: errors,
-                            message: ex.ToString()
+                            exceptionMessage: ex.ToString()
                         )
                     ),
                     service.ResponseType);

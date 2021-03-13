@@ -106,7 +106,7 @@ namespace Gtt.CodeWorks.Clients.HttpClient
                     request?.CorrelationId ?? Guid.Empty,
                     ServiceResult.PermanentError,
                     (long)(ServiceClock.CurrentTime() - start).TotalMilliseconds,
-                    message: ex.ToString()
+                    exceptionMessage: ex.ToString()
                 ));
             }
 
@@ -126,9 +126,10 @@ namespace Gtt.CodeWorks.Clients.HttpClient
                             response.MetaData.Result,
                             response.MetaData.DurationMs,
                             response.MetaData.ResponseCreated,
-                            response.MetaData.ErrorCodes.ToDictionary(k => Convert.ToInt32(k), v=> v.Value),
+                            response.MetaData.ErrorCodes?.ToDictionary(k => Convert.ToInt32(k), v=> v.Value),
                             response.MetaData.ValidationErrors,
-                            response.MetaData.Message,
+                            response.MetaData.PublicMessage,
+                            response.MetaData.ExceptionMessage,
                             response.MetaData.Dependencies
                         )
                     }
@@ -145,9 +146,10 @@ namespace Gtt.CodeWorks.Clients.HttpClient
                     response.MetaData.Result,
                     (long)(end - start).TotalMilliseconds,
                     end,
-                    response.MetaData.ErrorCodes.ToDictionary(k => Convert.ToInt32(k), v => v.Value),
+                    response.MetaData.ErrorCodes?.ToDictionary(k => Convert.ToInt32(k), v => v.Value),
                     response.MetaData.ValidationErrors,
-                    response.MetaData.Message,
+                    response.MetaData.PublicMessage,
+                    response.MetaData.ExceptionMessage,
                     dependencies)); //TODO: FIX ERROR DATA
 
         }
@@ -161,7 +163,8 @@ namespace Gtt.CodeWorks.Clients.HttpClient
             public DateTimeOffset ResponseCreated { get; set; }
             public Dictionary<string, string> ErrorCodes { get; set; }
             public Dictionary<string, string[]> ValidationErrors { get; set; }
-            public string Message { get; set; }
+            public string PublicMessage { get; set; }
+            public string ExceptionMessage { get; set; }
             public Dictionary<string, ResponseMetaData> Dependencies { get; set; }
         }
 
