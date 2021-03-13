@@ -11,9 +11,9 @@ namespace Gtt.CodeWorks.Validation
             
         }
 
-        public ValidationAttempt Validate<T>(T request, string prefix = null)
+        public IDictionary<string, string[]> Validate<T>(T request, string prefix = null)
         {
-            return ValidationAttempt.Success;
+            return new Dictionary<string, string[]>();
         }
 
         public static NullRequestValidator Instance => new NullRequestValidator();

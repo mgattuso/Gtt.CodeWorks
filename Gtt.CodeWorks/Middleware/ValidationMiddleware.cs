@@ -18,13 +18,13 @@ namespace Gtt.CodeWorks.Middleware
 
         public Task<ServiceResponse> OnRequest<TReq>(IServiceInstance service, TReq request, CancellationToken cancellationToken) where TReq : BaseRequest, new()
         {
-            var validationResult = _requestValidator.Validate(request);
-            if (validationResult.IsValid)
+            IDictionary<string, string[]> validationResult = _requestValidator.Validate(request);
+            if (validationResult.Count == 0)
             {
                 return Task.FromResult(this.ContinuePipeline());
             }
 
-            return Task.FromResult(new ServiceResponse(new ResponseMetaData(service, validationResult.Errors)));
+            return Task.FromResult(new ServiceResponse(new ResponseMetaData(service, ServiceResult.ValidationError, validationErrors: validationResult)));
         }
 
         public Task OnResponse<TReq, TRes>(IServiceInstance service, TReq request, ServiceResponse<TRes> response,

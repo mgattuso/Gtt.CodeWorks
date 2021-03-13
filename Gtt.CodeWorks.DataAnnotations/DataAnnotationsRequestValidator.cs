@@ -29,7 +29,7 @@ namespace Gtt.CodeWorks.DataAnnotations
             }
         }
 
-        public ValidationAttempt Validate<T>(T request, string prefix = null)
+        public IDictionary<string, string[]> Validate<T>(T request, string prefix = null)
         {
             var context = new ValidationContext(request, serviceProvider: _serviceProvider, items: null);
             var results = new List<ValidationResult>();
@@ -38,17 +38,30 @@ namespace Gtt.CodeWorks.DataAnnotations
 
             if (isValid)
             {
-                return ValidationAttempt.Success;
+                return new Dictionary<string, string[]>();
             }
 
-            prefix = !string.IsNullOrWhiteSpace(prefix) ? prefix.Trim()+"." : "";
+            prefix = !string.IsNullOrWhiteSpace(prefix) ? prefix.Trim() + "." : "";
 
-            var ve = ValidationErrorResponse.Member(results.Select(x => new ValidationErrorData()
+            Dictionary<string, List<string>> list = new Dictionary<string, List<string>>();
+
+            foreach (var err in results)
             {
-                ErrorMessage = x.ErrorMessage,
-                Members = x.MemberNames.Select(m => ToCamelCase(prefix+m))
-            }).ToArray());
-            return ValidationAttempt.Unsuccessful(ve);
+                if (string.IsNullOrWhiteSpace(err.ErrorMessage))
+                {
+                    continue;
+                }
+                foreach (var m in err.MemberNames)
+                {
+                    if (m==null) continue;
+                    var member = ToCamelCase(prefix + m.Trim());
+                    var l = list.GetValueOrDefault(member) ?? new List<string>();
+                    l.Add(err.ErrorMessage);
+                    list[member] = l;
+                }
+            }
+
+            return list.ToDictionary(k => k.Key, v => v.Value.ToArray());
         }
 
         private static string ToCamelCase(string str)

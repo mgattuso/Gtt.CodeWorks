@@ -56,7 +56,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
             return allowProps.Contains(options.JsonSchemaValidation);
         }
 
-        private static void RecursivelyGetErrors(IDictionary<string, object> dict, ValidationError err, JsonSchema schema)
+        private static void RecursivelyGetErrors(IDictionary<string, string[]> dict, ValidationError err, JsonSchema schema)
         {
             if (err is ChildSchemaValidationError child)
             {
@@ -86,7 +86,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
         }
 
 
-        public Task<IDictionary<string, object>> ValidateSchema(byte[] message, Type type, HttpDataSerializerOptions options = null)
+        public Task<IDictionary<string, string[]>> ValidateSchema(byte[] message, Type type, HttpDataSerializerOptions options = null)
         {
             options = options ?? new HttpDataSerializerOptions();
             string contents = Encoding.UTF8.GetString(message);
@@ -98,7 +98,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 false);
 
             ICollection<ValidationError> errors = schema.Validate(contents, new EnumFormatValidator());
-            IDictionary<string, object> dict = new Dictionary<string, object>();
+            IDictionary<string, string[]> dict = new Dictionary<string, string[]>();
             foreach (var err in errors)
             {
                 RecursivelyGetErrors(dict, err, schema);
@@ -106,7 +106,7 @@ namespace Gtt.CodeWorks.Serializers.TextJson
 
             if (dict.Any())
             {
-                dict.AddOrAppendValue("errorType", "jsonSchemaValidation", forceArray: false);
+                dict.AddOrAppendValue("errorType", "jsonSchemaValidation");
                 dict.AddOrAppendValue("schema", schema.ToJson(Formatting.None));
                 _logger.LogTrace(schema.ToJson());
             }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Gtt.CodeWorks.Validation;
 using Microsoft.AspNetCore.Http;
 
 namespace Gtt.CodeWorks.AspNet
@@ -48,7 +49,7 @@ namespace Gtt.CodeWorks.AspNet
                     new ResponseMetaData(
                         service,
                         ServiceResult.ValidationError,
-                        vex.Error));
+                        validationErrors: ValidationHelper.Create(vex.Error, vex.Member)));
             }
 
             await _converter.ConvertResponse(output, service.ResponseType, context.Response);

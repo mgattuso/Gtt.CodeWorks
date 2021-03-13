@@ -42,5 +42,12 @@ namespace Gtt.CodeWorks
                 return hashCode;
             }
         }
+
+        public Dictionary<int, string> ToDictionary()
+        {
+            return new Dictionary<int, string> {
+                { ErrorCode, Description }
+            };
+        }
     }
 }

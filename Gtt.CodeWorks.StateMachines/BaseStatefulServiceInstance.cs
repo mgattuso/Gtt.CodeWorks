@@ -126,11 +126,7 @@ namespace Gtt.CodeWorks.StateMachines
 
                 if (hasKey && data == null)
                 {
-                    return ValidationError(new ValidationErrorData
-                    {
-                        ErrorMessage = $"{p.Name} payload is required",
-                        Members = new[] { p.Name }
-                    });
+                    return ValidationError(p.Name, $"{p.Name} payload is required");
                 }
 
                 var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
@@ -157,8 +153,8 @@ namespace Gtt.CodeWorks.StateMachines
 
             var response = new TResponse();
             ServiceResult result = ServiceResult.Successful;
-            ErrorData errorData = null;
 
+            ErrorCodeData errorData = null;
 
             if (_forceErrorCode != null)
             {
@@ -171,9 +167,15 @@ namespace Gtt.CodeWorks.StateMachines
                 }
             }
 
+            Dictionary<int, string> errorDictionary = null;
+            if (errorData != null)
+            {
+                errorDictionary = new Dictionary<int, string> { [errorData.ErrorCode] = errorData.Description };
+            }
+
             response.Model = CurrentData;
             response.StateMachine = GetStateData();
-            return Result(result, response, errorData);
+            return new ServiceResponse<TResponse>(response, new ResponseMetaData(this, result, errorCodes: errorDictionary));
         }
 
         private readonly IStateRepository _stateRepository;
@@ -372,18 +374,13 @@ namespace Gtt.CodeWorks.StateMachines
                     return new ServiceResponse<TResponse>(
                         default(TResponse),
                         new ResponseMetaData(this, ServiceResult.PermanentError,
-                            new ErrorData("Could not derive identifier from provided data")));
+                           message: "Could not derive identifier from provided data"));
                 }
             }
 
             if (string.IsNullOrWhiteSpace(_identifier))
             {
-                var idRequired = ValidationError(new ValidationErrorData
-                {
-                    ErrorMessage = "The Identifier field is required",
-                    Members = new[] { "Identifier" }
-                });
-
+                var idRequired = ValidationError("Identifier", "The Identifier field is required");
                 return idRequired;
             }
 

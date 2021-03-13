@@ -103,15 +103,10 @@ namespace Gtt.CodeWorks.Clients.HttpClient
                 return new ServiceResponse<TResponse>
                 (default(TResponse), new ResponseMetaData(
                     uri.ToString(),
-                    ServiceClock.CurrentTime(),
-                    (long)(ServiceClock.CurrentTime() - start).TotalMilliseconds,
                     request?.CorrelationId ?? Guid.Empty,
                     ServiceResult.PermanentError,
-                    new Dictionary<string, object>
-                    {
-                        {"Error", new [] { ex.ToString() }}
-                    },
-                    null
+                    (long)(ServiceClock.CurrentTime() - start).TotalMilliseconds,
+                    message: ex.ToString()
                 ));
             }
 
@@ -127,11 +122,14 @@ namespace Gtt.CodeWorks.Clients.HttpClient
                     {
                         response.MetaData.ServiceName, new ResponseMetaData(
                             response.MetaData.ServiceName,
-                            response.MetaData.ResponseCreated,
-                            response.MetaData.DurationMs,
                             response.MetaData.CorrelationId,
                             response.MetaData.Result,
-                            response.MetaData.Errors
+                            response.MetaData.DurationMs,
+                            response.MetaData.ResponseCreated,
+                            response.MetaData.ErrorCodes.ToDictionary(k => Convert.ToInt32(k), v=> v.Value),
+                            response.MetaData.ValidationErrors,
+                            response.MetaData.Message,
+                            response.MetaData.Dependencies
                         )
                     }
                 };
@@ -143,11 +141,13 @@ namespace Gtt.CodeWorks.Clients.HttpClient
                 response.Data,
                 new ResponseMetaData(
                     $"{response.MetaData.ServiceName}.Client",
-                    end,
-                    (long)(end - start).TotalMilliseconds,
                     response.MetaData.CorrelationId,
                     response.MetaData.Result,
-                    response.MetaData.Errors,
+                    (long)(end - start).TotalMilliseconds,
+                    end,
+                    response.MetaData.ErrorCodes.ToDictionary(k => Convert.ToInt32(k), v => v.Value),
+                    response.MetaData.ValidationErrors,
+                    response.MetaData.Message,
                     dependencies)); //TODO: FIX ERROR DATA
 
         }
@@ -156,11 +156,14 @@ namespace Gtt.CodeWorks.Clients.HttpClient
         {
             public string ServiceName { get; set; }
             public Guid CorrelationId { get; set; }
+            public ServiceResult ServiceResult { get; set; }
             public ServiceResult Result { get; set; }
             public long DurationMs { get; set; }
             public DateTimeOffset ResponseCreated { get; set; }
-            public Dictionary<string, object> Errors { get; set; }
-            public Dictionary<string, InternalResponseMetadata> Dependencies { get; set; }
+            public Dictionary<string, string> ErrorCodes { get; set; }
+            public Dictionary<string, string[]> ValidationErrors { get; set; }
+            public string Message { get; set; }
+            public Dictionary<string, ResponseMetaData> Dependencies { get; set; }
         }
 
         public class InternalServiceResponse<TResponse> where TResponse : new()

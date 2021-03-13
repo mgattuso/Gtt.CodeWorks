@@ -37,11 +37,11 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
                     new ServiceResponse(
                         new ResponseMetaData(
                             service.FullName,
-                            ServiceClock.CurrentTime(),
-                            (long)(ServiceClock.CurrentTime() - start).TotalMilliseconds,
                             service.CorrelationId == default(Guid) ? Guid.Empty : service.CorrelationId,
                             ServiceResult.ValidationError,
-                            ex.Errors
+                            (long)(ServiceClock.CurrentTime() - start).TotalMilliseconds,
+                            ServiceClock.CurrentTime(),
+                            validationErrors: ex.Errors
                         )
                     ),
                     service.ResponseType);
@@ -52,13 +52,11 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
             {
                 var serialEx = ex as CodeWorksSerializationException;
                 string originalPayload = serialEx?.RawData ?? "";
-                var errors = new Dictionary<string, object>
-                {
-                    {"Error", new[] {ex.ToString()}}
-                };
+
+                Dictionary<string, string[]> errors = null;
                 if (!string.IsNullOrWhiteSpace(originalPayload))
                 {
-                    errors["payload"] = new[] { originalPayload };
+                    errors = new Dictionary<string, string[]> { ["payload"] = new[] { originalPayload } };
                 }
 
                 var error = await _responseGenerator.ConvertResponse(
@@ -66,11 +64,12 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
                     new ServiceResponse(
                         new ResponseMetaData(
                             service.FullName,
-                            ServiceClock.CurrentTime(),
-                            (long)(ServiceClock.CurrentTime() - start).TotalMilliseconds,
                             service.CorrelationId == default(Guid) ? Guid.Empty : service.CorrelationId,
                             ServiceResult.PermanentError,
-                            errors
+                            (long)(ServiceClock.CurrentTime() - start).TotalMilliseconds,
+                            ServiceClock.CurrentTime(),
+                            validationErrors: errors,
+                            message: ex.ToString()
                         )
                     ),
                     service.ResponseType);

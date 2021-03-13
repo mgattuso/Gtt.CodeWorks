@@ -8,21 +8,21 @@ namespace Gtt.CodeWorks.Tests.Core
     [TestClass]
     public class DictionaryExtensionTests
     {
-        [TestMethod]
-        public void AddOrUpdate_HappyPath()
-        {
-            //arrange
-            var d = new Dictionary<string, object>();
+        //[TestMethod]
+        //public void AddOrUpdate_HappyPath()
+        //{
+        //    //arrange
+        //    var d = new Dictionary<string, object>();
 
-            // act
-            d.AddOrAppendValue("test", "1");
-            d.AddOrAppendValue("test", "2");
-            d.AddOrAppendValue("test", "3");
-            d.AddOrAppendValue("test", "4");
-            d.AddOrAppendValue("test", null);
+        //    // act
+        //    d.AddOrAppendValue("test", "1");
+        //    d.AddOrAppendValue("test", "2");
+        //    d.AddOrAppendValue("test", "3");
+        //    d.AddOrAppendValue("test", "4");
+        //    d.AddOrAppendValue("test", null);
 
-            // assert
-            Assert.AreEqual(5, ((object[])d["test"]).Length);
-        }
+        //    // assert
+        //    Assert.AreEqual(5, ((object[])d["test"]).Length);
+        //}
     }
 }

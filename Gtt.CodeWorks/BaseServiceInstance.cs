@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 namespace Gtt.CodeWorks
 {
     public abstract class BaseServiceInstance<TRequest, TResponse>
-        : IServiceInstance<TRequest, TResponse>, 
+        : IServiceInstance<TRequest, TResponse>,
             IAuthenticatedServiceInstance,
             ILocalServiceInstance,
             ILocalServiceInstance<TRequest, TResponse>
@@ -146,14 +146,13 @@ namespace Gtt.CodeWorks
             }
             catch (BusinessLogicException ex)
             {
-                var errors = new ErrorData(ex.Message);
                 response = new ServiceResponse<TResponse>(
                     default(TResponse),
-                    new ResponseMetaData(this, ex.Result, errors));
+                    new ResponseMetaData(this, ex.Result, message: ex.ToString()));
             }
             catch (ValidationErrorException ex)
             {
-                response = ValidationError(new ValidationErrorData(ex.Error.ErrorMessage, ex.Error.Members.ToArray()));
+                response = ValidationError(ex.Error, ex.Member);
             }
             catch (Exception ex)
             {
@@ -185,7 +184,7 @@ namespace Gtt.CodeWorks
                 }
             }
 
-            if (response !=null && response.Data != null)
+            if (response != null && response.Data != null)
             {
                 BeforeResponse(response);
             }
@@ -205,7 +204,7 @@ namespace Gtt.CodeWorks
                 new ResponseMetaData(
                     this,
                     ServiceResult.TransientError,
-                    new ErrorData()
+                    message: reason
                 ));
         }
 
@@ -215,12 +214,12 @@ namespace Gtt.CodeWorks
             return Task.FromResult((ServiceResponse<TResponse>)null);
         }
 
-        protected ErrorData GetErrorData(int code)
+        protected ErrorCodeData GetErrorData(int code)
         {
             var codes = DefineErrorCodes() ?? _acceptableErrors ?? new Dictionary<int, string>();
             if (codes.TryGetValue(code, out var msg))
             {
-                return new ErrorData(msg, code.ToString());
+                return new ErrorCodeData(code, msg, FullName);
             }
 
             return null;
@@ -237,7 +236,7 @@ namespace Gtt.CodeWorks
                     new ResponseMetaData(
                         this,
                         ServiceResult.ValidationError,
-                        error
+                        error.ToDictionary()
                     )
                 );
             }
@@ -248,7 +247,7 @@ namespace Gtt.CodeWorks
                 new ResponseMetaData(
                     this,
                     ServiceResult.PermanentError,
-                    new ErrorData($"An unexpected error code {code} was returned", "")
+                    message: $"An unexpected error code {code} was returned"
                 ));
         }
 
@@ -258,7 +257,7 @@ namespace Gtt.CodeWorks
                 new ResponseMetaData(
                     this,
                     ServiceResult.TransientError,
-                    new ErrorData()
+                    message: ex.ToString()
                 ));
         }
 
@@ -268,7 +267,7 @@ namespace Gtt.CodeWorks
                 new ResponseMetaData(
                     this,
                     ServiceResult.PermanentError,
-                    new ErrorData(ex)
+                    message: ex.ToString()
                 )
             );
         }
@@ -311,7 +310,7 @@ namespace Gtt.CodeWorks
             {
                 throw new Exception("Cannot return a non-successful result through the success response");
             }
-            return new ServiceResponse<TResponse>(response, new ResponseMetaData(this, ServiceResult.Successful, dependencyMetaData));
+            return new ServiceResponse<TResponse>(response, new ResponseMetaData(this, ServiceResult.Successful, dependencies: dependencyMetaData));
         }
 
         protected Task<ServiceResponse<TResponse>> SuccessfulTask(TResponse response, ServiceResult result = ServiceResult.Successful, Dictionary<string, ResponseMetaData> dependencyMetaData = null)
@@ -324,13 +323,8 @@ namespace Gtt.CodeWorks
             return Task.FromResult(
                 new ServiceResponse<TResponse>(
                     response,
-                    new ResponseMetaData(this, ServiceResult.Successful, dependencyMetaData))
+                    new ResponseMetaData(this, ServiceResult.Successful, dependencies: dependencyMetaData))
                 );
-        }
-
-        protected ServiceResponse<TResponse> Result(ServiceResult result, TResponse response, ErrorData errorData = null)
-        {
-            return new ServiceResponse<TResponse>(response, new ResponseMetaData(this, result, errorData));
         }
 
         protected ServiceResponse<TResponse> Created(TResponse response)
@@ -342,21 +336,16 @@ namespace Gtt.CodeWorks
             return Successful(response, ServiceResult.Queued);
         }
 
-        protected ServiceResponse<TResponse> ValidationError(ValidationErrorData error)
+        protected ServiceResponse<TResponse> ValidationError(string error, string members)
         {
-            var ver = new ValidationErrorResponse();
-            ver.AddValidationError(error);
-            return new ServiceResponse<TResponse>(default(TResponse), new ResponseMetaData(this, ver));
+            return ValidationError((error, new[] { members }));
         }
 
-        protected ServiceResponse<TResponse> ValidationError(params ValidationErrorData[] validationErrors)
+        protected ServiceResponse<TResponse> ValidationError(params (string error, string[] members)[] validationErrors)
         {
-            var ver = new ValidationErrorResponse();
-            foreach (var error in validationErrors)
-            {
-                ver.AddValidationError(error);
-            }
-            return new ServiceResponse<TResponse>(default(TResponse), new ResponseMetaData(this, ver));
+            Dictionary<string, string[]> validationDictionary = validationErrors.ToDictionary(k => k.error, v => v.members);
+            var inverted = validationDictionary.FlipKeysAndValues();
+            return new ServiceResponse<TResponse>(default(TResponse), new ResponseMetaData(this, ServiceResult.ValidationError, validationErrors: inverted));
         }
 
         private Guid CalculateCorrelationId(TRequest request)

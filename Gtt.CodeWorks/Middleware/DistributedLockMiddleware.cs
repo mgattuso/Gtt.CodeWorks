@@ -40,8 +40,7 @@ namespace Gtt.CodeWorks.Middleware
                 return new ServiceResponse(new ResponseMetaData(
                         service,
                         ServiceResult.TransientError,
-                        new ErrorData($"A lock already exists for key \"{_key}\"")
-                    )
+                        message: $"A lock already exists for key \"{_key}\"")
                 );
             }
 

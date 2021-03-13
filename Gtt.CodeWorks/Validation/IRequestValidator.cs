@@ -1,7 +1,9 @@
-﻿namespace Gtt.CodeWorks.Validation
+﻿using System.Collections.Generic;
+
+namespace Gtt.CodeWorks.Validation
 {
     public interface IRequestValidator
     {
-        ValidationAttempt Validate<T>(T request, string prefix = null);
+        IDictionary<string, string[]> Validate<T>(T request, string prefix = null);
     }
 }

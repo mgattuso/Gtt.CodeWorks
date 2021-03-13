@@ -9,7 +9,7 @@ using Gtt.CodeWorks.Validation;
 
 namespace Gtt.CodeWorks.StateMachines.Middleware
 {
-    public class StateMachineValidatorMiddleware<TTrigger> : IServiceMiddleware 
+    public class StateMachineValidatorMiddleware<TTrigger> : IServiceMiddleware
         where TTrigger : struct, IConvertible
     {
         private readonly IRequestValidator _requestValidator;
@@ -40,19 +40,22 @@ namespace Gtt.CodeWorks.StateMachines.Middleware
 
             if (matchValue == null)
             {
-                return 
+                return
                     Task.FromResult(
-                        new ServiceResponse(new ResponseMetaData(service, ServiceResult.ValidationError, new ErrorData("Is required", match.Name)))
-                    );
+                        new ServiceResponse(new ResponseMetaData(
+                                service, 
+                                ServiceResult.ValidationError, 
+                                validationErrors: ValidationHelper.Create("Is a required property", match.Name)))
+                        );
             }
 
             var validationResult = _requestValidator.Validate(match.GetValue(stateMachineRequest), match.Name);
-            if (validationResult.IsValid)
+            if (validationResult.Count == 0)
             {
                 return Task.FromResult(this.ContinuePipeline());
             }
 
-            return Task.FromResult(new ServiceResponse(new ResponseMetaData(service, validationResult.Errors)));
+            return Task.FromResult(new ServiceResponse(new ResponseMetaData(service, ServiceResult.ValidationError, validationErrors: validationResult)));
         }
 
         public Task OnResponse<TReq, TRes>(IServiceInstance service, TReq request, ServiceResponse<TRes> response,

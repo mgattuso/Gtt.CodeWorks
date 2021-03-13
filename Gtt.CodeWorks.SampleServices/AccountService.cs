@@ -49,7 +49,7 @@ namespace Gtt.CodeWorks.SampleServices
         protected override void RegisterTriggerActions(RegistrationFactory register)
         {
             register.OnTrigger(Trigger.Open)
-                .WhenInState(State.Closed)
+                .WhenInState(State.Pending)
                 .Do((req, ct) =>
                 {
                     var data = As<AccountRequest.OpenData>(req);

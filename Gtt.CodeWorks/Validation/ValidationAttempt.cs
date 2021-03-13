@@ -1,31 +1,31 @@
-﻿namespace Gtt.CodeWorks.Validation
+﻿using System.Collections.Generic;
+
+namespace Gtt.CodeWorks.Validation
 {
     public class ValidationAttempt
     {
-        private ValidationAttempt(bool isValid, ValidationErrorResponse errors)
+        private readonly string _member;
+        private readonly string _error;
+
+        private ValidationAttempt(bool isValid, string member = null, string error = null)
         {
+            _member = member;
+            _error = error;
             IsValid = isValid;
-            Errors = errors;
         }
 
         public bool IsValid { get; }
-        public ValidationErrorResponse Errors { get; }
 
-        public static ValidationAttempt Success => new ValidationAttempt(true, null);
+        public static ValidationAttempt Success => new ValidationAttempt(true);
 
-        public static ValidationAttempt Unsuccessful(ValidationErrorResponse errors)
+        public static ValidationAttempt Unsuccessful(string member, string error)
         {
-            return new ValidationAttempt(false, errors);
-        }
-
-        public static ValidationAttempt Unsuccessful(string property, string error)
-        {
-            return Unsuccessful(ValidationErrorResponse.Member(property, error));
+            return new ValidationAttempt(false, member, error);
         }
 
         public static ValidationAttempt Unsuccessful(string globalError)
         {
-            return Unsuccessful(ValidationErrorResponse.Global(globalError));
+            return Unsuccessful("", globalError);
         }
     }
 }

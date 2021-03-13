@@ -36,9 +36,9 @@ namespace Gtt.CodeWorks.SampleAzureFunc
             builder.Services.AddTransient<IUserResolverSecret>(cfg => new UserResolverSecretBasic("ABC123"));
 
             builder.Services.AddTransient<ITokenizeClient>(cfg => new TokenizeClient(
-                Environment.GetEnvironmentVariable("TokenizerEndpoint"),
+                Environment.GetEnvironmentVariable("TokenizeEndpoint"),
                 "codeworks",
-                Environment.GetEnvironmentVariable("TokenizerKey")));
+                Environment.GetEnvironmentVariable("TokenizeKey")));
             builder.Services.AddTransient<IStateRepository>(cfg =>
                 new AzureTableStateRepository(
                     Environment.GetEnvironmentVariable("StateRepository"),

@@ -8,7 +8,7 @@ namespace Gtt.CodeWorks
     [Serializable]
     public class SchemaValidationException : Exception
     {
-        public IDictionary<string, object> Errors { get; }
+        public IDictionary<string, string[]> Errors { get; }
         //
         // For guidelines regarding the creation of new exception types, see
         //    http://msdn.microsoft.com/library/default.asp?url=/library/en-us/cpgenref/html/cpconerrorraisinghandlingguidelines.asp
@@ -20,7 +20,7 @@ namespace Gtt.CodeWorks
         {
         }
 
-        public SchemaValidationException(string message, IDictionary<string, object> errors) : base(message)
+        public SchemaValidationException(string message, IDictionary<string, string[]> errors) : base(message)
         {
             Errors = errors;
         }

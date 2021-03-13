@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Gtt.CodeWorks.Services;
+using Gtt.CodeWorks.Validation;
 using Microsoft.Extensions.Logging;
 
 namespace Gtt.CodeWorks.Middleware
@@ -58,12 +59,15 @@ namespace Gtt.CodeWorks.Middleware
                     case UserAuthStatus.Expired:
                         return new ServiceResponse(new ResponseMetaData(
                             service,
-                            ServiceResult.NotAuthenticated, new ErrorData("Expired", "authToken")));
+                            ServiceResult.NotAuthenticated,
+                            validationErrors: ValidationHelper.Create("Expired token", "authToken")
+                            ));
 
                     case UserAuthStatus.Invalid:
                         return new ServiceResponse(new ResponseMetaData(
                             service,
-                            ServiceResult.ValidationError, new ErrorData("Invalid token", "authToken")));
+                            ServiceResult.ValidationError,
+                            validationErrors: ValidationHelper.Create("Invalid token", "authToken")));
 
                     case UserAuthStatus.Valid:
                         if (userResult.User == null)
