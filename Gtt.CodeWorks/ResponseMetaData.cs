@@ -59,6 +59,7 @@ namespace Gtt.CodeWorks
             Result = serviceResult;
             DurationMs = durationMs;
             PublicMessage = string.IsNullOrWhiteSpace(publicMessage) ? null : publicMessage.Trim();
+            ExceptionMessage = string.IsNullOrWhiteSpace(exceptionMessage) ? null : exceptionMessage.Trim();
             Dependencies = dependencies;
             ErrorCodes = errorCodes?.ToDictionary(k => k.Key.ToString(), v => v.Value);
             ValidationErrors = validationErrors;
