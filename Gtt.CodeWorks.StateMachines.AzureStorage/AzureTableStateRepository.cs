@@ -14,7 +14,7 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
         private readonly ILogger<AzureTableStateRepository> _logger;
 
         public AzureTableStateRepository(
-            string connectionString, 
+            string connectionString,
             IObjectSerializer objectSerializer,
             ILogger<AzureTableStateRepository> logger) : base(connectionString)
         {
@@ -22,16 +22,17 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
             _logger = logger;
         }
 
-        public async Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data, bool saveHistory) 
-            where TData : BaseStateDataModel<TState> 
+        public async Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data, bool saveHistory, string parentIdentifier)
+            where TData : BaseStateDataModel<TState>
             where TState : struct, IConvertible
         {
             var tableName = metaData.MachineName.Replace(".", "");
             var table = await GetTable($"S{tableName}");
 
-            string partitionKey = metaData.Identifier;
+            string partitionKey = string.IsNullOrWhiteSpace(parentIdentifier) ? metaData.Identifier : parentIdentifier;
+            string rowKeyPrefix = string.IsNullOrWhiteSpace(parentIdentifier) ? "" : $"{metaData.Identifier}-";
 
-            var currentMarker = await table.GetEntity<StateDataTable>(partitionKey, "current");
+            var currentMarker = await table.GetEntity<StateDataTable>(partitionKey, rowKeyPrefix+"current");
 
             long sequenceNumber = currentMarker?.SequenceNumber ?? 0;
 
@@ -55,7 +56,7 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
             }
 
             currentMarker.PartitionKey = partitionKey;
-            currentMarker.RowKey = "current";
+            currentMarker.RowKey = rowKeyPrefix + "current";
             currentMarker.SequenceNumber = nextSequenceNumber;
             currentMarker.MachineName = metaData.MachineName;
             currentMarker.ContentLength = serializedState.Length;
@@ -72,7 +73,7 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
             var record = new StateDataTable
             {
                 PartitionKey = partitionKey,
-                RowKey = nextSequenceNumber.ToString(),
+                RowKey = rowKeyPrefix + nextSequenceNumber,
                 MachineName = metaData.MachineName,
                 Source = metaData.Source,
                 ContentLength = serializedState.Length,
@@ -116,18 +117,19 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
             return nextSequenceNumber;
         }
 
-        public async Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName, long? version) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible
+        public async Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName, long? version, string parentIdentifier) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible
         {
             var tableName = machineName.Replace(".", "");
             var table = await GetTable($"S{tableName}");
 
             version = version == 0 ? null : version;
 
-            string partitionKey = identifier;
+            string partitionKey = string.IsNullOrWhiteSpace(parentIdentifier) ? identifier : parentIdentifier;
+            string rowKeyPrefix = string.IsNullOrWhiteSpace(parentIdentifier) ? "" : $"{identifier}-";
 
             if (version < 0)
             {
-                var q = TableOperation.Retrieve(partitionKey, "current", new List<string>() { "SequenceNumber" });
+                var q = TableOperation.Retrieve(partitionKey, rowKeyPrefix+"current", new List<string>() { "SequenceNumber" });
                 var res = await table.ExecuteAsync(q);
                 var te = res.Result as DynamicTableEntity;
                 if (te != null)
@@ -137,8 +139,8 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
                 }
             }
 
-            
-            string versionToRetrieve = version?.ToString() ?? "current";
+
+            string versionToRetrieve = rowKeyPrefix + (version?.ToString() ?? "current");
             var data = await table.GetEntity<StateDataTable>(partitionKey, versionToRetrieve);
 
             if (data == null)
@@ -146,9 +148,15 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
                 return null;
             }
 
+            int rowKeySplitPoint = data.RowKey.LastIndexOf("-", StringComparison.Ordinal);
+
+            string id = string.IsNullOrWhiteSpace(parentIdentifier)
+                ? data.PartitionKey
+                : data.RowKey.Substring(0, rowKeySplitPoint);
+
             var state = new StateDto
             {
-                Identifier = data.PartitionKey,
+                Identifier = id,
                 MachineName = data.MachineName,
                 Source = data.Source,
                 Destination = data.Destination,
@@ -157,7 +165,8 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
                 Trigger = data.Trigger,
                 Username = data.Username,
                 UserIdentifier = data.UserIdentifier,
-                CorrelationId = data.CorrelationId.ToGuid()
+                CorrelationId = data.CorrelationId.ToGuid(),
+                ParentIdentifier = parentIdentifier
             }.UpdateAuditable(data);
 
             var obj = await _objectSerializer.Deserialize<TData>(data.SerializedState);

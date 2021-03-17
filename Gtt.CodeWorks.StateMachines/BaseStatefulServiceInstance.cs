@@ -36,6 +36,15 @@ namespace Gtt.CodeWorks.StateMachines
                     continue;
                 }
 
+                if (p.Name.Equals("parentIdentifier", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (typeof(TRequest).GetInterfaces().Contains(typeof(IHasParentIdentifier)))
+                    {
+                        _parentIdentifierProperty = p;
+                        continue;
+                    }
+                }
+
                 bool found = false;
                 foreach (TTrigger trigger in Enum.GetValues(typeof(TTrigger)))
                 {
@@ -58,6 +67,7 @@ namespace Gtt.CodeWorks.StateMachines
         private static readonly PropertyInfo[] _unexpectedProperties;
         private static readonly Dictionary<TTrigger, PropertyInfo> _triggerProperties = new Dictionary<TTrigger, PropertyInfo>();
         private static PropertyInfo _debugProperty;
+        private static PropertyInfo _parentIdentifierProperty;
 
         protected BaseStatefulServiceInstance(CoreDependencies coreDependencies, StatefulDependencies statefulDependencies) : base(coreDependencies)
         {
@@ -115,7 +125,7 @@ namespace Gtt.CodeWorks.StateMachines
 
             if (!CanCallAction(request.Trigger.Value))
             {
-                throw new BusinessLogicException($"Cannot call {request.Trigger} on {FullName}:{_identifier}", ServiceResult.ConflictingRequest);
+                throw new BusinessLogicException($"The {request.Trigger} trigger is not permitted.", $"Cannot call {request.Trigger} on {FullName}:{_identifier}", ServiceResult.ConflictingRequest);
             }
 
             var hasKey = _triggerProperties.ContainsKey(request.Trigger.Value);
@@ -181,12 +191,13 @@ namespace Gtt.CodeWorks.StateMachines
         private readonly IStateRepository _stateRepository;
         private TData _data;
         private string _identifier;
+        private string _parentIdentifier;
         public long SerialNumber { get; set; }
         public MachineStatus Status { get; private set; }
 
         public async Task ReadState(TRequest request)
         {
-            var result = await LoadData(request.Identifier, FullName, _data, _stateRepository, request?.Get?.Version);
+            var result = await LoadData(request.Identifier, FullName, _data, _stateRepository, request?.Get?.Version, _parentIdentifier);
             SerialNumber = result.sequenceNumber;
             if (result.data != null) _data = result.data;
             CreatedDate = result.created;
@@ -244,8 +255,9 @@ namespace Gtt.CodeWorks.StateMachines
                 ModifiedBy = FullName,
                 Created = CreatedDate,
                 Username = User?.Username,
-                UserIdentifier = User?.UserIdentifier
-            }, SerialNumber, _data, saveHistory: SaveStateHistory);
+                UserIdentifier = User?.UserIdentifier,
+                ParentIdentifier = _parentIdentifier
+            }, SerialNumber, _data, saveHistory: SaveStateHistory, parentIdentifier: _parentIdentifier);
         }
 
         protected override Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken)
@@ -257,6 +269,11 @@ namespace Gtt.CodeWorks.StateMachines
         protected virtual void RegisterTriggerActions(RegistrationFactory register)
         {
 
+        }
+
+        protected virtual string DefineParentIdentifier(TRequest request)
+        {
+            return null;
         }
 
         public override ServiceAction Action => ServiceAction.Stateful;
@@ -273,9 +290,10 @@ namespace Gtt.CodeWorks.StateMachines
             string machineName,
             TData currentData,
             IStateRepository repository,
-            long? version)
+            long? version,
+            string parentIdentifier)
         {
-            var stateInformation = await repository.RetrieveStateData<TData, TState>(identifier, machineName, version);
+            var stateInformation = await repository.RetrieveStateData<TData, TState>(identifier, machineName, version, parentIdentifier);
             if (stateInformation == null)
             {
                 return (currentData ?? new TData(), 0L, ServiceClock.CurrentTime(),
@@ -319,6 +337,12 @@ namespace Gtt.CodeWorks.StateMachines
             {
                 response.Data = new TResponse();
             }
+
+            if (response.Data is IHasParentIdentifier pr)
+            {
+                pr.ParentIdentifier = _parentIdentifier;
+            }
+
             response.Data.Model = CurrentData;
             response.Data.StateMachine = GetStateData();
             if (response.MetaData.Result == ServiceResult.ResourceNotFound)
@@ -348,7 +372,27 @@ namespace Gtt.CodeWorks.StateMachines
                 Logger.LogWarning(ex, $"Cannot remove debug data for {request.CorrelationId}");
             }
 
+            try
+            {
+                if (_parentIdentifierProperty != null && !(request is IHasParentIdentifier))
+                {
+                    throw new Exception($"Unexpected properties found on {request.GetType().Name}. " +
+                                        $"Unexpected property found. To add a property called ParentIdentifier " +
+                                        $"this request type (and response) should implement IHasParentIdentifier");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, $"Cannot set parent Identifier for {request.CorrelationId}");
+            }
+
+
             _identifier = request.Identifier;
+
+            if (request is IHasParentIdentifier pr && !string.IsNullOrWhiteSpace(pr.ParentIdentifier))
+            {
+                _parentIdentifier = pr.ParentIdentifier;
+            }
 
             var derivedIdFunction = DeriveIdentifier();
             if (derivedIdFunction != null && request.Trigger != null && request.Trigger.Equals(derivedIdFunction.Value.Trigger))
@@ -382,6 +426,21 @@ namespace Gtt.CodeWorks.StateMachines
             {
                 var idRequired = ValidationError("Identifier", "The Identifier field is required");
                 return idRequired;
+            }
+
+            try
+            {
+
+                var pid = DefineParentIdentifier(request);
+                if (!string.IsNullOrWhiteSpace(pid))
+                {
+                    _parentIdentifier = DefineParentIdentifier(request);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("Cannot defineParentIdentifier", ex);
             }
 
             if (request.Trigger != null)
@@ -433,7 +492,7 @@ namespace Gtt.CodeWorks.StateMachines
         {
             if (!CanCallAction(trigger))
             {
-                throw new BusinessLogicException($"Cannot call {trigger} on {FullName}:{_identifier}", ServiceResult.ConflictingRequest);
+                throw new BusinessLogicException($"The {trigger} trigger is not permitted.", $"Cannot call {trigger} on {FullName}:{_identifier}", ServiceResult.ConflictingRequest);
             }
 
             return Machine.FireAsync(trigger);

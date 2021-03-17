@@ -17,5 +17,6 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
         public string CorrelationId { get; set; }
         public string UserIdentifier { get; set; }
         public string Username { get; set; }
+        public string UpstreamPersist { get; set; }
     }
 }

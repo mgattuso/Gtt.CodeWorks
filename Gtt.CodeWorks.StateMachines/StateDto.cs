@@ -13,5 +13,6 @@ namespace Gtt.CodeWorks.StateMachines
         public string MachineName { get; set; }
         public string UserIdentifier { get; set; }
         public string Username { get; set; }
+        public string ParentIdentifier { get; set; }
     }
 }

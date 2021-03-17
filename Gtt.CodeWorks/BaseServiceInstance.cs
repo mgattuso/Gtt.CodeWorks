@@ -148,7 +148,7 @@ namespace Gtt.CodeWorks
             {
                 response = new ServiceResponse<TResponse>(
                     default(TResponse),
-                    new ResponseMetaData(this, ex.Result, exceptionMessage: ex.ToString()));
+                    new ResponseMetaData(this, ex.Result, publicMessage: ex.PublicMessage, exceptionMessage: ex.ToString()));
             }
             catch (ValidationErrorException ex)
             {
@@ -184,11 +184,7 @@ namespace Gtt.CodeWorks
                 }
             }
 
-            if (response != null && response.Data != null)
-            {
-                BeforeResponse(response);
-            }
-
+            BeforeResponse(response);
             StoredResponse = response;
             return response;
         }

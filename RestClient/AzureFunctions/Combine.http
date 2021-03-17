@@ -9,3 +9,34 @@ Accept: application/json
   "number1": 1,
   "number2": 2
 }
+
+###
+POST {{host}}/api/call/DerivedIdService
+Accept: application/json
+codeworks-prefs-schema-check: None
+
+{
+    "identifier": "Hello6076ff31-9ef9-4796-ba42-7900573a6dd4",
+    "trigger": "AnEvent",
+    "AnEvent": {
+      "Message": "Bye"
+    }
+}
+
+###
+POST {{host}}/api/call/NotImplementedService
+Accept: application/json
+
+{
+
+}
+
+###
+POST {{host}}/api/call/ParentService
+Accept: application/json
+
+{
+  "identifier": "1-1-2",
+  "parentIdentifier": "a", 
+  "trigger": "Continue"
+}

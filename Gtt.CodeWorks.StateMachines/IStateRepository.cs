@@ -6,11 +6,11 @@ namespace Gtt.CodeWorks.StateMachines
 {
     public interface IStateRepository
     {
-        Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data, bool saveHistory)
+        Task<long> StoreStateData<TData, TState>(StateDto metaData, long currentSequenceNumber, TData data, bool saveHistory, string parentIdentifier)
             where TData : BaseStateDataModel<TState>
             where TState : struct, IConvertible;
 
-        Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName, long? version)
+        Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName, long? version, string parentIdentifier)
             where TData : BaseStateDataModel<TState>
             where TState : struct, IConvertible;
     }

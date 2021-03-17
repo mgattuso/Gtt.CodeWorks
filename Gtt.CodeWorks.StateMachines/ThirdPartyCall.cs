@@ -16,6 +16,7 @@ namespace Gtt.CodeWorks.StateMachines
         private DateTimeOffset _modified = ServiceClock.CurrentTime();
         private long _sequenceNumber = 0;
         private string _identifier = "";
+        private string _parentIdentifier = null;
         private Guid _correlationId = default(Guid);
 
         private ThirdPartyStateData _data = new ThirdPartyStateData();
@@ -41,7 +42,7 @@ namespace Gtt.CodeWorks.StateMachines
                     SequenceNumber = _sequenceNumber,
                     Identifier = _identifier,
                     CorrelationId = _correlationId
-                }, _sequenceNumber, _data, saveHistory: true);
+                }, _sequenceNumber, _data, saveHistory: true, _parentIdentifier);
                 _sequenceNumber = nextSequenceNumber;
                 _modified = ServiceClock.CurrentTime();
             });
@@ -112,7 +113,7 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected async Task LoadData(string identifier, Guid correlationId)
         {
-            var storedData = await _stateRepository.RetrieveStateData<ThirdPartyStateData, State>(identifier, MachineName, null);
+            var storedData = await _stateRepository.RetrieveStateData<ThirdPartyStateData, State>(identifier, MachineName, null, _parentIdentifier);
             if (storedData != null)
             {
                 _data = storedData.Data;
@@ -122,9 +123,10 @@ namespace Gtt.CodeWorks.StateMachines
             }
         }
 
-        public async Task<TResponse> Process(TRequest request, string identifier, Guid correlationId)
+        public async Task<TResponse> Process(TRequest request, string identifier, Guid correlationId, string parentIdentifier = null)
         {
             _identifier = identifier;
+            _parentIdentifier = parentIdentifier;
             _correlationId = correlationId;
             _data.Request = request;
             await LoadData(identifier, correlationId);
