@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Gtt.CodeWorks.Tokenizer
@@ -63,41 +64,6 @@ namespace Gtt.CodeWorks.Tokenizer
                 }
 
                 v.Value.SetTokenAndMask(tok.Token, mask);
-            }
-        }
-
-        public static async Task Detokenize(object obj, IDetokenizer tokenizer, Guid? correlationId = null)
-        {
-            var tokenizableFields = await TokenizeModel.CollectTokenizablesAll(obj);
-            if (tokenizableFields.Count == 0)
-            {
-                return;
-            }
-
-            var values = await tokenizer.Detokenize(tokenizableFields
-                .Where(x => x.Value.Value.HasToken())
-                .Select(x => new BulkToken
-                {
-                    Token = x.Value.Value.RawToken(),
-                    Correlation = x.Key.ToString()
-                })
-                .ToArray(), correlationId);
-
-            if (values.Length == 0)
-            {
-                return;
-            }
-
-            var valuesDict = values.ToDictionary(x => Convert.ToInt32(x.Correlation));
-
-            foreach (var t in tokenizableFields)
-            {
-                var v = t.Value;
-                var val = valuesDict.GetValueOrDefault(v.Correlation);
-                if (val != null)
-                {
-                    v.Value.ValueFromStoredFormat(val.Value);
-                }
             }
         }
     }

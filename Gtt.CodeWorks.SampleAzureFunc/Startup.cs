@@ -15,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Tokenize.Client;
+using IDetokenizer = Gtt.CodeWorks.Tokenizer.IDetokenizer;
 
 [assembly: FunctionsStartup(typeof(Gtt.CodeWorks.SampleAzureFunc.Startup))]
 
@@ -39,12 +40,15 @@ namespace Gtt.CodeWorks.SampleAzureFunc
                 Environment.GetEnvironmentVariable("TokenizeEndpoint"),
                 "codeworks",
                 Environment.GetEnvironmentVariable("TokenizeKey")));
+
             builder.Services.AddTransient<IStateRepository>(cfg =>
                 new AzureTableStateRepository(
                     Environment.GetEnvironmentVariable("StateRepository"),
                     cfg.GetService<IObjectSerializer>(),
                     cfg.GetService<ILogger<AzureTableStateRepository>>()
                     ));
+
+            builder.Services.AddTransient<IDetokenizer, GttDetokenizer>();
         }
     }
 }
