@@ -515,6 +515,9 @@ namespace Gtt.CodeWorks.StateMachines
             return null;
         }
 
+        protected string Identifier => _identifier;
+        protected string ParentIdentifier => _parentIdentifier;
+
         protected TData CurrentData => _data;
 
         private TState[] GetAllCurrentStates()
