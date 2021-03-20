@@ -25,6 +25,7 @@ namespace Gtt.CodeWorks.Tokenizer
                 })
                 .ToArray();
 
+            // SEND ALL NON-TOKENIZED FIELDS TO THE SERVICE
             var tokens = await tokenizerService.Tokenize(records, correlationId);
 
             var tokenDict = tokens.ToDictionary(x => Convert.ToInt32(x.Correlation));
@@ -32,7 +33,27 @@ namespace Gtt.CodeWorks.Tokenizer
             foreach (var t in tokenizableFields)
             {
                 var v = t.Value;
-                var tok = tokenDict[v.Correlation];
+                
+                // RETRIEVE THE TOKENIZED DATA FROM RESULTS FROM THE SERVICE - WILL BE NULL IF THE DATA
+                // WAS ALREADY TOKENIZED
+                BulkToken tok = tokenDict.GetValueOrDefault(v.Correlation);
+
+                // IF THE DATA WAS ALREADY TOKENIZED THEN POPULATE IT FROM THE DATA YOU ALREADY HAVE
+                if (tok == null)
+                {
+                    tok = new BulkToken
+                    {
+                        Correlation = v.Correlation.ToString(),
+                        Token = v.Value.RawToken()
+                    };
+
+                    // LAST CHECK - IF THE TOKEN DOES NOT EXIST AT THIS POINT THEN THROW AN ERROR
+                    if (string.IsNullOrWhiteSpace(tok.Token))
+                    {
+                        throw new Exception("Could not find an appropriate token");
+                    }
+                }
+
                 var sa = v.SensitiveAttribute;
                 string mask = v.Value.MaskedValue;
 
