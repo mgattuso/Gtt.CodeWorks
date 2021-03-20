@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Gtt.CodeWorks.StateMachines;
 using Stateless;
@@ -16,7 +17,8 @@ namespace Gtt.CodeWorks.SampleServices
         }
         public enum Trigger
         {
-            Continue
+            Continue,
+            Finalize
         }
 
         public class Data : BaseStateDataModel<State>
@@ -36,7 +38,12 @@ namespace Gtt.CodeWorks.SampleServices
         protected override void Rules(StateMachine<State, Trigger> machine)
         {
             machine.Configure(State.NotStarted).Permit(Trigger.Continue, State.InProgress);
-            machine.Configure(State.InProgress).Permit(Trigger.Continue, State.Completed);
+            machine.Configure(State.InProgress).Permit(Trigger.Finalize, State.Completed);
+        }
+
+        protected override (Trigger Trigger, Func<ParentRequest, string> Func)? DeriveIdentifier()
+        {
+            return (Trigger.Continue, request => Guid.NewGuid().ToString());
         }
     }
 
