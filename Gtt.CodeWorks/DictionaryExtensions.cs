@@ -13,6 +13,12 @@ namespace Gtt.CodeWorks
             return dict.TryGetValue(key, out var val) ? val : default(TValue);
         }
 
+        public static TValue GetValueOrDefaultCw<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key)
+        {
+            if (dict == null) return default(TValue);
+            return dict.TryGetValue(key, out var val) ? val : default(TValue);
+        }
+
         public static IDictionary<TValue, TKey[]> FlipKeysAndValues<TKey, TValue>(this IDictionary<TKey, TValue[]> dict)
         {
             Dictionary<TValue, TKey[]> result = new Dictionary<TValue, TKey[]>();
