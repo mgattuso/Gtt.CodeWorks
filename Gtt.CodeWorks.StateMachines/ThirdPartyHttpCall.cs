@@ -28,6 +28,11 @@ namespace Gtt.CodeWorks.StateMachines
         protected sealed override async Task<VerificationAttempt> Verify(TRequest request, int attempt, CancellationToken cancellationToken)
         {
             var payload = CreateValidatePayload(request);
+            if (payload == null)
+            {
+                return VerificationAttempt.Unsuccessful();
+            }
+
             Data.VerifyHttpRequest = new ThirdPartyHttpRequestData
             {
                 Method = payload.Method.ToString(),
