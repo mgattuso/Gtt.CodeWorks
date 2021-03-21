@@ -19,7 +19,7 @@ namespace Gtt.CodeWorks.StateMachines
         private string _parentIdentifier = null;
         private Guid _correlationId = default(Guid);
 
-        private ThirdPartyStateData _data = new ThirdPartyStateData();
+        protected ThirdPartyStateData Data { get; private set; } = new ThirdPartyStateData();
 
         private string MachineName => GetType().FullName?.Replace("+", ".") ?? GetType().Name;
 
@@ -42,7 +42,7 @@ namespace Gtt.CodeWorks.StateMachines
                     SequenceNumber = _sequenceNumber,
                     Identifier = _identifier,
                     CorrelationId = _correlationId
-                }, _sequenceNumber, _data, saveHistory: true, _parentIdentifier);
+                }, _sequenceNumber, Data, saveHistory: true, _parentIdentifier);
                 _sequenceNumber = nextSequenceNumber;
                 _modified = ServiceClock.CurrentTime();
             });
@@ -116,7 +116,7 @@ namespace Gtt.CodeWorks.StateMachines
             var storedData = await _stateRepository.RetrieveStateData<ThirdPartyStateData, State>(identifier, MachineName, null, _parentIdentifier);
             if (storedData != null)
             {
-                _data = storedData.Data;
+                Data = storedData.Data;
                 _created = storedData.StateMetaData.Created;
                 _modified = storedData.StateMetaData.Modified;
                 _sequenceNumber = storedData.StateMetaData.SequenceNumber;
@@ -128,11 +128,11 @@ namespace Gtt.CodeWorks.StateMachines
             _identifier = identifier;
             _parentIdentifier = parentIdentifier;
             _correlationId = correlationId;
-            _data.Request = request;
+            Data.Request = request;
             await LoadData(identifier, correlationId);
-            while (!_machine.IsInState(State.Terminal) && !_machine.IsInState(State.Manual) && _data.Attempts < MaxAttempts())
+            while (!_machine.IsInState(State.Terminal) && !_machine.IsInState(State.Manual) && Data.Attempts < MaxAttempts())
             {
-                if (_data.Attempts > 0)
+                if (Data.Attempts > 0)
                 {
                     await Task.Delay(DelayBetweenAttemptsMs());
                 }
@@ -152,12 +152,12 @@ namespace Gtt.CodeWorks.StateMachines
                     await _machine.FireAsync(Trigger.Reset);
                 }
 
-                _data.Attempts++;
+                Data.Attempts++;
             }
 
             if (_machine.IsInState(State.Completed))
             {
-                return _data.Response;
+                return Data.Response;
             }
 
             if (AllowManualOverride())
@@ -188,17 +188,17 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected async Task InternalVerify()
         {
-            if (_data.Attempts == 0) return;
+            if (Data.Attempts == 0) return;
 
             int timeout = ExecuteCallTimeoutMs();
             var cancellationToken = CancellationToken.None;
-            var task = Verify(_data.Request, _data.Attempts, cancellationToken);
+            var task = Verify(Data.Request, Data.Attempts, cancellationToken);
             if (await Task.WhenAny(task, Task.Delay(timeout, cancellationToken)) == task)
             {
                 var result = await task;
                 if (result.Response != null)
                 {
-                    _data.Response = result.Response;
+                    Data.Response = result.Response;
                 }
                 switch (result.Verification)
                 {
@@ -226,13 +226,13 @@ namespace Gtt.CodeWorks.StateMachines
         {
             int timeout = ExecuteCallTimeoutMs();
             var cancellationToken = CancellationToken.None;
-            var task = Execute(_data.Request, _data.Attempts, cancellationToken);
+            var task = Execute(Data.Request, Data.Attempts, cancellationToken);
             if (await Task.WhenAny(task, Task.Delay(timeout, cancellationToken)) == task)
             {
                 var result = await task;
                 if (result.Response != null)
                 {
-                    _data.Response = result.Response;
+                    Data.Response = result.Response;
                 }
                 switch (result.Status)
                 {
@@ -302,6 +302,11 @@ namespace Gtt.CodeWorks.StateMachines
             public int Attempts { get; set; }
             public TRequest Request { get; set; }
             public TResponse Response { get; set; }
+            public ThirdPartyHttpRequestData ExecuteHttpRequest { get; set; }
+            public ThirdPartyHttpRequestData VerifyHttpRequest { get; set; }
+            public ThirdPartyHttpResponseData ExecuteHttpResponse { get; set; }
+            public ThirdPartyHttpResponseData VerifyHttpResponse { get; set; }
+
         }
 
         public class ExecuteAttempt
@@ -367,6 +372,21 @@ namespace Gtt.CodeWorks.StateMachines
                     Verification = ThirdPartyVerification.ManualCheck
                 };
             }
+        }
+
+        public class ThirdPartyHttpRequestData
+        {
+            public string Method { get; set; }
+            public string Url { get; set; }
+            public Dictionary<string, string[]> Headers { get; set; }
+            public string Body { get; set; }
+        }
+
+        public class ThirdPartyHttpResponseData
+        {
+            public int StatusCode { get; set; }
+            public Dictionary<string, string[]> Headers { get; set; }
+            public string Body { get; set; }
         }
     }
 }

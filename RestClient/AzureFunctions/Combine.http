@@ -36,7 +36,15 @@ POST {{host}}/api/call/ParentService
 Accept: application/json
 
 {
-  "identifier": "1-1-2",
-  "parentIdentifier": "a", 
+  "parentIdentifier": "d", 
   "trigger": "Continue"
+}
+
+###
+POST {{host}}/api/call/TokenizedDataService
+Accept: application/json
+
+{
+  "ssn": "12345678",
+  "date": "2020-02-13"
 }
