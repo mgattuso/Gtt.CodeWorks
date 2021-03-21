@@ -17,17 +17,17 @@ namespace Gtt.CodeWorks.StateMachines
             _httpClient = httpClient;
         }
 
-        public abstract HttpRequestMessage CreateExecutePayload(TRequest request);
+        public abstract Task<HttpRequestMessage> CreateExecutePayload(TRequest request);
 
-        public abstract HttpRequestMessage CreateValidatePayload(TRequest request);
+        public abstract Task<HttpRequestMessage> CreateValidatePayload(TRequest request);
 
-        public abstract ExecuteAttempt ValidateExecuteResponse(ThirdPartyHttpResponseData response);
-        public abstract VerificationAttempt ValidateVerifyResponse(ThirdPartyHttpResponseData response);
+        public abstract Task<ExecuteAttempt> ValidateExecuteResponse(ThirdPartyHttpResponseData response);
+        public abstract Task<VerificationAttempt> ValidateVerifyResponse(ThirdPartyHttpResponseData response);
 
 
         protected sealed override async Task<VerificationAttempt> Verify(TRequest request, int attempt, CancellationToken cancellationToken)
         {
-            var payload = CreateValidatePayload(request);
+            var payload = await CreateValidatePayload(request);
             if (payload == null)
             {
                 return VerificationAttempt.Unsuccessful();
@@ -51,12 +51,13 @@ namespace Gtt.CodeWorks.StateMachines
                 Body = responseText
             };
 
-            return ValidateVerifyResponse(Data.VerifyHttpResponse);
+            var result = await ValidateVerifyResponse(Data.VerifyHttpResponse);
+            return result;
         }
 
         protected sealed override async Task<ExecuteAttempt> Execute(TRequest request, int attempt, CancellationToken cancellationToken)
         {
-            var payload = CreateExecutePayload(request);
+            var payload = await CreateExecutePayload(request);
             Data.ExecuteHttpRequest = new ThirdPartyHttpRequestData
             {
                 Method = payload.Method.ToString(),
@@ -75,7 +76,8 @@ namespace Gtt.CodeWorks.StateMachines
                 Body = responseText
             };
 
-            return ValidateExecuteResponse(Data.ExecuteHttpResponse);
+            var result = await ValidateExecuteResponse(Data.ExecuteHttpResponse);
+            return result;
         }
     }
 }
