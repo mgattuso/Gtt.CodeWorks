@@ -262,17 +262,21 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected override Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken)
         {
-            var key = (request?.Identifier ?? "").Trim();
+            var identifierResult = GetIdentifierFromRequestOrDerived(request);
+            if (string.IsNullOrWhiteSpace(identifierResult.identifier))
+            {
+                return Task.FromResult("");
+            }
+
+            var key = (identifierResult.identifier ?? "").Trim();
             if (request is IHasParentIdentifier parent)
             {
+                Logger.LogTrace("Parent Identifier found");
                 var parentKey = ((parent?.ParentIdentifier ?? "") + "-").Trim() + key;
                 return Task.FromResult(parentKey);
             }
-            else
-            {
 
-                return Task.FromResult(key);
-            }
+            return Task.FromResult(key);
 
         }
 
@@ -404,33 +408,16 @@ namespace Gtt.CodeWorks.StateMachines
                 _parentIdentifier = pr.ParentIdentifier;
             }
 
-            var derivedIdFunction = DeriveIdentifier();
-            if (derivedIdFunction != null && request.Trigger != null && request.Trigger.Equals(derivedIdFunction.Value.Trigger))
+            var derivedIdResult = GetIdentifierFromRequestOrDerived(request);
+            
+            if (derivedIdResult.errorResult != null)
             {
-                try
-                {
-                    string derivedIdentifier = derivedIdFunction.Value.Func(request);
-                    if (!string.IsNullOrWhiteSpace(derivedIdentifier))
-                    {
-                        if (!string.IsNullOrWhiteSpace(request.Identifier))
-                        {
-                            Logger.LogInformation($"Request Identifier {request.Identifier} is being replaced by derived identifier {derivedIdentifier} for request correlationId: {request.CorrelationId}");
-                        }
-
-                        _identifier = derivedIdentifier;
-                        request.Identifier = derivedIdentifier;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, $"Could not derive identifier for correlationId:{request.CorrelationId}");
-
-                    return new ServiceResponse<TResponse>(
-                        default(TResponse),
-                        new ResponseMetaData(this, ServiceResult.PermanentError,
-                           exceptionMessage: "Could not derive identifier from provided data"));
-                }
+                return derivedIdResult.errorResult;
             }
+
+            _identifier = derivedIdResult.identifier;
+            request.Identifier = derivedIdResult.identifier;
+
 
             if (string.IsNullOrWhiteSpace(_identifier))
             {
@@ -482,6 +469,38 @@ namespace Gtt.CodeWorks.StateMachines
             }
 
             return null;
+        }
+
+        protected (string identifier, ServiceResponse<TResponse> errorResult) GetIdentifierFromRequestOrDerived(TRequest request)
+        {
+            var derivedIdFunction = DeriveIdentifier();
+            if (derivedIdFunction != null && request.Trigger != null && request.Trigger.Equals(derivedIdFunction.Value.Trigger))
+            {
+                try
+                {
+                    string derivedIdentifier = derivedIdFunction.Value.Func(request);
+                    if (!string.IsNullOrWhiteSpace(derivedIdentifier))
+                    {
+                        if (!string.IsNullOrWhiteSpace(request.Identifier))
+                        {
+                            Logger.LogInformation($"Request Identifier {request.Identifier} is being replaced by derived identifier {derivedIdentifier} for request correlationId: {request.CorrelationId}");
+                        }
+
+                        return (derivedIdentifier, null);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, $"Could not derive identifier for correlationId:{request.CorrelationId}");
+
+                    return ("", new ServiceResponse<TResponse>(
+                        default(TResponse),
+                        new ResponseMetaData(this, ServiceResult.PermanentError,
+                            exceptionMessage: "Could not derive identifier from provided data")));
+                }
+            }
+
+            return (request.Identifier, null);
         }
 
         protected StateMachineData<TState, TTrigger> GetStateData()

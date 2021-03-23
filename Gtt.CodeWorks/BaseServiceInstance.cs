@@ -25,13 +25,14 @@ namespace Gtt.CodeWorks
         protected BaseServiceInstance(CoreDependencies coreDependencies)
         {
             CurrentEnvironment = coreDependencies.EnvironmentResolver.Environment;
+            _logger = coreDependencies.LoggerFactory.CreateLogger(GetType());
             _pipeline.Add(new RateLimiterMiddleware(coreDependencies.RateLimiter));
             _pipeline.Add(new TokenizationMiddleware(coreDependencies.Tokenizer, coreDependencies.EnvironmentResolver));
             _pipeline.Add(new LoggingMiddleware(coreDependencies.ServiceLogger));
             _pipeline.Add(new AuthenticationMiddleware(coreDependencies.UserResolver, coreDependencies.LoggerFactory.CreateLogger<AuthenticationMiddleware>()));
-            _pipeline.Add(new DistributedLockMiddleware<TRequest>(coreDependencies.DistributedLockService, CreateDistributedLockKey));
+            _pipeline.Add(new DistributedLockMiddleware<TRequest>(coreDependencies.DistributedLockService, coreDependencies.LoggerFactory.CreateLogger(typeof(DistributedLockMiddleware<TRequest>)), CreateDistributedLockKey));
             _pipeline.Add(new ValidationMiddleware(coreDependencies.RequestValidator));
-            _logger = coreDependencies.LoggerFactory.CreateLogger(GetType());
+            
             _chainedServiceResolver = coreDependencies.ChainedServiceResolver;
             _chainedServiceResolver?.AddChainedService(this);
         }
