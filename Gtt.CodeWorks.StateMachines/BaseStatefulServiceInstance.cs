@@ -263,7 +263,17 @@ namespace Gtt.CodeWorks.StateMachines
         protected override Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken)
         {
             var key = (request?.Identifier ?? "").Trim();
-            return Task.FromResult(key);
+            if (request is IHasParentIdentifier parent)
+            {
+                var parentKey = ((parent?.ParentIdentifier ?? "") + "-").Trim() + key;
+                return Task.FromResult(parentKey);
+            }
+            else
+            {
+
+                return Task.FromResult(key);
+            }
+
         }
 
         protected virtual void RegisterTriggerActions(RegistrationFactory register)

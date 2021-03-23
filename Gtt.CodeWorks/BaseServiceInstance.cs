@@ -83,6 +83,7 @@ namespace Gtt.CodeWorks
 
             // ON REQUEST PIPELINE
 
+            _logger.LogTrace($"Start request pipeline for {request.CorrelationId}");
             foreach (var middleware in _pipeline)
             {
                 try
@@ -109,8 +110,10 @@ namespace Gtt.CodeWorks
                     }
                 }
             }
+            _logger.LogTrace($"End request pipeline for {request.CorrelationId}");
 
             // EXECUTE THE SERVICE
+            _logger.LogTrace($"Start execute for {request.CorrelationId}");
             try
             {
                 if (!cancellationToken.IsCancellationRequested)
@@ -159,6 +162,10 @@ namespace Gtt.CodeWorks
                 response = PermanentError(ex);
             }
 
+            _logger.LogTrace($"End execute for {request.CorrelationId}");
+
+
+            _logger.LogTrace($"Start response pipeline for {request.CorrelationId}");
             // ON RESPONSE PIPELINE
             for (var i = _pipeline.Count - 1; i >= 0; i--)
             {
@@ -183,6 +190,7 @@ namespace Gtt.CodeWorks
                     }
                 }
             }
+            _logger.LogTrace($"End response pipeline for {request.CorrelationId}");
 
             BeforeResponse(response);
             StoredResponse = response;
