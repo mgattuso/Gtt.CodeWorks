@@ -27,7 +27,14 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected sealed override async Task<VerificationAttempt> Verify(TRequest request, int attempt, CancellationToken cancellationToken)
         {
-            var payload = await CreateValidatePayload(request);
+            var createValidPayloadTask = CreateValidatePayload(request);
+            // Catch scenario where the implement returns null directly and not a null task
+            if (createValidPayloadTask == null)
+            {
+                return VerificationAttempt.Unsuccessful();
+            }
+
+            var payload = await createValidPayloadTask;
             if (payload == null)
             {
                 return VerificationAttempt.Unsuccessful();
@@ -51,7 +58,14 @@ namespace Gtt.CodeWorks.StateMachines
                 Body = responseText
             };
 
-            var result = await ValidateVerifyResponse(Data.VerifyHttpResponse);
+            var validateVerifyResponse = ValidateVerifyResponse(Data.VerifyHttpResponse);
+
+            if (validateVerifyResponse == null)
+            {
+                return VerificationAttempt.Unsuccessful();
+            }
+
+            var result = await validateVerifyResponse;
             return result;
         }
 
