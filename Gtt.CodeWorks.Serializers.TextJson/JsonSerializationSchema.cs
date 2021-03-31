@@ -38,7 +38,9 @@ namespace Gtt.CodeWorks.Serializers.TextJson
                 TypeMappers = new List<ITypeMapper>
                 {
                     new TokenStringTypeMapper(),
-                    new TokenDateTypeMapper()
+                    new TokenDateTypeMapper(),
+                    new ClientTokenStringTypeMapper(),
+                    new ClientTokenDateTypeMapper()
                 }
             });
             
@@ -160,6 +162,19 @@ namespace Gtt.CodeWorks.Serializers.TextJson
         public bool UseReference => false;
     }
 
+    public class ClientTokenStringTypeMapper : ITypeMapper
+    {
+        public void GenerateSchema(JsonSchema schema, TypeMapperContext context)
+        {
+            schema.Type = JsonObjectType.String;
+            schema.Description = "ClientTokenString. Accepts a string but will be converted to tokenize string structure";
+            schema.Format = "ClientTokenString";
+        }
+
+        public Type MappedType => typeof(ClientTokenString);
+        public bool UseReference => false;
+    }
+
     public class TokenDateTypeMapper : ITypeMapper
     {
         public void GenerateSchema(JsonSchema schema, TypeMapperContext context)
@@ -170,6 +185,19 @@ namespace Gtt.CodeWorks.Serializers.TextJson
         }
 
         public Type MappedType => typeof(TokenDate);
+        public bool UseReference => false;
+    }
+
+    public class ClientTokenDateTypeMapper : ITypeMapper
+    {
+        public void GenerateSchema(JsonSchema schema, TypeMapperContext context)
+        {
+            schema.Type = JsonObjectType.String;
+            schema.Description = "ClientTokenDate. Accepts a date formatted date but will be converted to tokenize string structure";
+            schema.Format = "ClientTokenDate";
+        }
+
+        public Type MappedType => typeof(ClientTokenDate);
         public bool UseReference => false;
     }
 }
