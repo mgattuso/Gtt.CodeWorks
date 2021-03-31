@@ -54,6 +54,25 @@ namespace Gtt.CodeWorks.Tests.Duplicator
         }
 
         [TestMethod]
+        public void ServiceTestWithReplacementType()
+        {
+            var settings = new CopierSettings
+            {
+                ReplacementTypes =
+                {
+                    { typeof(TokenDate), typeof(DateTime) },
+                    { typeof(TokenString), typeof(string) },
+                }
+            };
+            settings.BaseTypesToRemove.Add(typeof(BaseServiceInstance<,>));
+            var c = new Copier(settings);
+            c.LimitOutputToAssemblyOfType(typeof(TokenRequest));
+            c.AddType(typeof(TokenRequest));
+            var r = c.Process();
+            Console.WriteLine(r);
+        }
+
+        [TestMethod]
         public void TokenTest()
         {
             var settings = new CopierSettings();

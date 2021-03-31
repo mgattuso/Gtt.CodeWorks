@@ -7,13 +7,6 @@ using System.Text;
 
 namespace Gtt.CodeWorks.Duplicator
 {
-    public class CopierSettings
-    {
-        public bool SkipAllOverrides { get; set; } = true;
-        public bool AddAllUsingStatementProcessed { get; set; } = false;
-        public List<Type> BaseTypesToRemove { get; } = new List<Type>();
-    }
-
     public class Copier
     {
         private readonly CopierSettings _settings;
@@ -137,7 +130,7 @@ namespace Gtt.CodeWorks.Duplicator
                 // WRITE CLASSES
                 foreach (var t in n.Where(x => x.DeclaredParent == null && x.IsWritable).Select(x => x.FundamentalType).Distinct())
                 {
-                    classesSb.Append(Typewriter(t, l));
+                    classesSb.Append(Typewriter(t, l, _settings.ReplacementTypes));
                 }
 
                 if (!string.IsNullOrWhiteSpace(n.Key))
@@ -361,7 +354,7 @@ namespace Gtt.CodeWorks.Duplicator
             }
         }
 
-        private string Typewriter(TypeMetaData t, List<TypeMetaData> types)
+        private string Typewriter(TypeMetaData t, List<TypeMetaData> types, Dictionary<Type, Type> replacementTypes)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -387,12 +380,18 @@ namespace Gtt.CodeWorks.Duplicator
                         p.Property.Printed = true;
                         string modifiers = $"{{ {(p.Getter || AlwaysGetAndSet ? "get;" : "")} {(p.Setter || AlwaysGetAndSet ? "set;" : "")} }}";
                         string overrideStatement = p.IsOverride ? "override " : "";
-                        sb.AppendLine($"public {overrideStatement}{p.Property.ClassInheritanceNormalizedName} {p.Name} {modifiers}");
+
+                        TypeMetaData propertyMd = p.Property;
+                        if (replacementTypes.ContainsKey(p.Property.Type))
+                        {
+                            propertyMd = new TypeMetaData(replacementTypes[p.Property.Type]);
+                        }
+                        sb.AppendLine($"public {overrideStatement}{propertyMd.ClassInheritanceNormalizedName} {p.Name} {modifiers}");
                     }
 
                     foreach (var st in types.Where(ty => ty.DeclaredParent == t && ty.IsWritable))
                     {
-                        sb.Append(Typewriter(st, types));
+                        sb.Append(Typewriter(st, types, _settings.ReplacementTypes));
                     }
 
                     break;
@@ -414,174 +413,5 @@ namespace Gtt.CodeWorks.Duplicator
 
         }
 
-    }
-
-    public class GenericTypeMetaData
-    {
-        public GenericTypeMetaData(TypeMetaData t)
-        {
-            Type = t;
-        }
-
-        public string TName { get; set; }
-        public List<TypeMetaData> TypeConstraints { get; set; } = new List<TypeMetaData>();
-        public List<string> GenericConstraints { get; set; } = new List<string>();
-        public TypeMetaData Type { get; }
-
-        public override bool Equals(object obj)
-        {
-            var other = obj as GenericTypeMetaData;
-            if (other == null) return false;
-            return Equals(other.Type, this.Type);
-        }
-
-        public override int GetHashCode()
-        {
-            return this.Type.GetHashCode();
-        }
-    }
-
-    public class PropertyMetaData
-    {
-        public PropertyMetaData()
-        {
-
-        }
-
-        public string Name { get; set; }
-        public TypeMetaData Parent { get; set; }
-        public TypeMetaData Property { get; set; }
-        public bool Getter { get; set; }
-        public bool Setter { get; set; }
-        public bool IsOverride { get; set; }
-
-    }
-
-    public enum TypeFormat
-    {
-        @Class,
-        @Struct,
-        @Enum
-    }
-
-    public class TypeMetaData
-    {
-        public TypeMetaData(Type t)
-        {
-            Type = t;
-            FundamentalType = this;
-        }
-
-        public string Name => Type.Name;
-        public string ClassNormalizedName
-        {
-            get
-            {
-                var name = Name;
-                var nname = name.Split('`')[0];
-                if (!HasGenerics) return nname;
-                return $"{nname}<{ string.Join(",", OrderedGenericArguments.Select(x => x.Type.FundamentalType.PropertyNormalizedName).ToArray())}>";
-            }
-        }
-
-        public string ClassInheritanceNormalizedName
-        {
-            get
-            {
-                var t = this;
-                var name = Name;
-                string upperLevel = "";
-                if (t.FundamentalType.DeclaredParent != null && !t.IsTemplateType)
-                {
-                    if (t.IsCollection && !t.Type.IsArray)
-                    {
-                        // SKIP FOR COLLECTIONS OTHER THAN ARRAYS
-                        upperLevel = "";
-                    }
-                    else
-                    {
-                        upperLevel = t.FundamentalType.DeclaredParent != null ? t.FundamentalType.DeclaredParent.ClassInheritanceNormalizedName + "." : "";
-                    }
-                }
-
-                var nname = name.Split('`')[0];
-                if (!HasGenerics) return upperLevel + nname;
-                return $"{upperLevel}{nname}<{ string.Join(",", OrderedGenericInstanceArguments.Select(x => x.Type.PropertyNormalizedName).ToArray())}>";
-            }
-        }
-
-        public string PropertyNormalizedName
-        {
-            get
-            {
-                var t = this;
-                var name = Name;
-                string upperLevel = "";
-                if (t.FundamentalType.DeclaredParent != null && !t.IsTemplateType)
-                {
-                    upperLevel = t.FundamentalType.DeclaredParent != null ? t.FundamentalType.DeclaredParent.ClassInheritanceNormalizedName + "." : "";
-                }
-                var nname = name.Split('`')[0];
-                if (!HasGenerics) return upperLevel+nname;
-                return $"{upperLevel}{nname}<{ string.Join(",", OrderedGenericArguments.Select(x => x.TName).ToArray())}>";
-            }
-        }
-        public Type Type { get; }
-        public TypeFormat Format { get; set; }
-        public bool IsAbstract { get; set; }
-        public bool IsNullable { get; set; }
-        public bool IsCollection { get; set; }
-        public bool IsTemplateType { get; set; }
-        public bool HasGenerics { get; set; }
-        public string Namespace { get; set; }
-        public List<GenericTypeMetaData> OrderedGenericArguments { get; set; } = new List<GenericTypeMetaData>();
-        public List<GenericTypeMetaData> OrderedGenericInstanceArguments { get; set; } = new List<GenericTypeMetaData>();
-        public TypeMetaData HierarchyParent { get; set; }
-        public TypeMetaData DeclaredParent { get; set; }
-        public TypeMetaData FundamentalType { get; set; }
-        public Dictionary<object, string> EnumValues { get; set; } = new Dictionary<object, string>();
-        public Type EnumDataType { get; set; }
-        public List<PropertyMetaData> Properties { get; set; } = new List<PropertyMetaData>();
-        public bool IsWritable
-        {
-            get
-            {
-                if (IsTemplateType) return false;
-                if (IsCollection) return false;
-                if (!OrderedGenericArguments.Any()) return true;
-                bool result = true;
-                for (int i = 0; i < OrderedGenericArguments.Count; i++)
-                {
-                    var og = OrderedGenericArguments[i];
-                    var od = OrderedGenericInstanceArguments[i];
-                    if (og.Type != od.Type)
-                    {
-                        result = false;
-                    }
-                }
-                return result;
-            }
-        }
-
-        public bool Printed { get; set; }
-
-        public bool IgnoreTypeForInheritance { get; set; }
-
-        public override bool Equals(object obj)
-        {
-            var other = obj as TypeMetaData;
-            if (other == null) return false;
-            return Equals(other.Type, this.Type);
-        }
-
-        public override int GetHashCode()
-        {
-            return this.Type.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return Name;
-        }
     }
 }
