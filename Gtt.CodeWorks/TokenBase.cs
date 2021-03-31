@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Gtt.CodeWorks
 {
-    public abstract class TokenBase<T> : ITokenizable<T>
+    public abstract class TokenBase
     {
         protected string TokenPrefix;
         protected string TokenSuffix;
@@ -18,7 +18,10 @@ namespace Gtt.CodeWorks
             MaskPrefix = TokenizeSettings.MaskPrefix ?? "[M__";
             MaskSuffix = TokenizeSettings.MaskSuffix ?? "__M]";
         }
+    }
 
+    public abstract class TokenBase<T> : TokenBase, ITokenizable<T>
+    {
         public object ValueObj { get; protected set; }
         public string Token { get; protected set; }
         public string MaskedValue { get; protected set; }
