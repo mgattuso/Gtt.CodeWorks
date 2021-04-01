@@ -41,6 +41,16 @@ namespace Gtt.CodeWorks.SampleServices
             machine.Configure(State.InProgress).Permit(Trigger.Finalize, State.Completed);
         }
 
+        protected override string FormatIdentifier(string requestIdentifier)
+        {
+            return requestIdentifier.ToUpper().Replace("-", "");
+        }
+
+        protected override string FormatParentIdentifier(string parentIdentifier)
+        {
+            return parentIdentifier.ToLowerInvariant();
+        }
+
         protected override (Trigger Trigger, Func<ParentRequest, string> Func)? DeriveIdentifier()
         {
             return (Trigger.Continue, request => Guid.NewGuid().ToString());

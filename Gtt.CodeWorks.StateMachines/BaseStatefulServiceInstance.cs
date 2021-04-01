@@ -405,7 +405,8 @@ namespace Gtt.CodeWorks.StateMachines
 
             if (request is IHasParentIdentifier pr && !string.IsNullOrWhiteSpace(pr.ParentIdentifier))
             {
-                _parentIdentifier = pr.ParentIdentifier;
+                string formattedParentIdentifier = FormatParentIdentifier(pr.ParentIdentifier);
+                _parentIdentifier = formattedParentIdentifier;
             }
 
             var derivedIdResult = GetIdentifierFromRequestOrDerived(request);
@@ -431,7 +432,7 @@ namespace Gtt.CodeWorks.StateMachines
                 var pid = DefineParentIdentifier(request);
                 if (!string.IsNullOrWhiteSpace(pid))
                 {
-                    _parentIdentifier = DefineParentIdentifier(request);
+                    _parentIdentifier = FormatParentIdentifier(DefineParentIdentifier(request));
                 }
 
             }
@@ -486,7 +487,8 @@ namespace Gtt.CodeWorks.StateMachines
                             Logger.LogInformation($"Request Identifier {request.Identifier} is being replaced by derived identifier {derivedIdentifier} for request correlationId: {request.CorrelationId}");
                         }
 
-                        return (derivedIdentifier, null);
+                        string formattedIdentifier = FormatIdentifier(derivedIdentifier);
+                        return (formattedIdentifier, null);
                     }
                 }
                 catch (Exception ex)
@@ -500,7 +502,18 @@ namespace Gtt.CodeWorks.StateMachines
                 }
             }
 
-            return (request.Identifier, null);
+            string formattedRequestIdentifier = FormatIdentifier(request.Identifier);
+            return (formattedRequestIdentifier, null);
+        }
+
+        protected virtual string FormatIdentifier(string identifier)
+        {
+            return identifier;
+        }
+
+        protected  virtual string FormatParentIdentifier(string parentIdentifier)
+        {
+            return parentIdentifier;
         }
 
         protected StateMachineData<TState, TTrigger> GetStateData()
