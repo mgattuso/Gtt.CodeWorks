@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Gtt.CodeWorks.AzureStorage;
 using Gtt.CodeWorks.Functions.Host;
 using Gtt.CodeWorks.JWT;
 using Gtt.CodeWorks.SampleServices;
@@ -35,6 +36,10 @@ namespace Gtt.CodeWorks.SampleAzureFunc
 
             builder.Services.AddTransient<IUserResolver, DummyUserResolver>();
             builder.Services.AddTransient<IUserResolverSecret>(cfg => new UserResolverSecretBasic("ABC123"));
+            builder.Services.AddTransient<IEventPublisher, AzureTablesEventPublisher>(cfg => new AzureTablesEventPublisher(
+                Environment.GetEnvironmentVariable("StateRepository"),
+                cfg.GetService<IObjectSerializer>()
+            ));
 
             builder.Services.AddTransient<ITokenizeClient>(cfg => new TokenizeClient(
                 Environment.GetEnvironmentVariable("TokenizeEndpoint"),

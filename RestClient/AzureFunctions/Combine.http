@@ -36,7 +36,7 @@ POST {{host}}/api/call/ParentService
 Accept: application/json
 
 {
-  "parentIdentifier": "d", 
+  "parentIdentifier": "TEST@example.com",
   "trigger": "Continue"
 }
 
