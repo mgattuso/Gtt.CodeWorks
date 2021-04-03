@@ -7,8 +7,7 @@ namespace Gtt.CodeWorks
 {
     public interface IEventPublisher
     {
-        Task Publish<T>(T @event, 
-            Guid correlationId,
+        Task Publish<T>(T @event,
             int retries = 3,
             int retryMs = 1000,
             bool exponential = true,
@@ -16,7 +15,7 @@ namespace Gtt.CodeWorks
             TimeSpan? delay = null) where T : PublishedEvent;
     }
 
-    public class PublishedEvent
+    public class PublishedEvent : BaseRequest
     {
         public string EventId { get; set; }
         public PublishedEvent()

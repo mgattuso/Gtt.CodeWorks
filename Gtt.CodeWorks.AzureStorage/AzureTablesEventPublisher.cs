@@ -25,8 +25,7 @@ namespace Gtt.CodeWorks.AzureStorage
         }
 
         public async Task Publish<T>(
-            T @event, 
-            Guid correlationId,
+            T @event,
             int retries = 3, 
             int retryMs = 1000, 
             bool exponential = true, 
@@ -75,7 +74,7 @@ namespace Gtt.CodeWorks.AzureStorage
                     RetryPolicy = retryPolicy
                 }, new OperationContext
                 {
-                    ClientRequestID = correlationId.ToString()
+                    ClientRequestID = @event.CorrelationId.ToString()
                 }
             );
         }

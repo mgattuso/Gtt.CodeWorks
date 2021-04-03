@@ -21,8 +21,8 @@ namespace Gtt.CodeWorks.SampleServices
             {
                 Action = EventAction.Create,
                 Message = request.Message,
-                EventId = request.CorrelationId.ToString()
-            }, request.CorrelationId,
+                CorrelationId = request.CorrelationId
+            },
                 ttl: request.Ttl != null ? TimeSpan.FromMilliseconds(request.Ttl.Value) : (TimeSpan?)null,
                 delay: request.Delay != null ? TimeSpan.FromMilliseconds(request.Delay.Value) : (TimeSpan?)null
                 );
