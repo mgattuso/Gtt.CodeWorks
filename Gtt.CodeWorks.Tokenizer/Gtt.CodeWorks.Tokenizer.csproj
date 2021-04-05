@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.71</Version>
+    <Version>0.0.72</Version>
     <Authors>Michael Gattuso</Authors>
     <Company>gtt.me</Company>
     <Product>CodeWorks</Product>
@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Tokenize.Client" Version="0.1.6" />
+    <PackageReference Include="Tokenize.Client" Version="0.18.0" />
     <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks" Version="0.*" />
   </ItemGroup>
 

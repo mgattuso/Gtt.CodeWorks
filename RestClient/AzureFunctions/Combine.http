@@ -48,3 +48,13 @@ Accept: application/json
   "ssn": "12345678",
   "date": "2020-02-13"
 }
+
+###
+POST {{host}}/api/call/PublishEventService
+Accept: application/json
+
+{
+  "ttl": 20000,
+  "delay": 10000,
+  "message": "Hello There 2"
+}
