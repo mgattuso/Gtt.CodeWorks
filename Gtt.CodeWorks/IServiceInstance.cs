@@ -20,13 +20,10 @@ namespace Gtt.CodeWorks
         where TRequest : BaseRequest, new() where TResponse : new()
     {
 
-        Task<ServiceResponse<TResponse>> ExecuteLazyLocal(TRequest request,
+        Task<ServiceResponse<TResponse>> ExecuteTakeCached(TRequest request,
             CancellationToken cancellationToken);
 
-        Task<ServiceResponse<TResponse>> ExecuteLazyLocal(TRequest request, Func<TRequest, bool> predicate,
-            CancellationToken cancellationToken);
-
-        Task<ServiceResponse<TResponse>> ExecuteLocal(TRequest request,
+        Task<ServiceResponse<TResponse>> ExecuteTakeCached(TRequest request, Func<TRequest, bool> predicate,
             CancellationToken cancellationToken);
     }
 
@@ -38,7 +35,6 @@ namespace Gtt.CodeWorks
         Guid CorrelationId { get; }
         Guid? SessionId { get; }
         int? ServiceHop { get; }
-        ServiceAction Action { get; }
         Task<ServiceResponse> Execute(BaseRequest request, DateTimeOffset startTime, CancellationToken cancellationToken);
         Type RequestType { get; }
         Type ResponseType { get; }

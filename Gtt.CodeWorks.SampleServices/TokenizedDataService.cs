@@ -44,7 +44,6 @@ namespace Gtt.CodeWorks.SampleServices
             return NoErrorCodes();
         }
 
-        public override ServiceAction Action => ServiceAction.Create;
     }
 
     public class TokenizedDataRequest : BaseRequest

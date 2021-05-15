@@ -43,7 +43,6 @@ namespace Gtt.CodeWorks.SampleServices
             return NoErrorCodes();
         }
 
-        public override ServiceAction Action { get; }
     }
 
     public class ThirdPartyRequest : BaseRequest

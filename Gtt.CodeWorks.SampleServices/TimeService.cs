@@ -44,7 +44,6 @@ namespace Gtt.CodeWorks.SampleServices
                 );
         }
 
-        public override ServiceAction Action => ServiceAction.Read;
     }
 
     public class TimeRequest : BaseRequest

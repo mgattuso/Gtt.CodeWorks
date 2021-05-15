@@ -41,7 +41,6 @@ namespace Gtt.CodeWorks.SampleServices
             return NoErrorCodes();
         }
 
-        public override ServiceAction Action => ServiceAction.Update;
     }
 
     public class PublishEventRequest : BaseRequest

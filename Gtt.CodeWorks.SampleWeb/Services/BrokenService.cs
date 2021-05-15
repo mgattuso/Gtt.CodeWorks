@@ -39,7 +39,5 @@ namespace Gtt.CodeWorks.SampleWeb.Services
                 {100, "This is an error"}
             };
         }
-
-        public override ServiceAction Action => ServiceAction.Read;
     }
 }

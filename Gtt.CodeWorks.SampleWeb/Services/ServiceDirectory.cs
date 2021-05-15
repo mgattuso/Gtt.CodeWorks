@@ -22,13 +22,13 @@ namespace Gtt.CodeWorks.SampleWeb.Services
         public Task<ServiceResponse<IGetAccountService.Response>> Call(IGetAccountService.Request request, CancellationToken cancellationToken)
         {
             return _serviceProvider.GetService<IGetAccountService>()
-                                   .Execute(request, ServiceClock.CurrentTime(), cancellationToken);
+                                   .Execute(request, cancellationToken);
         }
 
         public Task<ServiceResponse<IGetProfileService.Response>> Call(IGetProfileService.Request request, CancellationToken cancellationToken)
         {
             return _serviceProvider.GetService<IGetProfileService>()
-                .Execute(request, ServiceClock.CurrentTime(), cancellationToken);
+                .Execute(request, cancellationToken);
         }
     }
 

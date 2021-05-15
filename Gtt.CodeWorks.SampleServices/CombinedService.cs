@@ -23,16 +23,16 @@ namespace Gtt.CodeWorks.SampleServices
 
         protected override async Task<ServiceResponse<CombinedResponse>> Implementation(CombinedRequest request, CancellationToken cancellationToken)
         {
-            var time = await _timeService.ExecuteLazyLocal(new TimeRequest(), cancellationToken);
-            var sum = await _sumService.ExecuteLocal(new SumRequest
+            var time = await _timeService.ExecuteTakeCached(new TimeRequest(), cancellationToken);
+            var sum = await _sumService.Execute(new SumRequest
             {
                 Number1 = request.Number1,
                 Number2 = request.Number2
             }, cancellationToken);
 
-            var cachedTime = await _timeService.ExecuteLazyLocal(new TimeRequest(), cancellationToken);
-            var cachedSum = await _sumService.ExecuteLazyLocal(new SumRequest(), cancellationToken);
-            var noCachedSum = await _sumService.ExecuteLazyLocal(new SumRequest
+            var cachedTime = await _timeService.ExecuteTakeCached(new TimeRequest(), cancellationToken);
+            var cachedSum = await _sumService.ExecuteTakeCached(new SumRequest(), cancellationToken);
+            var noCachedSum = await _sumService.ExecuteTakeCached(new SumRequest
             {
                 Number1 = request.Number1 * 2,
                 Number2 = request.Number2 * 2
@@ -56,7 +56,6 @@ namespace Gtt.CodeWorks.SampleServices
             return NoErrorCodes();
         }
 
-        public override ServiceAction Action => ServiceAction.Create;
     }
 
     public class CombinedRequest : BaseRequest

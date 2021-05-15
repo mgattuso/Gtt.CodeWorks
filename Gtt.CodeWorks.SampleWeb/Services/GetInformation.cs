@@ -47,9 +47,6 @@ namespace Gtt.CodeWorks.SampleWeb.Services
         {
             return NoErrorCodes();
         }
-
-        public override ServiceAction Action => ServiceAction.Read;
-
         public class Request : BaseRequest
         {
             public int AccountId { get; set; }

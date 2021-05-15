@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Gtt.CodeWorks.Middleware;
 using Gtt.CodeWorks.StateMachines.Middleware;
-using Gtt.CodeWorks.Validation;
 using Microsoft.Extensions.Logging;
 using Stateless;
 using Stateless.Graph;
@@ -69,13 +68,16 @@ namespace Gtt.CodeWorks.StateMachines
         private static PropertyInfo _debugProperty;
         private static PropertyInfo _parentIdentifierProperty;
 
-        protected BaseStatefulServiceInstance(CoreDependencies coreDependencies, StatefulDependencies statefulDependencies) : base(coreDependencies)
+        protected BaseStatefulServiceInstance(
+            CoreDependencies coreDependencies, 
+            StatefulDependencies statefulDependencies) : base(coreDependencies)
         {
             _stateRepository = statefulDependencies.StateRepository;
             _currentEnvironment = coreDependencies.EnvironmentResolver.Environment;
             CreatedDate = ServiceClock.CurrentTime();
             ModifiedDate = CreatedDate;
 
+            // REMOVE THE DEFAULT VALIDATION AND REPLACE WITH THE STATEFUL VALIDATION SERVICE
             var existingValidation = PipeLine.FirstOrDefault(x => typeof(ValidationMiddleware) == x.GetType());
             var idx = PipeLine.IndexOf(existingValidation);
             PipeLine.RemoveAt(idx);
@@ -208,9 +210,9 @@ namespace Gtt.CodeWorks.StateMachines
             }
         }
 
-        public sealed override Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
+        public sealed override Task<ServiceResponse<TResponse>> Execute(TRequest request, CancellationToken cancellationToken)
         {
-            return base.Execute(request, startTime, cancellationToken);
+            return base.Execute(request, cancellationToken);
         }
 
         private async Task<ServiceResponse<TResponse>> ExecuteRegistrations(TRequest request, CancellationToken cancellationToken)
@@ -289,9 +291,6 @@ namespace Gtt.CodeWorks.StateMachines
         {
             return null;
         }
-
-        public override ServiceAction Action => ServiceAction.Stateful;
-
         protected void SetErrorCode(int errorCode, ErrorAction errorAction)
         {
             _forceErrorCode = errorCode;
@@ -557,6 +556,11 @@ namespace Gtt.CodeWorks.StateMachines
             return null;
         }
 
+        protected virtual (TTrigger Trigger, Func<TRequest, Task<string>> Func)? DeriveIdentifierAsync()
+        {
+            return null;
+        }
+
         protected string Identifier => _identifier;
         protected string ParentIdentifier => _parentIdentifier;
 
@@ -712,18 +716,5 @@ namespace Gtt.CodeWorks.StateMachines
 
             internal List<OnTriggerAction> Triggers => _triggers;
         }
-    }
-
-    public enum MachineStatus
-    {
-        Stopped,
-        DataLoaded,
-        Started
-    }
-
-    public enum ErrorAction
-    {
-        PreventTrigger,
-        AllowTrigger
     }
 }

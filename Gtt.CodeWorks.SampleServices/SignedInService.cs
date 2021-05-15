@@ -31,7 +31,6 @@ namespace Gtt.CodeWorks.SampleServices
 
         public override IAccessPolicy AccessPolicy => new LoggedInAccessPolicy();
 
-        public override ServiceAction Action => ServiceAction.Read;
     }
 
     public class SignedInRequest : BaseRequest

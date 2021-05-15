@@ -201,8 +201,6 @@ namespace Gtt.Financial.Core.Account
             return NoErrorCodes();
         }
 
-        public override ServiceAction Action => ServiceAction.Update;
-
         private StateMachine<AccountState, AccountAction> _stateMachine =
             new StateMachine<AccountState, AccountAction>(AccountState.Active);
 

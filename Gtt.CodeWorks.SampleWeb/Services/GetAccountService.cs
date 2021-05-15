@@ -22,7 +22,7 @@ namespace Gtt.CodeWorks.SampleWeb.Services
     }
 
     public class GetAccountService : 
-        BaseReadService<IGetAccountService.Request, IGetAccountService.Response>,
+        BaseServiceInstance<IGetAccountService.Request, IGetAccountService.Response>,
         IGetAccountService
     {
         public GetAccountService(CoreDependencies coreDependencies) : base(coreDependencies)
@@ -39,6 +39,11 @@ namespace Gtt.CodeWorks.SampleWeb.Services
                     Name = $"Account {request.AccountId}"
                 })
             );
+        }
+
+        protected override Task<string> CreateDistributedLockKey(IGetAccountService.Request request, CancellationToken cancellationToken)
+        {
+            return NoDistributedLock();
         }
 
         protected override IDictionary<int, string> DefineErrorCodes()

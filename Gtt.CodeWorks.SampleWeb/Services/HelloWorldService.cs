@@ -21,9 +21,6 @@ namespace Gtt.CodeWorks.SampleWeb.Services
         {
             return NoErrorCodes();
         }
-
-        public override ServiceAction Action => ServiceAction.Read;
-
         protected override Task<ServiceResponse<Response>> Implementation(Request request, CancellationToken cancellationToken)
         {
             return Task.FromResult(Implementation(request));

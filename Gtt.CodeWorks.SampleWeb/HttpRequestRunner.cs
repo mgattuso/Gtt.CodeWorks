@@ -24,7 +24,7 @@ namespace Gtt.CodeWorks.AspNet
             where TRes : new()
         {
             var input = await _converter.ConvertRequest<TReq>(context.Request);
-            var output = await service.Execute(input, ServiceClock.CurrentTime(), cancellationToken);
+            var output = await service.Execute(input, cancellationToken);
             await _converter.ConvertResponse(output, context.Response, new HttpDataSerializerOptions());
         }
 

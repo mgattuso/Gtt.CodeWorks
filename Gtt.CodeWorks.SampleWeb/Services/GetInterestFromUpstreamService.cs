@@ -43,10 +43,6 @@ namespace Gtt.CodeWorks.SampleWeb.Services
         {
             return NoErrorCodes();
         }
-
-        public override ServiceAction Action => ServiceAction.Create;
-
-
         public class Request : BaseRequest
         {
             public double Principal { get; set; }

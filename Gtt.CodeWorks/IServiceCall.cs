@@ -10,6 +10,6 @@ namespace Gtt.CodeWorks
     {
         string Name { get; }
         string FullName { get; }
-        Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken);
+        Task<ServiceResponse<TResponse>> Execute(TRequest request, CancellationToken cancellationToken);
     }
 }

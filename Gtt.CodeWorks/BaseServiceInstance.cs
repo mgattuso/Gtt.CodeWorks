@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Gtt.CodeWorks.Middleware;
-using Gtt.CodeWorks.Validation;
 using Microsoft.Extensions.Logging;
 
 namespace Gtt.CodeWorks
@@ -32,7 +31,7 @@ namespace Gtt.CodeWorks
             _pipeline.Add(new AuthenticationMiddleware(coreDependencies.UserResolver, coreDependencies.LoggerFactory.CreateLogger<AuthenticationMiddleware>()));
             _pipeline.Add(new DistributedLockMiddleware<TRequest>(coreDependencies.DistributedLockService, coreDependencies.LoggerFactory.CreateLogger(typeof(DistributedLockMiddleware<TRequest>)), CreateDistributedLockKey));
             _pipeline.Add(new ValidationMiddleware(coreDependencies.RequestValidator));
-            
+
             _chainedServiceResolver = coreDependencies.ChainedServiceResolver;
             _chainedServiceResolver?.AddChainedService(this);
         }
@@ -41,13 +40,8 @@ namespace Gtt.CodeWorks
         private Guid? _sessionId;
         private int? _serviceHop;
 
-        public virtual Task<ServiceResponse<TResponse>> ExecuteLocal(TRequest request,
-            CancellationToken cancellationToken)
-        {
-            return Execute(request, ServiceClock.CurrentTime(), cancellationToken);
-        }
-
-        public virtual Task<ServiceResponse<TResponse>> ExecuteLazyLocal(TRequest request,
+        public virtual Task<ServiceResponse<TResponse>> ExecuteTakeCached(
+            TRequest request, 
             CancellationToken cancellationToken)
         {
             var cached = GetCachedResponse<TRequest, TResponse>();
@@ -56,10 +50,13 @@ namespace Gtt.CodeWorks
                 _logger.LogDebug($"Found cached version for {cached.MetaData.ServiceName} {_correlationId}");
                 return Task.FromResult(cached);
             }
-            return Execute(request, ServiceClock.CurrentTime(), cancellationToken);
+            return Execute(request, cancellationToken);
         }
 
-        public Task<ServiceResponse<TResponse>> ExecuteLazyLocal(TRequest request, Func<TRequest, bool> predicate, CancellationToken cancellationToken)
+        public Task<ServiceResponse<TResponse>> ExecuteTakeCached(
+            TRequest request, 
+            Func<TRequest, bool> predicate, 
+            CancellationToken cancellationToken)
         {
             var cached = GetCachedResponse<TRequest, TResponse>(predicate);
             if (cached != null)
@@ -67,17 +64,17 @@ namespace Gtt.CodeWorks
                 _logger.LogDebug($"Found cached version matching predicate for {cached.MetaData.ServiceName} {_correlationId}");
                 return Task.FromResult(cached);
             }
-            return Execute(request, ServiceClock.CurrentTime(), cancellationToken);
+            return Execute(request, cancellationToken);
         }
 
-        public virtual async Task<ServiceResponse<TResponse>> Execute(TRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
+        public virtual async Task<ServiceResponse<TResponse>> Execute(TRequest request, CancellationToken cancellationToken)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
-            StartTime = startTime;
+            StartTime = ServiceClock.CurrentTime();
             _chainedServiceResolver?.AddCallToChain(this);
             _correlationId = CalculateCorrelationId(request);
             _sessionId = request.SessionId;
-            _serviceHop = CalculateServiceHop(request);
+            _serviceHop = CalculateServiceHop();
             request.CorrelationId = _correlationId;
             request.SyncCorrelationIds();
             ServiceResponse<TResponse> response = null;
@@ -291,6 +288,11 @@ namespace Gtt.CodeWorks
             return Task.FromResult(string.Empty);
         }
 
+        protected IDictionary<int, string> AddErrorCode(int code, string description)
+        {
+            return AddErrorCodes((code, description));
+        }
+
         protected IDictionary<int, string> AddErrorCodes(params (int code, string description)[] errors)
         {
             foreach (var error in errors)
@@ -346,6 +348,11 @@ namespace Gtt.CodeWorks
             return ValidationError((error, new[] { members }));
         }
 
+        protected ServiceResponse<TResponse> ValidationError(string error, string[] members)
+        {
+            return ValidationError((error, members));
+        }
+
         protected ServiceResponse<TResponse> ValidationError(params (string error, string[] members)[] validationErrors)
         {
             Dictionary<string, string[]> validationDictionary = validationErrors.ToDictionary(k => k.error, v => v.members);
@@ -372,7 +379,7 @@ namespace Gtt.CodeWorks
             return Guid.NewGuid();
         }
 
-        private int CalculateServiceHop(TRequest request)
+        private int CalculateServiceHop()
         {
             int? maxHop = _chainedServiceResolver?.AllInstances()
                 .Max(x => x.ServiceHop);
@@ -396,8 +403,6 @@ namespace Gtt.CodeWorks
 
         public IEnumerable<KeyValuePair<int, string>> AllErrorCodes() => DefineErrorCodes() ?? new Dictionary<int, string>();
         public UserInformation User { get; set; }
-
-        public abstract ServiceAction Action { get; }
         public async Task<ServiceResponse> Execute(BaseRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
         {
             StoredRequest = request;

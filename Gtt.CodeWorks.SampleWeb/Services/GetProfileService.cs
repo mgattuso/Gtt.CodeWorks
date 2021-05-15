@@ -20,7 +20,7 @@ namespace Gtt.CodeWorks.SampleWeb.Services
         }
     }
 
-    public class GetProfileService : BaseReadService<IGetProfileService.Request, IGetProfileService.Response>
+    public class GetProfileService : BaseServiceInstance<IGetProfileService.Request, IGetProfileService.Response>
     {
         public GetProfileService(CoreDependencies coreDependencies) : base(coreDependencies)
         {
@@ -36,6 +36,11 @@ namespace Gtt.CodeWorks.SampleWeb.Services
                     }
                 )
             );
+        }
+
+        protected override Task<string> CreateDistributedLockKey(IGetProfileService.Request request, CancellationToken cancellationToken)
+        {
+            return NoDistributedLock();
         }
 
         protected override IDictionary<int, string> DefineErrorCodes()

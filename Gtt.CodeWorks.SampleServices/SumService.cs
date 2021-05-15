@@ -35,7 +35,6 @@ namespace Gtt.CodeWorks.SampleServices
             );
         }
 
-        public override ServiceAction Action => ServiceAction.Create;
     }
 
     public class SumRequest : BaseRequest
