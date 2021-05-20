@@ -67,6 +67,12 @@ namespace Gtt.CodeWorks
             return Execute(request, cancellationToken);
         }
 
+        public async Task<ServiceResponse> Execute(BaseRequest request, CancellationToken cancellationToken)
+        {
+            var r = await this.Execute((TRequest) request, cancellationToken);
+            return r;
+        }
+
         public virtual async Task<ServiceResponse<TResponse>> Execute(TRequest request, CancellationToken cancellationToken)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
@@ -403,12 +409,6 @@ namespace Gtt.CodeWorks
 
         public IEnumerable<KeyValuePair<int, string>> AllErrorCodes() => DefineErrorCodes() ?? new Dictionary<int, string>();
         public UserInformation User { get; set; }
-        public async Task<ServiceResponse> Execute(BaseRequest request, DateTimeOffset startTime, CancellationToken cancellationToken)
-        {
-            StoredRequest = request;
-            var result = await Execute((TRequest)request, startTime, cancellationToken);
-            return result;
-        }
 
         public Type RequestType => typeof(TRequest);
         public Type ResponseType => typeof(ServiceResponse<TResponse>);

@@ -8,7 +8,7 @@
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
     <Version>0.0.84</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>0.0.84.0</AssemblyVersion>
+    <AssemblyVersion>0.0.90.0</AssemblyVersion>
     <Copyright>2021, Michael Gattuso</Copyright>
     <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
   </PropertyGroup>

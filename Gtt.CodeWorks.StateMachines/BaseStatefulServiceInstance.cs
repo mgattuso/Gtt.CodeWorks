@@ -23,6 +23,50 @@ namespace Gtt.CodeWorks.StateMachines
         where TTrigger : struct, IConvertible
         where TData : BaseStateDataModel<TState>, new()
     {
+        protected BaseStatefulServiceInstance(
+            CoreDependencies coreDependencies,
+            StatefulDependencies statefulDependencies) : base(coreDependencies)
+        {
+            _stateRepository = statefulDependencies.StateRepository;
+            _currentEnvironment = coreDependencies.EnvironmentResolver.Environment;
+            CreatedDate = ServiceClock.CurrentTime();
+            ModifiedDate = CreatedDate;
+
+            // REMOVE THE DEFAULT VALIDATION AND REPLACE WITH THE STATEFUL VALIDATION SERVICE
+            var existingValidation = PipeLine.FirstOrDefault(x => typeof(ValidationMiddleware) == x.GetType());
+            var idx = PipeLine.IndexOf(existingValidation);
+            PipeLine.RemoveAt(idx);
+            PipeLine.Insert(idx, new StateMachineValidatorMiddleware<TTrigger>(coreDependencies.RequestValidator));
+
+            _data = new TData();
+            Machine = new StateMachine<TState, TTrigger>(() => _data.State, s => _data.State = s);
+            Machine.OnTransitionCompletedAsync(OnTransitionAction);
+        }
+
+        #region static constructor and members
+
+        /// <summary>
+        /// Stores the debug property if it is defined on the request object
+        /// </summary>
+        private static PropertyInfo _debugProperty;
+
+        /// <summary>
+        /// Stores an array of unexpected properties. An unexpected property is a property name on the request object that does
+        /// not match the name of one of the triggers for the service. Only properties named after a trigger or the "debug" property
+        /// are allowed.
+        /// </summary>
+        private static readonly PropertyInfo[] _unexpectedProperties;
+
+        /// <summary>
+        /// Stores a lookup of the associated data property for a trigger.
+        /// </summary>
+        private static readonly Dictionary<TTrigger, PropertyInfo> _triggerProperties = new Dictionary<TTrigger, PropertyInfo>();
+
+        /// <summary>
+        /// Stores whether the parent ID has been configured correctly.
+        /// </summary>
+        private static bool _hasIncorrectDefinedParentIdentifierProperty = false;
+
         static BaseStatefulServiceInstance()
         {
             var properties = typeof(TRequest).GetTypeInfo().DeclaredProperties.ToArray();
@@ -37,11 +81,11 @@ namespace Gtt.CodeWorks.StateMachines
 
                 if (p.Name.Equals("parentIdentifier", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    if (typeof(TRequest).GetInterfaces().Contains(typeof(IHasParentIdentifier)))
+                    if (!typeof(TRequest).GetInterfaces().Contains(typeof(IHasParentIdentifier)))
                     {
-                        _parentIdentifierProperty = p;
-                        continue;
+                        _hasIncorrectDefinedParentIdentifierProperty = true;
                     }
+                    continue;
                 }
 
                 bool found = false;
@@ -63,263 +107,100 @@ namespace Gtt.CodeWorks.StateMachines
             _unexpectedProperties = unexpected.ToArray();
         }
 
-        private static readonly PropertyInfo[] _unexpectedProperties;
-        private static readonly Dictionary<TTrigger, PropertyInfo> _triggerProperties = new Dictionary<TTrigger, PropertyInfo>();
-        private static PropertyInfo _debugProperty;
-        private static PropertyInfo _parentIdentifierProperty;
+        #endregion
 
-        protected BaseStatefulServiceInstance(
-            CoreDependencies coreDependencies, 
-            StatefulDependencies statefulDependencies) : base(coreDependencies)
+
+
+        public (string diagram, string contentType) Diagram()
         {
-            _stateRepository = statefulDependencies.StateRepository;
-            _currentEnvironment = coreDependencies.EnvironmentResolver.Environment;
-            CreatedDate = ServiceClock.CurrentTime();
-            ModifiedDate = CreatedDate;
-
-            // REMOVE THE DEFAULT VALIDATION AND REPLACE WITH THE STATEFUL VALIDATION SERVICE
-            var existingValidation = PipeLine.FirstOrDefault(x => typeof(ValidationMiddleware) == x.GetType());
-            var idx = PipeLine.IndexOf(existingValidation);
-            PipeLine.RemoveAt(idx);
-            PipeLine.Insert(idx, new StateMachineValidatorMiddleware<TTrigger>(coreDependencies.RequestValidator));
-
-            _data = new TData();
-            Machine = new StateMachine<TState, TTrigger>(() => _data.State, s => _data.State = s);
-            Machine.OnTransitionCompletedAsync(OnTransitionAction);
+            Rules(Machine);
+            var d = UmlDotGraph.Format(Machine.GetInfo());
+            return (d, "text/vnd.graphviz");
         }
 
-        private readonly RegistrationFactory _registrationFactory = new RegistrationFactory();
-        private int? _forceErrorCode = null;
-        private ErrorAction? _forceErrorAction = null;
-        private readonly CodeWorksEnvironment _currentEnvironment;
-
-        private void SetupParameterData()
-        {
-            foreach (TTrigger trigger in Enum.GetValues(typeof(TTrigger)))
-            {
-                if (_triggerProperties.ContainsKey(trigger))
-                {
-                    Machine.SetTriggerParameters((TTrigger)trigger, typeof(TRequest), _triggerProperties[trigger].PropertyType);
-                }
-                else
-                {
-                    Machine.SetTriggerParameters((TTrigger)trigger, typeof(TRequest));
-                }
-            }
-        }
-
-        protected StateMachine<TState, TTrigger> Machine { get; }
-
-        private async Task OnTransitionAction(StateMachine<TState, TTrigger>.Transition transition)
-        {
-            if (Status != MachineStatus.Started)
-            {
-                throw new Exception("Machine must be started before it can run. Call Start()");
-            }
-
-            await StoreState(_identifier, transition.Source.ToString(), transition.Destination.ToString(),
-                transition.Trigger.ToString(), transition.IsReentry);
-        }
-
-        protected sealed override async Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken)
-        {
-            Debug.Assert(request.Trigger != null, "request.Trigger != null");
-
-            if (!CanCallAction(request.Trigger.Value))
-            {
-                throw new BusinessLogicException($"The {request.Trigger} trigger is not permitted.", $"Cannot call {request.Trigger} on {FullName}:{_identifier}", ServiceResult.ConflictingRequest);
-            }
-
-            var hasKey = _triggerProperties.ContainsKey(request.Trigger.Value);
-            var p = _triggerProperties.GetValueOrDefault(request.Trigger.Value);
-            if (p != null)
-            {
-                var data = p.GetValue(request);
-
-                if (hasKey && data == null)
-                {
-                    return ValidationError(p.Name, $"{p.Name} payload is required");
-                }
-
-                var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
-                if (registrationResponse != null) return registrationResponse;
-
-                if (_forceErrorAction == null || _forceErrorAction == ErrorAction.AllowTrigger)
-                {
-                    await Machine.FireAsync(
-                        new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest, object>(request.Trigger.Value), request, data);
-                }
-            }
-            else
-            {
-                var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
-                if (registrationResponse != null) return registrationResponse;
-
-                if (_forceErrorAction == null || _forceErrorAction == ErrorAction.AllowTrigger)
-                {
-                    await Machine.FireAsync(
-                        new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest>(request.Trigger.Value),
-                        request);
-                }
-            }
-
-            var response = new TResponse();
-            ServiceResult result = ServiceResult.Successful;
-
-            ErrorCodeData errorData = null;
-
-            if (_forceErrorCode != null)
-            {
-                result = ServiceResult.ValidationError;
-                errorData = GetErrorData(_forceErrorCode.Value);
-                if (errorData == null)
-                {
-                    Debug.Assert(_forceErrorCode != null, nameof(_forceErrorCode) + " != null");
-                    return ErrorCode(_forceErrorCode.Value);
-                }
-            }
-
-            Dictionary<int, string> errorDictionary = null;
-            if (errorData != null)
-            {
-                errorDictionary = new Dictionary<int, string> { [errorData.ErrorCode] = errorData.Description };
-            }
-
-            response.Model = CurrentData;
-            response.StateMachine = GetStateData();
-            return new ServiceResponse<TResponse>(response, new ResponseMetaData(this, result, errorCodes: errorDictionary));
-        }
-
+        #region Services
         private readonly IStateRepository _stateRepository;
-        private TData _data;
-        private string _identifier;
-        private string _parentIdentifier;
-        public long SerialNumber { get; set; }
+        #endregion
+
+        #region public members
+        public Type StateType => typeof(TState);
+        public Type TriggerType => typeof(TTrigger);
+        public Type DataType => typeof(TData);
         public MachineStatus Status { get; private set; }
+        public long SerialNumber { get; private set; }
+        public DateTimeOffset CreatedDate { get; private set; }
+        public DateTimeOffset ModifiedDate { get; private set; }
+        #endregion
 
-        public async Task ReadState(TRequest request)
+        #region protected members
+        protected StateMachine<TState, TTrigger> Machine { get; }
+        protected TData CurrentData => _data;
+        #endregion
+
+        #region private members
+        private TData _data;
+        #endregion
+
+        #region abstract and unimplemented virtual methods
+        protected abstract void Rules(StateMachine<TState, TTrigger> machine);
+
+        protected virtual void RegisterTriggerActions(RegistrationFactory register)
         {
-            var result = await LoadData(request.Identifier, FullName, _data, _stateRepository, request?.Get?.Version, _parentIdentifier);
-            SerialNumber = result.sequenceNumber;
-            if (result.data != null) _data = result.data;
-            CreatedDate = result.created;
-            ModifiedDate = result.modified;
-            if (Status == MachineStatus.Stopped)
-            {
-                Status = MachineStatus.DataLoaded;
-            }
         }
 
-        public sealed override Task<ServiceResponse<TResponse>> Execute(TRequest request, CancellationToken cancellationToken)
+        protected virtual void ModifyResponse(ServiceResponse<TResponse> response)
         {
-            return base.Execute(request, cancellationToken);
+
         }
 
-        private async Task<ServiceResponse<TResponse>> ExecuteRegistrations(TRequest request, CancellationToken cancellationToken)
+        protected virtual DistributedLockStrategy LockStrategy { get; set; } = DistributedLockStrategy.InstanceStrategy;
+        #endregion
+
+        private (int ErrorCode, ErrorAction Action)? _forcedError = null;
+
+        private StatefulIdentifier _identifiers = null;
+        private CodeWorksEnvironment _currentEnvironment;
+        private readonly RegistrationFactory _registrationFactory = new RegistrationFactory();
+
+
+        private async Task<StatefulIdentifier> GetIdentifiers(TRequest request, CancellationToken ct)
         {
-            foreach (var trigger in _registrationFactory.Triggers)
+            if (_identifiers != null) return _identifiers;
+
+            var derivedIds = DeriveIdentifier() ?? new DerivedIdAction[0];
+            var deriveParentIds = DeriveParentIdentifier() ?? new DerivedIdAction[0];
+
+            string id = request.Identifier;
+            string parentId = "";
+
+            // default strategy
+            foreach (var derivedId in derivedIds)
             {
-                if (request.Trigger != null && trigger.Trigger.Equals(request.Trigger.Value))
+                if (derivedId.Trigger.Equals(request.Trigger))
                 {
-                    if (trigger.States.Length == 0 || trigger.States.Any(IsInState))
+                    id = await derivedId.Strategy(request, ct);
+                    break;
+                }
+            }
+
+            if (request is IHasParentIdentifier pr)
+            {
+                parentId = pr.ParentIdentifier;
+                foreach (var derivedId in deriveParentIds)
+                {
+                    if (derivedId.Trigger.Equals(request.Trigger))
                     {
-                        var t = trigger.Execute(request, cancellationToken);
-
-                        if (t is Task<ServiceResponse<TResponse>> tr)
-                        {
-                            var sr = await tr;
-                            if (sr != null)
-                            {
-                                return sr;
-                            }
-                        }
-
-                        await t;
+                        parentId = await derivedId.Strategy(request, ct);
+                        break;
                     }
                 }
             }
 
-            return null;
+            _identifiers = new StatefulIdentifier(id, parentId);
+            return _identifiers;
         }
 
-        private async Task StoreState(string identifier, string source, string destination, string trigger, bool isReentry)
-        {
-            SerialNumber = await _stateRepository.StoreStateData<TData, TState>(new StateDto
-            {
-                CorrelationId = CorrelationId,
-                MachineName = FullName,
-                Identifier = identifier,
-                Source = source,
-                Destination = destination,
-                Trigger = trigger,
-                IsReentry = isReentry,
-                CreatedBy = FullName,
-                ModifiedBy = FullName,
-                Created = CreatedDate,
-                Username = User?.Username,
-                UserIdentifier = User?.UserIdentifier,
-                ParentIdentifier = _parentIdentifier
-            }, SerialNumber, _data, saveHistory: SaveStateHistory, parentIdentifier: _parentIdentifier);
-        }
-
-        protected override Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken)
-        {
-            var identifierResult = GetIdentifierFromRequestOrDerived(request);
-            if (string.IsNullOrWhiteSpace(identifierResult.identifier))
-            {
-                return Task.FromResult("");
-            }
-
-            var key = (identifierResult.identifier ?? "").Trim();
-            if (request is IHasParentIdentifier parent)
-            {
-                Logger.LogTrace("Parent Identifier found");
-                var parentKey = ((parent?.ParentIdentifier ?? "") + "-").Trim() + key;
-                return Task.FromResult(parentKey);
-            }
-
-            return Task.FromResult(key);
-
-        }
-
-        protected virtual void RegisterTriggerActions(RegistrationFactory register)
-        {
-
-        }
-
-        protected virtual string DefineParentIdentifier(TRequest request)
-        {
-            return null;
-        }
-        protected void SetErrorCode(int errorCode, ErrorAction errorAction)
-        {
-            _forceErrorCode = errorCode;
-            _forceErrorAction = errorAction;
-        }
-
-        protected abstract void Rules(StateMachine<TState, TTrigger> machine);
-        protected async Task<(TData data, long sequenceNumber, DateTimeOffset created, DateTimeOffset modified)> LoadData(
-            string identifier,
-            string machineName,
-            TData currentData,
-            IStateRepository repository,
-            long? version,
-            string parentIdentifier)
-        {
-            var stateInformation = await repository.RetrieveStateData<TData, TState>(identifier, machineName, version, parentIdentifier);
-            if (stateInformation == null)
-            {
-                return (currentData ?? new TData(), 0L, ServiceClock.CurrentTime(),
-                    ServiceClock.CurrentTime());
-            }
-
-            return (stateInformation.Data,
-                    stateInformation.StateMetaData.SequenceNumber,
-                    stateInformation.StateMetaData.Created,
-                    stateInformation.StateMetaData.Modified);
-        }
-
-        public async Task Start(TRequest request)
+        public async Task Start(TRequest request, CancellationToken ct)
         {
             if (Status == MachineStatus.Started)
             {
@@ -328,24 +209,87 @@ namespace Gtt.CodeWorks.StateMachines
 
             if (Status == MachineStatus.Stopped)
             {
-                await ReadState(request);
+                await ReadState(request, ct);
             }
 
             Status = MachineStatus.Started;
         }
 
-        public bool IsNew()
+        public async Task ReadState(TRequest request, CancellationToken ct)
         {
-            return SerialNumber == 0;
+            var ids = await GetIdentifiers(request, ct);
+            var result = await LoadData(
+                ids.Identifier,
+                ids.ParentIdentifier,
+                FullName,
+                _data,
+                _stateRepository,
+                request?.Get?.Version);
+            SerialNumber = result.SequenceNumber;
+            if (result.Data != null) _data = result.Data;
+            CreatedDate = result.Created;
+            ModifiedDate = result.Modified;
+            if (Status == MachineStatus.Stopped)
+            {
+                Status = MachineStatus.DataLoaded;
+            }
         }
 
-        protected virtual void ModifyResponse(ServiceResponse<TResponse> response)
+        protected void SetErrorCode(int errorCode, ErrorAction errorAction)
+        {
+            _forcedError = (errorCode, errorAction);
+        }
+
+        protected async Task<LoadDataResult> LoadData(
+            string identifier,
+            string parentIdentifier,
+            string machineName,
+            TData currentData,
+            IStateRepository repository,
+            long? version)
         {
 
+            var stateInformation = await repository.RetrieveStateData<TData, TState>(_identifiers.Identifier, machineName, version, parentIdentifier);
+            if (stateInformation == null)
+            {
+                return new LoadDataResult
+                {
+                    Data = currentData ?? new TData(),
+                    SequenceNumber = 0L,
+                    Created = ServiceClock.CurrentTime(),
+                    Modified = ServiceClock.CurrentTime()
+                };
+            }
+
+            return new LoadDataResult
+            {
+                Data = stateInformation.Data,
+                SequenceNumber = stateInformation.StateMetaData.SequenceNumber,
+                Created = stateInformation.StateMetaData.Created,
+                Modified = stateInformation.StateMetaData.Modified
+            };
+        }
+
+        protected virtual DerivedIdAction[] DeriveIdentifier()
+        {
+            return new DerivedIdAction[0];
+        }
+
+        protected virtual DerivedIdAction[] DeriveParentIdentifier()
+        {
+            return new DerivedIdAction[0];
+        }
+        public sealed override Task<ServiceResponse<TResponse>> Execute(TRequest request, CancellationToken cancellationToken)
+        {
+            return base.Execute(request, cancellationToken);
         }
 
         protected sealed override void BeforeResponse(ServiceResponse<TResponse> response)
         {
+            if (_identifiers == null)
+                throw new NullReferenceException(
+                    $"{nameof(_identifiers)} is null when it should be populated for this is ever executed");
+
             if (response.Data == null)
             {
                 response.Data = new TResponse();
@@ -353,7 +297,7 @@ namespace Gtt.CodeWorks.StateMachines
 
             if (response.Data is IHasParentIdentifier pr)
             {
-                pr.ParentIdentifier = _parentIdentifier;
+                pr.ParentIdentifier = _identifiers.ParentIdentifier;
             }
 
             response.Data.Model = CurrentData;
@@ -366,14 +310,40 @@ namespace Gtt.CodeWorks.StateMachines
             base.BeforeResponse(response);
         }
 
+        protected override async Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken)
+        {
+            var ids = await GetIdentifiers(request, cancellationToken);
+            Logger.LogTrace($"Calling {nameof(CreateDistributedLockKey)} with LockStrategy={LockStrategy} for {request.CorrelationId}");
+            switch (LockStrategy)
+            {
+                case DistributedLockStrategy.InstanceStrategy:
+                    return ids.ConsolidatedIdentifier;
+
+                case DistributedLockStrategy.ParentStrategy:
+                    if (ids.HasParentIdentifier())
+                        return ids.ParentIdentifier;
+
+                    return ids.ConsolidatedIdentifier;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(LockStrategy), $"No implementation defined for LockStrategy={LockStrategy}");
+            }
+
+        }
+
         protected override async Task<ServiceResponse<TResponse>> BeforeImplementation(TRequest request, CancellationToken cancellationToken)
         {
+            // 1. handle unexpected properties
+            // search for unexpected properties on the request object. Ideally this would be caught in a unit test but this
+            // code will prevent a request object that has unexpected properties.
             if (_unexpectedProperties != null && _unexpectedProperties.Any())
             {
                 throw new Exception($"Unexpected properties found on {request.GetType().Name}. Unexpected: {string.Join(",", _unexpectedProperties.Select(x => x.Name))}");
             }
+
+            // 2. handle debug data
             try
             {
+                // if mode is production and debug property is populated in the request then remove the debug data
                 if (_currentEnvironment == CodeWorksEnvironment.Production && _debugProperty != null &&
                     !_debugProperty.PropertyType.IsValueType && _debugProperty.CanWrite)
                 {
@@ -385,9 +355,11 @@ namespace Gtt.CodeWorks.StateMachines
                 Logger.LogWarning(ex, $"Cannot remove debug data for {request.CorrelationId}");
             }
 
+
+            // 2. Check for a parentIdentifier without the IHasParentIdentifier interface
             try
             {
-                if (_parentIdentifierProperty != null && !(request is IHasParentIdentifier))
+                if (_hasIncorrectDefinedParentIdentifierProperty)
                 {
                     throw new Exception($"Unexpected properties found on {request.GetType().Name}. " +
                                         $"Unexpected property found. To add a property called ParentIdentifier " +
@@ -399,63 +371,35 @@ namespace Gtt.CodeWorks.StateMachines
                 Logger.LogWarning(ex, $"Cannot set parent Identifier for {request.CorrelationId}");
             }
 
-
-            _identifier = request.Identifier;
-
-            if (request is IHasParentIdentifier pr && !string.IsNullOrWhiteSpace(pr.ParentIdentifier))
-            {
-                string formattedParentIdentifier = FormatParentIdentifier(pr.ParentIdentifier);
-                _parentIdentifier = formattedParentIdentifier;
-            }
-
-            var derivedIdResult = GetIdentifierFromRequestOrDerived(request);
-            
-            if (derivedIdResult.errorResult != null)
-            {
-                return derivedIdResult.errorResult;
-            }
-
-            _identifier = derivedIdResult.identifier;
-            request.Identifier = derivedIdResult.identifier;
-
-
-            if (string.IsNullOrWhiteSpace(_identifier))
+            // 3. Ensure identifiers are setup
+            var ids = await GetIdentifiers(request, cancellationToken);
+            if (!ids?.HasValidIdentifiers() ?? false)
             {
                 var idRequired = ValidationError("Identifier", "The Identifier field is required");
                 return idRequired;
             }
 
-            try
-            {
-
-                var pid = DefineParentIdentifier(request);
-                if (!string.IsNullOrWhiteSpace(pid))
-                {
-                    _parentIdentifier = FormatParentIdentifier(DefineParentIdentifier(request));
-                }
-
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError("Cannot defineParentIdentifier", ex);
-            }
-
+            // 4. Check for trigger in the request. If found execute trigger otherwise just read the state machine
             if (request.Trigger != null)
             {
-                await Start(request);
+                await Start(request, cancellationToken);
             }
             else
             {
-                await ReadState(request);
+                await ReadState(request, cancellationToken);
                 if (Status == MachineStatus.Stopped)
                 {
                     return NotFound();
                 }
             }
 
+            // 5. execute the rules for the machine
             Rules(Machine);
+
+            // 6. Register the trigger action and setup the request data for the specific trigger being requested
             RegisterTriggerActions(_registrationFactory);
             SetupParameterData();
+
 
             if (request.Trigger == null)
             {
@@ -468,51 +412,8 @@ namespace Gtt.CodeWorks.StateMachines
                 return NotFound();
             }
 
+            // if not issues found then return null so that the code will continue and not shortcircuit in this method
             return null;
-        }
-
-        protected (string identifier, ServiceResponse<TResponse> errorResult) GetIdentifierFromRequestOrDerived(TRequest request)
-        {
-            var derivedIdFunction = DeriveIdentifier();
-            if (derivedIdFunction != null && request.Trigger != null && request.Trigger.Equals(derivedIdFunction.Value.Trigger))
-            {
-                try
-                {
-                    string derivedIdentifier = derivedIdFunction.Value.Func(request);
-                    if (!string.IsNullOrWhiteSpace(derivedIdentifier))
-                    {
-                        if (!string.IsNullOrWhiteSpace(request.Identifier))
-                        {
-                            Logger.LogInformation($"Request Identifier {request.Identifier} is being replaced by derived identifier {derivedIdentifier} for request correlationId: {request.CorrelationId}");
-                        }
-
-                        string formattedIdentifier = FormatIdentifier(derivedIdentifier);
-                        return (formattedIdentifier, null);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, $"Could not derive identifier for correlationId:{request.CorrelationId}");
-
-                    return ("", new ServiceResponse<TResponse>(
-                        default(TResponse),
-                        new ResponseMetaData(this, ServiceResult.PermanentError,
-                            exceptionMessage: "Could not derive identifier from provided data")));
-                }
-            }
-
-            string formattedRequestIdentifier = FormatIdentifier(request.Identifier);
-            return (formattedRequestIdentifier, null);
-        }
-
-        protected virtual string FormatIdentifier(string identifier)
-        {
-            return identifier;
-        }
-
-        protected  virtual string FormatParentIdentifier(string parentIdentifier)
-        {
-            return parentIdentifier;
         }
 
         protected StateMachineData<TState, TTrigger> GetStateData()
@@ -520,7 +421,7 @@ namespace Gtt.CodeWorks.StateMachines
             return new StateMachineData<TState, TTrigger>
             {
                 SerialNumber = SerialNumber,
-                Identifier = _identifier,
+                Identifier = _identifiers.ConsolidatedIdentifier,
                 CurrentState = _data.State,
                 AllowedTriggers = Machine?.PermittedTriggers?.ToArray() ?? new TTrigger[0],
                 ActiveStates = GetAllCurrentStates(),
@@ -528,43 +429,6 @@ namespace Gtt.CodeWorks.StateMachines
                 Modified = ModifiedDate
             };
         }
-
-        protected Task FireAsync(TTrigger trigger)
-        {
-            if (!CanCallAction(trigger))
-            {
-                throw new BusinessLogicException($"The {trigger} trigger is not permitted.", $"Cannot call {trigger} on {FullName}:{_identifier}", ServiceResult.ConflictingRequest);
-            }
-
-            return Machine.FireAsync(trigger);
-        }
-
-        protected bool CanCallAction(TTrigger action)
-        {
-            return Machine.CanFire(action);
-        }
-
-        protected bool IsInState(TState state)
-        {
-            return Machine.IsInState(state);
-        }
-
-        protected virtual bool SaveStateHistory => true;
-
-        protected virtual (TTrigger Trigger, Func<TRequest, string> Func)? DeriveIdentifier()
-        {
-            return null;
-        }
-
-        protected virtual (TTrigger Trigger, Func<TRequest, Task<string>> Func)? DeriveIdentifierAsync()
-        {
-            return null;
-        }
-
-        protected string Identifier => _identifier;
-        protected string ParentIdentifier => _parentIdentifier;
-
-        protected TData CurrentData => _data;
 
         private TState[] GetAllCurrentStates()
         {
@@ -602,9 +466,6 @@ namespace Gtt.CodeWorks.StateMachines
             }
         }
 
-        public DateTimeOffset CreatedDate { get; private set; }
-        public DateTimeOffset ModifiedDate { get; private set; }
-
         protected static T As<T>(StateMachine<TState, TTrigger>.Transition transition)
         {
             if (transition.Parameters == null || transition.Parameters.Length < 2)
@@ -614,10 +475,6 @@ namespace Gtt.CodeWorks.StateMachines
 
             var v = transition.Parameters[1];
             return (T)v;
-        }
-        protected ServiceResponse<TResponse> Continue()
-        {
-            return null;
         }
 
         protected T As<T>(TRequest request)
@@ -638,16 +495,168 @@ namespace Gtt.CodeWorks.StateMachines
             return (TRequest)v;
         }
 
-        public (string diagram, string contentType) Diagram()
+        protected override async Task<ServiceResponse<TResponse>> Implementation(TRequest request, CancellationToken cancellationToken)
         {
-            Rules(Machine);
-            var d = UmlDotGraph.Format(Machine.GetInfo());
-            return (d, "text/vnd.graphviz");
+            Debug.Assert(request.Trigger != null, "request.Trigger != null");
+            var ids = await GetIdentifiers(request, cancellationToken);
+
+            // CHECK THAT THE TRIGGER CAN BE CALLED ON THE CURRENT STATE
+            if (!CanCallAction(request.Trigger.Value))
+            {
+                throw new BusinessLogicException($"The {request.Trigger} trigger is not permitted.", $"Cannot call {request.Trigger} on {FullName}:{ids.ConsolidatedIdentifier}", ServiceResult.ConflictingRequest);
+            }
+
+            PropertyInfo triggerDataProperty = _triggerProperties.GetValueOrDefault(request.Trigger.Value);
+            var triggerData = triggerDataProperty?.GetValue(request);
+
+            // IF THE TRIGGER PROPERTY IS DEFINED BUT THE TRIGGER PAYLOAD IS NOT POPULATED THEN CREATE A VALIDATION ERROR
+            if (triggerDataProperty != null && triggerData == null)
+            {
+                return ValidationError(triggerDataProperty.Name, $"{triggerDataProperty.Name} payload is required");
+            }
+
+            // EXECUTE REGISTRATIONS. IF ANY REGISTRATION RETURNS A RESPONSE THEN SHORT-CIRCUIT AND RETURN THE RESPONSE
+            var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
+            if (registrationResponse != null) return registrationResponse;
+
+            if (_forcedError?.Action == ErrorAction.AllowTrigger)
+            {
+                if (triggerData != null)
+                {
+                    await Machine.FireAsync(
+                        new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest, object>(request.Trigger.Value), request, triggerData);
+                }
+                else
+                {
+                    await Machine.FireAsync(
+                        new StateMachine<TState, TTrigger>.TriggerWithParameters<TRequest>(request.Trigger.Value),
+                        request);
+                }
+
+            }
+
+            var response = new TResponse();
+            ServiceResult result = ServiceResult.Successful;
+
+            ErrorCodeData errorData = null;
+
+            if (_forcedError != null)
+            {
+                result = ServiceResult.ValidationError;
+                errorData = GetErrorData(_forcedError.Value.ErrorCode);
+                if (errorData == null)
+                {
+                    Debug.Assert(_forcedError != null, nameof(_forcedError) + " != null");
+                    return ErrorCode(_forcedError.Value.ErrorCode);
+                }
+            }
+
+            Dictionary<int, string> errorDictionary = null;
+            if (errorData != null)
+            {
+                errorDictionary = new Dictionary<int, string> { [errorData.ErrorCode] = errorData.Description };
+            }
+
+            response.Model = CurrentData;
+            response.StateMachine = GetStateData();
+            return new ServiceResponse<TResponse>(response, new ResponseMetaData(this, result, errorCodes: errorDictionary));
         }
 
-        public Type StateType => typeof(TState);
-        public Type TriggerType => typeof(TTrigger);
-        public Type DataType => typeof(TData);
+        private async Task OnTransitionAction(StateMachine<TState, TTrigger>.Transition transition)
+        {
+            if (Status != MachineStatus.Started)
+            {
+                throw new Exception("Machine must be started before it can run. Call Start()");
+            }
+
+            await StoreState(
+                transition.Source.ToString(),
+                transition.Destination.ToString(),
+                transition.Trigger.ToString(),
+                transition.IsReentry);
+        }
+
+        private void SetupParameterData()
+        {
+            // setup stateless machine trigger parameters if the trigger has associated data
+            foreach (TTrigger trigger in Enum.GetValues(typeof(TTrigger)))
+            {
+                if (_triggerProperties.ContainsKey(trigger))
+                {
+                    Machine.SetTriggerParameters((TTrigger)trigger, typeof(TRequest), _triggerProperties[trigger].PropertyType);
+                }
+                else
+                {
+                    Machine.SetTriggerParameters((TTrigger)trigger, typeof(TRequest));
+                }
+            }
+        }
+
+        private async Task<ServiceResponse<TResponse>> ExecuteRegistrations(TRequest request, CancellationToken cancellationToken)
+        {
+            // IF NO TRIGGER PROVIDED THEN NO REGISTRATION CAN BE EXECUTED .... CONTINUE
+            if (request.Trigger == null) return null;
+
+            foreach (var trigger in _registrationFactory.Triggers)
+            {
+                // IF REQUEST DOESN'T MATCH THE CURRENT TRIGGER THEN CONTINUE
+                if (!trigger.Trigger.Equals(request.Trigger.Value)) continue;
+                // IF THE REGISTRATION IS EXPECTING A SPECIFIC STATE AND THE MACHINE ISN'T IN THAT STATE THEN CONTINUE
+                if (trigger.States.Length != 0 && !trigger.States.Any(IsInState)) continue;
+
+                Task t = trigger.Execute(request, cancellationToken);
+
+                if (t is Task<ServiceResponse<TResponse>> tr)
+                {
+                    var sr = await tr;
+                    if (sr != null)
+                    {
+                        return sr;
+                    }
+                }
+
+                await t;
+            }
+
+            return null;
+        }
+
+        public bool IsNew()
+        {
+            return SerialNumber == 0;
+        }
+
+        protected bool CanCallAction(TTrigger action)
+        {
+            return Machine.CanFire(action);
+        }
+
+        protected bool IsInState(TState state)
+        {
+            return Machine.IsInState(state);
+        }
+
+        protected virtual bool SaveStateHistory => true;
+
+        private async Task StoreState(string source, string destination, string trigger, bool isReentry)
+        {
+            SerialNumber = await _stateRepository.StoreStateData<TData, TState>(new StateDto
+            {
+                CorrelationId = CorrelationId,
+                MachineName = FullName,
+                Identifier = _identifiers.Identifier,
+                Source = source,
+                Destination = destination,
+                Trigger = trigger,
+                IsReentry = isReentry,
+                CreatedBy = FullName,
+                ModifiedBy = FullName,
+                Created = CreatedDate,
+                Username = User?.Username,
+                UserIdentifier = User?.UserIdentifier,
+                ParentIdentifier = _identifiers.ParentIdentifier,
+            }, SerialNumber, _data, saveHistory: SaveStateHistory, parentIdentifier: _identifiers.ParentIdentifier);
+        }
 
         public class OnTriggerAction
         {
@@ -696,6 +705,18 @@ namespace Gtt.CodeWorks.StateMachines
             }
         }
 
+        public class DerivedIdAction
+        {
+            public TTrigger Trigger { get; }
+            public Func<TRequest, CancellationToken, Task<string>> Strategy { get; }
+
+            public DerivedIdAction(TTrigger trigger, Func<TRequest, CancellationToken, Task<string>> strategy)
+            {
+                Trigger = trigger;
+                Strategy = strategy;
+            }
+        }
+
         public class RegistrationFactory
         {
             private readonly List<OnTriggerAction> _triggers = new List<OnTriggerAction>();
@@ -715,6 +736,27 @@ namespace Gtt.CodeWorks.StateMachines
             }
 
             internal List<OnTriggerAction> Triggers => _triggers;
+        }
+
+        public class LoadDataResult
+        {
+            public TData Data { get; set; }
+            public long SequenceNumber { get; set; }
+            public DateTimeOffset Created { get; set; }
+            public DateTimeOffset Modified { get; set; }
+        }
+
+        public enum DistributedLockStrategy
+        {
+            /// <summary>
+            /// Create lock based on a unique instance of the service.
+            /// </summary>
+            InstanceStrategy,
+
+            /// <summary>
+            /// Create lock based on only one child instance of a parent service
+            /// </summary>
+            ParentStrategy
         }
     }
 }

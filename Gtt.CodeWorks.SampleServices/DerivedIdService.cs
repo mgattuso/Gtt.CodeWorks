@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Gtt.CodeWorks.StateMachines;
 using Stateless;
 
@@ -39,9 +41,12 @@ namespace Gtt.CodeWorks.SampleServices
                 .PermitReentry(Trigger.AnEvent);
         }
 
-        protected override (Trigger Trigger, Func<DerivedIdRequest, string> Func)? DeriveIdentifier()
+        protected override DerivedIdAction[] DeriveIdentifier()
         {
-            return (Trigger.AnEvent, request => request.AnEvent.Message + Guid.NewGuid());
+            return new[]
+            {
+                new DerivedIdAction(Trigger.AnEvent, (request, token) => Task.FromResult(request.AnEvent.Message + Guid.NewGuid()))
+            };
         }
     }
 
@@ -60,4 +65,6 @@ namespace Gtt.CodeWorks.SampleServices
     {
 
     }
+
+
 }

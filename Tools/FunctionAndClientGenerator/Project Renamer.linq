@@ -4,8 +4,8 @@
 
 void Main()
 {
-	var rootLocation = "";
 	var filePicker = new FilePicker();
+	filePicker.Text = GetDefaultZipFile();
 	var projectName = new TextBox().Dump("Project");
 	var clientName = new TextBox().Dump("Client");
 	filePicker.TextInput += (sender, args) =>
@@ -72,4 +72,10 @@ public string FixNames(string name, string project, string client)
 	var o1 = name.Replace("__PROJECTROOT__", project);
 	var o2 = o1.Replace("__CLIENTNAME__", client);
 	return o2;
+}
+
+public string GetDefaultZipFile() {
+	var s = Util.CurrentQueryPath;
+	FileInfo fi = new FileInfo(s);
+	return $"{fi.Directory.FullName}/PROJECTROOT.zip";
 }

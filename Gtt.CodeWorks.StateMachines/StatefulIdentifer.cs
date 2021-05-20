@@ -6,7 +6,7 @@ namespace Gtt.CodeWorks.StateMachines
 {
     public class StatefulIdentifier
     {
-        public StatefulIdentifier(string parentIdentifier, string identifier)
+        public StatefulIdentifier(string identifier, string parentIdentifier)
         {
             ParentIdentifier = parentIdentifier;
             Identifier = identifier;
@@ -22,5 +22,10 @@ namespace Gtt.CodeWorks.StateMachines
         }
 
         public string ConsolidatedIdentifier => $"{ParentIdentifier}{Separator}{Identifier}";
+
+        public bool HasValidIdentifiers()
+        {
+            return !string.IsNullOrWhiteSpace(Identifier);
+        }
     }
 }

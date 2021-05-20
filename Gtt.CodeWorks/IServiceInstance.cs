@@ -35,7 +35,7 @@ namespace Gtt.CodeWorks
         Guid CorrelationId { get; }
         Guid? SessionId { get; }
         int? ServiceHop { get; }
-        Task<ServiceResponse> Execute(BaseRequest request, DateTimeOffset startTime, CancellationToken cancellationToken);
+        Task<ServiceResponse> Execute(BaseRequest request, CancellationToken cancellationToken);
         Type RequestType { get; }
         Type ResponseType { get; }
         IEnumerable<KeyValuePair<int, string>> AllErrorCodes();

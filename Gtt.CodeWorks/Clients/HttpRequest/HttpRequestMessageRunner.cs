@@ -26,7 +26,7 @@ namespace Gtt.CodeWorks.Clients.HttpRequest
             try
             {
                 var input = await _responseGenerator.ConvertRequest(service.RequestType, request);
-                var output = await service.Execute(input, ServiceClock.CurrentTime(), cancellationToken);
+                var output = await service.Execute(input, cancellationToken);
                 var response = await _responseGenerator.ConvertResponse(request, output, service.ResponseType);
                 return response;
             }

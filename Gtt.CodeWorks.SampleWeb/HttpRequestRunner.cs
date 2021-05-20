@@ -41,7 +41,7 @@ namespace Gtt.CodeWorks.AspNet
             {
                 var input = await _converter.ConvertRequest(service.RequestType, context.Request, new HttpDataSerializerOptions());
                 correlationId = input.CorrelationId;
-                output = await service.Execute(input, start, cancellationToken);
+                output = await service.Execute(input, cancellationToken);
             }
             catch (ValidationErrorException vex)
             {
