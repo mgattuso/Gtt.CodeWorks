@@ -519,7 +519,7 @@ namespace Gtt.CodeWorks.StateMachines
             var registrationResponse = await ExecuteRegistrations(request, cancellationToken);
             if (registrationResponse != null) return registrationResponse;
 
-            if (_forcedError?.Action == ErrorAction.AllowTrigger)
+            if (_forcedError == null || _forcedError?.Action == ErrorAction.AllowTrigger)
             {
                 if (triggerData != null)
                 {
