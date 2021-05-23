@@ -163,7 +163,7 @@ namespace Gtt.CodeWorks.StateMachines
         private readonly RegistrationFactory _registrationFactory = new RegistrationFactory();
 
 
-        private async Task<StatefulIdentifier> GetIdentifiers(TRequest request, CancellationToken ct)
+        protected async Task<StatefulIdentifier> GetIdentifiers(TRequest request, CancellationToken ct)
         {
             if (_identifiers != null) return _identifiers;
 

@@ -8,6 +8,7 @@ void Main()
 	filePicker.Text = GetDefaultZipFile();
 	var projectName = new TextBox().Dump("Project");
 	var clientName = new TextBox().Dump("Client");
+	var githubAccount = new TextBox().Dump("Github Account");
 	filePicker.TextInput += (sender, args) =>
 	{
 		var zipPath = filePicker.Text.Dump();
@@ -22,15 +23,15 @@ void Main()
 		foreach (var d in directories)
 		{
 			Console.WriteLine("D: " + d.FullName);
-			var dn = FixNames(d.FullName, projectName.Text, clientName.Text);
+			var dn = FixNames(d.FullName, projectName.Text, clientName.Text, githubAccount.Text);
 
 			foreach (var f in d.EnumerateFiles())
 			{
 				Console.WriteLine("F: " + f.FullName);
 				var contents = File.ReadAllText(f.FullName);
-				contents = FixNames(contents, projectName.Text, clientName.Text);
+				contents = FixNames(contents, projectName.Text, clientName.Text, githubAccount.Text);
 				File.WriteAllText(f.FullName, contents);
-				var fn = FixNames(f.FullName, projectName.Text, clientName.Text);
+				var fn = FixNames(f.FullName, projectName.Text, clientName.Text, githubAccount.Text);
 				if (!fn.Equals(f.FullName))
 				{
 					var pd = new FileInfo(fn).DirectoryName;
@@ -67,11 +68,12 @@ void Main()
 }
 
 // You can define other methods, fields, classes and namespaces here
-public string FixNames(string name, string project, string client)
+public string FixNames(string name, string project, string client, string githubAccount)
 {
 	var o1 = name.Replace("__PROJECTROOT__", project);
 	var o2 = o1.Replace("__CLIENTNAME__", client);
-	return o2;
+	var o3 = o2.Replace("__GITHUBACCOUNT__", githubAccount);
+	return o3;
 }
 
 public string GetDefaultZipFile() {
