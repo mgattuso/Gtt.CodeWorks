@@ -28,7 +28,7 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
         {
             var tableName = NormalizeTableName(metaData.MachineName);
             _logger.LogTrace($"Using table name {tableName}");
-            var table = await GetTable($"S{tableName}");
+            var table = await GetTable(tableName);
             string partitionKey = string.IsNullOrWhiteSpace(parentIdentifier) ? metaData.Identifier : parentIdentifier;
             string rowKeyPrefix = string.IsNullOrWhiteSpace(parentIdentifier) ? "" : $"{metaData.Identifier}-";
 
@@ -120,12 +120,12 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
         private static string NormalizeTableName(string table)
         {
             var tableName = table.Replace(".", "");
-            if (tableName.Length > 63)
+            if (tableName.Length > 62)
             {
-                return tableName.Substring(tableName.Length - 63, 63);
+                return tableName.Substring(tableName.Length - 62, 62);
             }
 
-            return tableName;
+            return $"S{tableName}";
         }
 
         public async Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName, long? version, string parentIdentifier) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible
