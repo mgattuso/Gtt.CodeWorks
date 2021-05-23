@@ -26,9 +26,9 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
             where TData : BaseStateDataModel<TState>
             where TState : struct, IConvertible
         {
-            var tableName = metaData.MachineName.Replace(".", "");
+            var tableName = NormalizeTableName(metaData.MachineName);
+            _logger.LogTrace($"Using table name {tableName}");
             var table = await GetTable($"S{tableName}");
-
             string partitionKey = string.IsNullOrWhiteSpace(parentIdentifier) ? metaData.Identifier : parentIdentifier;
             string rowKeyPrefix = string.IsNullOrWhiteSpace(parentIdentifier) ? "" : $"{metaData.Identifier}-";
 
@@ -117,13 +117,24 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
             return nextSequenceNumber;
         }
 
+        private static string NormalizeTableName(string table)
+        {
+            var tableName = table.Replace(".", "");
+            if (tableName.Length > 63)
+            {
+                return tableName.Substring(tableName.Length - 63, 63);
+            }
+
+            return tableName;
+        }
+
         public async Task<StoredState<TData, TState>> RetrieveStateData<TData, TState>(string identifier, string machineName, long? version, string parentIdentifier) where TData : BaseStateDataModel<TState> where TState : struct, IConvertible
         {
-            var tableName = machineName.Replace(".", "");
+            var tableName = NormalizeTableName(machineName);
+            _logger.LogTrace($"Using table name {tableName}");
             var table = await GetTable($"S{tableName}");
 
             version = version == 0 ? null : version;
-
             string partitionKey = string.IsNullOrWhiteSpace(parentIdentifier) ? identifier : parentIdentifier;
             string rowKeyPrefix = string.IsNullOrWhiteSpace(parentIdentifier) ? "" : $"{identifier}-";
 
