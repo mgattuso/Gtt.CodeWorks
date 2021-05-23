@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.71</Version>
+    <Version>0.0.100</Version>
     <Authors>Michael Gattuso</Authors>
     <Product>CodeWorks</Product>
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NJsonSchema" Version="10.3.2" />
+    <PackageReference Include="NJsonSchema" Version="10.4.4" />
     <PackageReference Include="System.Text.Json" Version="4.7.2" />
     <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks" Version="0.*" />
   </ItemGroup>

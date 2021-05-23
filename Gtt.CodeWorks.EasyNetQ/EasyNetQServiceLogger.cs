@@ -20,7 +20,7 @@ namespace Gtt.CodeWorks.EasyNetQ
         public async Task LogRequest<TReq>(Guid correlationId, string serviceName, TReq request) where TReq : new()
         {
             var msg = await _logObjectSerializer.Serialize(request);
-            await _bus.PublishAsync(new ServiceLogMessage
+            await _bus.PubSub.PublishAsync(new ServiceLogMessage
             {
                 CorrelationId = correlationId,
                 Event = "Request",
@@ -32,7 +32,7 @@ namespace Gtt.CodeWorks.EasyNetQ
         public async Task LogResponse<TRes>(Guid correlationId, string serviceName, TRes response)
         {
             var msg = await _logObjectSerializer.Serialize(response);
-            await _bus.PublishAsync(new ServiceLogMessage
+            await _bus.PubSub.PublishAsync(new ServiceLogMessage
             {
                 CorrelationId = correlationId,
                 Event = "Response",

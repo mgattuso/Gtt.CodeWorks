@@ -34,7 +34,12 @@ namespace Gtt.CodeWorks.EasyNetQ
             var he = bus.Advanced.ExchangeDeclare($"{subscription.Queue.Name}{Holding}_{retryDelay}ms", ExchangeType);
             var fe = bus.Advanced.ExchangeDeclare($"{subscription.Queue.Name}{Failed}", ExchangeType);
 
-            var hq = bus.Advanced.QueueDeclare($"{subscription.Queue.Name}{Holding}_{retryDelay}ms", perQueueMessageTtl: retryDelay, deadLetterExchange: re.Name);
+            var hq = bus.Advanced.QueueDeclare($"{subscription.Queue.Name}{Holding}_{retryDelay}ms", cfg =>
+            {
+                cfg.WithMessageTtl(TimeSpan.FromMilliseconds(retryDelay));
+                cfg.WithDeadLetterExchange(re);
+            });
+
             var fq = bus.Advanced.QueueDeclare($"{subscription.Queue.Name}{Failed}");
 
             bus.Advanced.Bind(re, subscription.Queue, "");
@@ -64,11 +69,11 @@ namespace Gtt.CodeWorks.EasyNetQ
                 throw new ArgumentException($"retryDelay if defined must be between 0 and {MaxRetryDelay}", nameof(retryDelay));
             }
 
-            bus.Advanced.Conventions.ErrorExchangeNamingConvention = m => $"{m.Queue}{Exceptions}";
-            bus.Advanced.Conventions.ErrorQueueNamingConvention = m => $"{m.Queue}{Exceptions}";
+            //bus.Advanced.Conventions.ErrorExchangeNamingConvention = m => $"{m.Queue}{Exceptions}";
+            //bus.Advanced.Conventions.ErrorQueueNamingConvention = m => $"{m.Queue}{Exceptions}";
 
             //SETUP SUBSCRIBER
-            var subscription = bus.Subscribe(subscriptionId, handler);
+            var subscription = bus.PubSub.Subscribe(subscriptionId, handler);
             var ex = CreateExceptionQueues(bus, subscription); // PROACTIVELY CREATE EXCEPTION QUEUES
             var re = CreateRetryQueues(bus, subscription, retryDelay); // CREATE RETRY & HOLDING QUEUES
 
