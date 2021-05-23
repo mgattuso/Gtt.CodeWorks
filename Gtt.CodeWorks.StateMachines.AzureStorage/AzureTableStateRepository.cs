@@ -132,7 +132,7 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
         {
             var tableName = NormalizeTableName(machineName);
             _logger.LogTrace($"Using table name {tableName}");
-            var table = await GetTable($"S{tableName}");
+            var table = await GetTable(tableName);
 
             version = version == 0 ? null : version;
             string partitionKey = string.IsNullOrWhiteSpace(parentIdentifier) ? identifier : parentIdentifier;
