@@ -20,10 +20,12 @@ namespace Gtt.CodeWorks.SampleServices
         protected override async Task<ServiceResponse<ThirdPartyResponse>> Implementation(ThirdPartyRequest request, CancellationToken cancellationToken)
         {
             var exampleCall = new ExampleService(_stateRepository);
-            var result = await exampleCall.Process(new ThirdPartyCallRequest
+            var ids = new StatefulIdentifier($"example-{request.CorrelationId}");
+
+            var result = await exampleCall.Process(ids, new ThirdPartyCallRequest
             {
                 Name = "Test Request"
-            }, $"example-{request.CorrelationId}", CorrelationId);
+            }, CorrelationId);
             if (result != null)
             {
                 var r = new ThirdPartyResponse();

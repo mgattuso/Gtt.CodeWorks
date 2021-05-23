@@ -14,9 +14,8 @@ namespace Gtt.CodeWorks.StateMachines
         private readonly StateMachine<State, Trigger> _machine = new StateMachine<State, Trigger>(State.Pending);
         private DateTimeOffset _created = ServiceClock.CurrentTime();
         private DateTimeOffset _modified = ServiceClock.CurrentTime();
+        private StatefulIdentifier _statefulIdentifier;
         private long _sequenceNumber = 0;
-        private string _identifier = "";
-        private string _parentIdentifier = null;
         private Guid _correlationId = default(Guid);
 
         protected ThirdPartyStateData Data { get; private set; } = new ThirdPartyStateData();
@@ -40,9 +39,9 @@ namespace Gtt.CodeWorks.StateMachines
                     Created = _created,
                     Modified = _modified,
                     SequenceNumber = _sequenceNumber,
-                    Identifier = _identifier,
+                    Identifier = _statefulIdentifier.Identifier,
                     CorrelationId = _correlationId
-                }, _sequenceNumber, Data, saveHistory: true, _parentIdentifier);
+                }, _sequenceNumber, Data, saveHistory: true, _statefulIdentifier.ParentIdentifier);
                 _sequenceNumber = nextSequenceNumber;
                 _modified = ServiceClock.CurrentTime();
             });
@@ -111,9 +110,9 @@ namespace Gtt.CodeWorks.StateMachines
         protected abstract bool AllowManualOverride();
         protected abstract int DelayBetweenAttemptsMs();
 
-        protected async Task LoadData(string identifier, Guid correlationId)
+        protected async Task LoadData(StatefulIdentifier identifier, Guid correlationId)
         {
-            var storedData = await _stateRepository.RetrieveStateData<ThirdPartyStateData, State>(identifier, MachineName, null, _parentIdentifier);
+            var storedData = await _stateRepository.RetrieveStateData<ThirdPartyStateData, State>(identifier.Identifier, MachineName, null, identifier.ParentIdentifier);
             if (storedData != null)
             {
                 Data = storedData.Data;
@@ -123,10 +122,9 @@ namespace Gtt.CodeWorks.StateMachines
             }
         }
 
-        public async Task<TResponse> Process(TRequest request, string identifier, Guid correlationId, string parentIdentifier = null)
+        public async Task<TResponse> Process(StatefulIdentifier identifier, TRequest request, Guid correlationId)
         {
-            _identifier = identifier;
-            _parentIdentifier = parentIdentifier;
+            _statefulIdentifier = identifier;
             _correlationId = correlationId;
             Data.Request = request;
             await LoadData(identifier, correlationId);
