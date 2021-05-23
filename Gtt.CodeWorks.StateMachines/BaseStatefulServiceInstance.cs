@@ -162,6 +162,20 @@ namespace Gtt.CodeWorks.StateMachines
         private CodeWorksEnvironment _currentEnvironment;
         private readonly RegistrationFactory _registrationFactory = new RegistrationFactory();
 
+        /// <summary>
+        /// Method to retrieve the current identifiers for the service implementation. Should be available whenever a sub-class
+        /// accesses it.
+        /// </summary>
+        /// <returns></returns>
+        protected Task<StatefulIdentifier> GetIdentifiers()
+        {
+            if (_identifiers != null)
+            {
+                return Task.FromResult(_identifiers);
+            }
+
+            throw new Exception("Identifiers are not available");
+        }
 
         protected async Task<StatefulIdentifier> GetIdentifiers(TRequest request, CancellationToken ct)
         {
@@ -330,7 +344,7 @@ namespace Gtt.CodeWorks.StateMachines
 
         }
 
-        protected override async Task<ServiceResponse<TResponse>> BeforeImplementation(TRequest request, CancellationToken cancellationToken)
+        protected sealed override async Task<ServiceResponse<TResponse>> BeforeImplementation(TRequest request, CancellationToken cancellationToken)
         {
             // 1. handle unexpected properties
             // search for unexpected properties on the request object. Ideally this would be caught in a unit test but this
