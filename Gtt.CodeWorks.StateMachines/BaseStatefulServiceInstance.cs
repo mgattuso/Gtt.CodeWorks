@@ -109,8 +109,6 @@ namespace Gtt.CodeWorks.StateMachines
 
         #endregion
 
-
-
         public (string diagram, string contentType) Diagram()
         {
             Rules(Machine);
@@ -149,6 +147,11 @@ namespace Gtt.CodeWorks.StateMachines
         }
 
         protected virtual void ModifyResponse(ServiceResponse<TResponse> response)
+        {
+
+        }
+
+        protected virtual void PersistData(StatefulIdentifier identifier, TData data, ServiceResponse<TResponse> response)
         {
 
         }
@@ -322,6 +325,8 @@ namespace Gtt.CodeWorks.StateMachines
             }
             ModifyResponse(response);
             base.BeforeResponse(response);
+            //TODO: DETERMINE WHAT SAFETY AROUND THIS CALL WILL LOOK LIKE - EG RECOVERY FROM ERROR
+            PersistData(_identifiers, CurrentData, response);
         }
 
         protected override async Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken)

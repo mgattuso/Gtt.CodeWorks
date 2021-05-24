@@ -8,7 +8,7 @@ using Stateless.Graph;
 
 namespace Gtt.CodeWorks.StateMachines
 {
-    public abstract class ThirdPartyCall<TRequest, TResponse> where TRequest : new() where TResponse : new()
+    public abstract class ThirdPartyCall<TRequest, TResponse> : IThirdPartyCall where TRequest : new() where TResponse : new()
     {
         private readonly IStateRepository _stateRepository;
         private readonly StateMachine<State, Trigger> _machine = new StateMachine<State, Trigger>(State.Pending);
@@ -20,7 +20,7 @@ namespace Gtt.CodeWorks.StateMachines
 
         protected ThirdPartyStateData Data { get; private set; } = new ThirdPartyStateData();
 
-        private string MachineName => GetType().FullName?.Replace("+", ".") ?? GetType().Name;
+        public string MachineName => GetType().FullName?.Replace("+", ".") ?? GetType().Name;
 
         protected ThirdPartyCall(IStateRepository stateRepository)
         {
@@ -386,5 +386,10 @@ namespace Gtt.CodeWorks.StateMachines
             public Dictionary<string, string[]> Headers { get; set; }
             public string Body { get; set; }
         }
+    }
+
+    public interface IThirdPartyCall
+    {
+        string MachineName { get; }
     }
 }
