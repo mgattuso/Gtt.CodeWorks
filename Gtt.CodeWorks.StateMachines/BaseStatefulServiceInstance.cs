@@ -296,6 +296,12 @@ namespace Gtt.CodeWorks.StateMachines
         {
             return new DerivedIdAction[0];
         }
+
+        protected virtual Task<bool> IsParentIdentifierValid(string parentIdentifier)
+        {
+            return Task.FromResult(true);
+        }
+
         public sealed override Task<ServiceResponse<TResponse>> Execute(TRequest request, CancellationToken cancellationToken)
         {
             return base.Execute(request, cancellationToken);
@@ -315,6 +321,7 @@ namespace Gtt.CodeWorks.StateMachines
             if (response.Data is IHasParentIdentifier pr)
             {
                 pr.ParentIdentifier = _identifiers.ParentIdentifier;
+                response.Data.StateMachine.Identifier = _identifiers.Identifier;
             }
 
             response.Data.Model = CurrentData;
@@ -323,6 +330,7 @@ namespace Gtt.CodeWorks.StateMachines
             {
                 response.Data = null;
             }
+
             ModifyResponse(response);
             base.BeforeResponse(response);
             //TODO: DETERMINE WHAT SAFETY AROUND THIS CALL WILL LOOK LIKE - EG RECOVERY FROM ERROR
@@ -394,11 +402,28 @@ namespace Gtt.CodeWorks.StateMachines
             var ids = await GetIdentifiers(request, cancellationToken);
             if (!ids?.HasValidIdentifiers() ?? false)
             {
-                var idRequired = ValidationError("Identifier", "The Identifier field is required");
+                var idRequired = ValidationError("The Identifier field is required", "Identifier");
                 return idRequired;
             }
 
-            // 4. Check for trigger in the request. If found execute trigger otherwise just read the state machine
+            // 4. Validate the parent identifier is present and found
+            if (request is IHasParentIdentifier pi)
+            {
+                if (ids != null && !ids.HasParentIdentifier())
+                {
+                    var parentMissingError = ValidationError("The parent identifier is required", "ParentIdentifier");
+                    return parentMissingError;
+                }
+
+                var parentIsValid = await IsParentIdentifierValid(pi.ParentIdentifier);
+                if (!parentIsValid)
+                {
+                    var parentInvalidError = ValidationError("The parent identifier is not valid", "ParentIdentifier");
+                    return parentInvalidError;
+                }
+            }
+
+            // 5. Check for trigger in the request. If found execute trigger otherwise just read the state machine
             if (request.Trigger != null)
             {
                 await Start(request, cancellationToken);
@@ -412,10 +437,10 @@ namespace Gtt.CodeWorks.StateMachines
                 }
             }
 
-            // 5. execute the rules for the machine
+            // 6. execute the rules for the machine
             Rules(Machine);
 
-            // 6. Register the trigger action and setup the request data for the specific trigger being requested
+            // 7. Register the trigger action and setup the request data for the specific trigger being requested
             RegisterTriggerActions(_registrationFactory);
             SetupParameterData();
 
