@@ -318,17 +318,17 @@ namespace Gtt.CodeWorks.StateMachines
                 response.Data = new TResponse();
             }
 
-            if (response.Data is IHasParentIdentifier pr)
-            {
-                pr.ParentIdentifier = _identifiers.ParentIdentifier;
-                response.Data.StateMachine.Identifier = _identifiers.Identifier;
-            }
-
             response.Data.Model = CurrentData;
             response.Data.StateMachine = GetStateData();
             if (response.MetaData.Result == ServiceResult.ResourceNotFound)
             {
                 response.Data = null;
+            }
+
+            if (response.Data is IHasParentIdentifier pr)
+            {
+                pr.ParentIdentifier = _identifiers.ParentIdentifier;
+                response.Data.StateMachine.Identifier = _identifiers.Identifier;
             }
 
             ModifyResponse(response);
