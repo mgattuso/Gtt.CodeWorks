@@ -196,14 +196,14 @@ namespace Gtt.CodeWorks
             }
             _logger.LogTrace($"End response pipeline for {request.CorrelationId}");
 
-            BeforeResponse(response);
+            await BeforeResponse(response);
             StoredResponse = response;
             return response;
         }
 
-        protected virtual void BeforeResponse(ServiceResponse<TResponse> response)
+        protected virtual Task BeforeResponse(ServiceResponse<TResponse> response)
         {
-
+            return Task.CompletedTask;
         }
 
         protected ServiceResponse<TResponse> TemporaryException(string reason)

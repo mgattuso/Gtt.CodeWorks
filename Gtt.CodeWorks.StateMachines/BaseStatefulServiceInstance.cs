@@ -151,9 +151,9 @@ namespace Gtt.CodeWorks.StateMachines
 
         }
 
-        protected virtual void PersistData(StatefulIdentifier identifier, TData data, ServiceResponse<TResponse> response)
+        protected virtual Task PersistData(StatefulIdentifier identifier, TData data, ServiceResponse<TResponse> response)
         {
-
+            return Task.CompletedTask;
         }
 
         protected virtual DistributedLockStrategy LockStrategy { get; set; } = DistributedLockStrategy.InstanceStrategy;
@@ -307,7 +307,7 @@ namespace Gtt.CodeWorks.StateMachines
             return base.Execute(request, cancellationToken);
         }
 
-        protected sealed override void BeforeResponse(ServiceResponse<TResponse> response)
+        protected sealed override Task BeforeResponse(ServiceResponse<TResponse> response)
         {
             if (_identifiers == null)
                 throw new NullReferenceException(
@@ -334,7 +334,7 @@ namespace Gtt.CodeWorks.StateMachines
             ModifyResponse(response);
             base.BeforeResponse(response);
             //TODO: DETERMINE WHAT SAFETY AROUND THIS CALL WILL LOOK LIKE - EG RECOVERY FROM ERROR
-            PersistData(_identifiers, CurrentData, response);
+            return PersistData(_identifiers, CurrentData, response);
         }
 
         protected override async Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken)
