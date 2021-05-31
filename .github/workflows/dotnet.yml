@@ -38,6 +38,9 @@ jobs:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks/Gtt.CodeWorks.csproj
         TAG_FORMAT: Gtt.CodeWorks.* 
+        
+    - name: Deploy package locally
+      run: dotnet nuget push Gtt.CodeWorks/Gtt.Recruit.Client*.nupkg -s Local
     
     - name: Deploy CodeWorks.Serializers.TextJson Package
       uses: brandedoutcast/publish-nuget@v2.5.5
