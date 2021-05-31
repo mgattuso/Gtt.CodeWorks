@@ -31,7 +31,7 @@ namespace Gtt.CodeWorks.StateMachines
 
         public bool HasParentIdentifier()
         {
-            return string.IsNullOrWhiteSpace(ParentIdentifier);
+            return !string.IsNullOrWhiteSpace(ParentIdentifier);
         }
 
         public string ConsolidatedIdentifier => $"{ParentIdentifier}{Separator}{Identifier}";
