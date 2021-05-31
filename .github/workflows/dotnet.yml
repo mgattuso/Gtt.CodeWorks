@@ -45,6 +45,13 @@ jobs:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.Serializers.TextJson/Gtt.CodeWorks.Serializers.TextJson.csproj
         TAG_FORMAT: Gtt.CodeWorks.Serializers.TextJson.*
+        
+    - name: Deploy CodeWorks.Serializers.JsonNet Package
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        NUGET_KEY: ${{ secrets.nuget_key }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.Serializers.JsonNet/Gtt.CodeWorks.Serializers.JsonNet.csproj
+        TAG_FORMAT: Gtt.CodeWorks.Serializers.JsonNet.*
     
     - name: Deploy Gtt.CodeWorks.DataAnnotations Package
       uses: brandedoutcast/publish-nuget@v2.5.5
