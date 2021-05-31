@@ -133,7 +133,7 @@ namespace Gtt.CodeWorks.Serializers.JsonNet
 
         public Task<string> SerializeExample(Type t, HttpDataSerializerOptions options = null)
         {
-            options ??= new HttpDataSerializerOptions();
+            options = options ?? new HttpDataSerializerOptions();
             var schema = GetSchema(t, options, useStringEnums: true, requireReferenceTypes: true);
             var sample = schema.ToSampleJson();
             var json = sample.ToString(Formatting.Indented);

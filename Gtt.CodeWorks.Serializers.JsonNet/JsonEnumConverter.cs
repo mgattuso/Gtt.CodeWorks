@@ -72,7 +72,14 @@ namespace Gtt.CodeWorks.Serializers.JsonNet
 
                         if (!string.IsNullOrWhiteSpace(name))
                         {
-                            Enum.TryParse(objectType, name, true, out e2);
+                            try
+                            {
+                                e2 = Enum.Parse(objectType, name, true);
+                            }
+                            catch (Exception)
+                            {
+                                e2 = null;
+                            }
                         }
 
                         if (value != null)
@@ -96,10 +103,15 @@ namespace Gtt.CodeWorks.Serializers.JsonNet
                     var s = reader.Value as string;
                     if (Enum.IsDefined(objectType, s))
                     {
-                        if (Enum.TryParse(objectType, s, true, out var eh))
+                        try
                         {
-                            return eh;
+                            return Enum.Parse(objectType, s, true);
                         }
+                        catch (Exception)
+                        {
+                            // INTENTIONALLY SWALLOW
+                        }
+
                     }
                     throw new ValidationErrorException($"Cannot create enum of type{objectType.Name} from the value {s}", "");
                 }

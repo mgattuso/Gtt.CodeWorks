@@ -44,10 +44,14 @@ namespace Gtt.CodeWorks.Serializers.JsonNet
 
             try
             {
-                await using var ms = new MemoryStream(message);
-                using var reader = new StreamReader(ms, Encoding.UTF8);
-                var result = JsonSerializer.Create(settings).Deserialize(reader, type);
-                return (BaseRequest) result;
+                using (var ms = new MemoryStream(message))
+                {
+                    using (var reader = new StreamReader(ms, Encoding.UTF8))
+                    {
+                        var result = JsonSerializer.Create(settings).Deserialize(reader, type);
+                        return (BaseRequest)result;
+                    }
+                }
             }
             catch (JsonSerializationException ex)
             {
@@ -77,7 +81,7 @@ namespace Gtt.CodeWorks.Serializers.JsonNet
 
                 if (string.IsNullOrWhiteSpace(contents))
                 {
-                    return (BaseRequest) Activator.CreateInstance(type);
+                    return (BaseRequest)Activator.CreateInstance(type);
                 }
 
                 _logger.LogError(ex, $"Cannot deserialize request payload {contents}");
@@ -95,17 +99,19 @@ namespace Gtt.CodeWorks.Serializers.JsonNet
         {
             var settings = JsonNetSerializerSettings.CreateJsonSerializerSettings(options, _debugMode);
             string contents = "";
-            await using var stream = new MemoryStream();
-            await using (var writer = new StreamWriter(stream, Encoding.UTF8))
+            using (var stream = new MemoryStream())
             {
-                var serializer = JsonSerializer.Create(settings);
-                serializer.Serialize(writer, request, requestType);
-            }
+                using (var writer = new StreamWriter(stream, Encoding.UTF8))
+                {
+                    var serializer = JsonSerializer.Create(settings);
+                    serializer.Serialize(writer, request, requestType);
+                }
 
-            stream.Position = 0;
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                contents = await reader.ReadToEndAsync();
+                stream.Position = 0;
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    contents = await reader.ReadToEndAsync();
+                }
             }
 
             return contents;
@@ -123,10 +129,15 @@ namespace Gtt.CodeWorks.Serializers.JsonNet
 
             try
             {
-                await using var ms = new MemoryStream(message);
-                using var reader = new StreamReader(ms, Encoding.UTF8);
-                var result = JsonSerializer.Create(settings).Deserialize(reader, typeof(T));
-                return (T)result;
+                using (var ms = new MemoryStream(message))
+                {
+                    using (var reader = new StreamReader(ms, Encoding.UTF8))
+                    {
+                        var result = JsonSerializer.Create(settings).Deserialize(reader, typeof(T));
+                        return (T)result;
+                    }
+                }
+
             }
             catch (JsonException ex)
             {
@@ -152,10 +163,14 @@ namespace Gtt.CodeWorks.Serializers.JsonNet
 
             try
             {
-                await using var ms = new MemoryStream(message);
-                using var reader = new StreamReader(ms, Encoding.UTF8);
-                var result = JsonSerializer.Create(settings).Deserialize(reader, type);
-                return (ServiceResponse)result;
+                using (var ms = new MemoryStream(message))
+                {
+                    using (var reader = new StreamReader(ms, Encoding.UTF8))
+                    {
+                        var result = JsonSerializer.Create(settings).Deserialize(reader, type);
+                        return (ServiceResponse)result;
+                    }
+                }
             }
             catch (JsonException ex)
             {
