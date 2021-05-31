@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 using System.Threading.Tasks;
-using EasyNetQ.Logging;
 using Gtt.CodeWorks.Serializers.TextJson;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace Gtt.CodeWorks.Tests.Serializers
+namespace Gtt.CodeWorks.Tests.Serializers.TextJsonSerializers
 {
 
     [TestClass]

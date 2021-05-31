@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Gtt.CodeWorks.Serializers.TextJson;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Gtt.CodeWorks.Tests.Serializers
+namespace Gtt.CodeWorks.Tests.Serializers.TextJsonSerializers
 {
     [TestClass]
     public class JsonLogObjectSerializerTests

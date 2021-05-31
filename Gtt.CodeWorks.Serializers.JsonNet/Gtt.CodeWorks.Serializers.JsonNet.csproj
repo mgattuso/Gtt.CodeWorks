@@ -1,15 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.0.100</Version>
+    <Authors>Michael Gattuso</Authors>
+    <Product>CodeWorks</Product>
+    <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
+    <AssemblyVersion>0.0.100.0</AssemblyVersion>
+    <Copyright>2020, Michael Gattuso</Copyright>
+    <Description>CodeWorks serializer adds the ability to serialize codework services request/response to JSON using the newtonsoft serializer.</Description>
+    <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="NJsonSchema" Version="10.4.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks" Version="0.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
+    <ProjectReference Condition=" '$(Configuration)' == 'Debug'" Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
   </ItemGroup>
+
 
 </Project>
