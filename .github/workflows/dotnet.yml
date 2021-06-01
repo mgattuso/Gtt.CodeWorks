@@ -40,7 +40,7 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.* 
         
     - name: Deploy package locally
-      run: nuget add Gtt.CodeWorks/Gtt.CodeWorks.0.0.102.nupkg -s local_package
+      run: nuget add ./Gtt.CodeWorks.0.0.102.nupkg -s local_package
     
     - name: Deploy CodeWorks.Serializers.TextJson Package
       uses: brandedoutcast/publish-nuget@v2.5.5
