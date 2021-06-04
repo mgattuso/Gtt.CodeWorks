@@ -9,6 +9,7 @@
     <Product>CodeWorks</Product>
     <Copyright>2021, Michael Gattuso</Copyright>
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>

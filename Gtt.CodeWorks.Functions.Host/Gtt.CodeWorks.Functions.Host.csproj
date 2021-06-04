@@ -8,6 +8,7 @@
     <Company>gtt.me</Company>
     <Product>Code Works</Product>
     <Copyright>2020, Michael Gattuso</Copyright>
+    <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>

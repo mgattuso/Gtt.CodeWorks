@@ -9,6 +9,7 @@
     <Product>Codeworks</Product>
     <Copyright>2021</Copyright>
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
