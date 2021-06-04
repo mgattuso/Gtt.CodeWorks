@@ -38,27 +38,43 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     
-    - name: Deploy CodeWorks Package
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        NUGET_KEY: ${{ secrets.nuget_key }}
-        PROJECT_FILE_PATH: Gtt.CodeWorks/Gtt.CodeWorks.csproj
-        TAG_FORMAT: Gtt.CodeWorks.* 
-        
-    - name: Deploy Gtt.Recruit.Client Package Locally
+    - name: Deploy CodeWorks Package Locally
       uses: Rebel028/publish-nuget@2.6.1
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks/Gtt.CodeWorks.csproj
         TAG_FORMAT: Gtt.CodeWorks.*
         NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
+
+    - name: Deploy CodeWorks Package
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        NUGET_KEY: ${{ secrets.nuget_key }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks/Gtt.CodeWorks.csproj
+        TAG_FORMAT: Gtt.CodeWorks.* 
     
+    - name: Deploy CodeWorks.Serializers.TextJson Package Locally
+      uses: Rebel028/publish-nuget@2.6.1
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.Serializers.TextJson/Gtt.CodeWorks.Serializers.TextJson.csproj
+        TAG_FORMAT: Gtt.CodeWorks.Serializers.TextJson.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
+
     - name: Deploy CodeWorks.Serializers.TextJson Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.Serializers.TextJson/Gtt.CodeWorks.Serializers.TextJson.csproj
         TAG_FORMAT: Gtt.CodeWorks.Serializers.TextJson.*
+
+    - name: Deploy CodeWorks.Serializers.JsonNet Package Locally
+      uses: Rebel028/publish-nuget@2.6.1
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.Serializers.JsonNet/Gtt.CodeWorks.Serializers.JsonNet.csproj
+        TAG_FORMAT: Gtt.CodeWorks.Serializers.JsonNet.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
         
     - name: Deploy CodeWorks.Serializers.JsonNet Package
       uses: brandedoutcast/publish-nuget@v2.5.5
@@ -67,6 +83,14 @@ jobs:
         PROJECT_FILE_PATH: Gtt.CodeWorks.Serializers.JsonNet/Gtt.CodeWorks.Serializers.JsonNet.csproj
         TAG_FORMAT: Gtt.CodeWorks.Serializers.JsonNet.*
     
+    - name: Deploy Gtt.CodeWorks.DataAnnotations Package Locally
+      uses: Rebel028/publish-nuget@2.6.1
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.DataAnnotations/Gtt.CodeWorks.DataAnnotations.csproj
+        TAG_FORMAT: Gtt.CodeWorks.DataAnnotations.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
+
     - name: Deploy Gtt.CodeWorks.DataAnnotations Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
@@ -74,6 +98,14 @@ jobs:
         PROJECT_FILE_PATH: Gtt.CodeWorks.DataAnnotations/Gtt.CodeWorks.DataAnnotations.csproj
         TAG_FORMAT: Gtt.CodeWorks.DataAnnotations.*
     
+    - name: Deploy Gtt.CodeWorks.EasyNetQ Package Locally
+      uses: Rebel028/publish-nuget@2.6.1
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.EasyNetQ/Gtt.CodeWorks.EasyNetQ.csproj
+        TAG_FORMAT: Gtt.CodeWorks.EasyNetQ.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
+
     - name: Deploy Gtt.CodeWorks.EasyNetQ Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
@@ -81,6 +113,14 @@ jobs:
         PROJECT_FILE_PATH: Gtt.CodeWorks.EasyNetQ/Gtt.CodeWorks.EasyNetQ.csproj
         TAG_FORMAT: Gtt.CodeWorks.EasyNetQ.*
         
+    - name: Deploy Gtt.CodeWorks.Functions.Host Package Locally
+      uses: Rebel028/publish-nuget@2.6.1
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.Functions.Host/Gtt.CodeWorks.Functions.Host.csproj
+        TAG_FORMAT: Gtt.CodeWorks.Functions.Host.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
+
     - name: Deploy Gtt.CodeWorks.Functions.Host Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
@@ -88,12 +128,28 @@ jobs:
         PROJECT_FILE_PATH: Gtt.CodeWorks.Functions.Host/Gtt.CodeWorks.Functions.Host.csproj
         TAG_FORMAT: Gtt.CodeWorks.Functions.Host.*
 
+    - name: Deploy Gtt.CodeWorks.Duplicator Package Locally
+      uses: Rebel028/publish-nuget@2.6.1
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.Duplicator/Gtt.CodeWorks.Duplicator.csproj
+        TAG_FORMAT: Gtt.CodeWorks.Duplicator.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
+
     - name: Deploy Gtt.CodeWorks.Duplicator Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.Duplicator/Gtt.CodeWorks.Duplicator.csproj
         TAG_FORMAT: Gtt.CodeWorks.Duplicator.*
+
+    - name: Deploy Gtt.CodeWorks.AzureStorage Package Locally
+      uses: Rebel028/publish-nuget@2.6.1
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.AzureStorage/Gtt.CodeWorks.AzureStorage.csproj
+        TAG_FORMAT: Gtt.CodeWorks.AzureStorage.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
         
     - name: Deploy Gtt.CodeWorks.AzureStorage Package
       uses: brandedoutcast/publish-nuget@v2.5.5
@@ -102,6 +158,14 @@ jobs:
         PROJECT_FILE_PATH: Gtt.CodeWorks.AzureStorage/Gtt.CodeWorks.AzureStorage.csproj
         TAG_FORMAT: Gtt.CodeWorks.AzureStorage.*
         
+    - name: Deploy Gtt.CodeWorks.StateMachines Package Locally
+      uses: Rebel028/publish-nuget@2.6.1
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.StateMachines/Gtt.CodeWorks.StateMachines.csproj
+        TAG_FORMAT: Gtt.CodeWorks.StateMachines.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
+
     - name: Deploy Gtt.CodeWorks.StateMachines Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
@@ -109,6 +173,14 @@ jobs:
         PROJECT_FILE_PATH: Gtt.CodeWorks.StateMachines/Gtt.CodeWorks.StateMachines.csproj
         TAG_FORMAT: Gtt.CodeWorks.StateMachines.*
         
+    - name: Deploy Gtt.CodeWorks.StateMachines.AzureStorage Package Locally
+      uses: Rebel028/publish-nuget@2.6.1
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.StateMachines.AzureStorage/Gtt.CodeWorks.StateMachines.AzureStorage.csproj
+        TAG_FORMAT: Gtt.CodeWorks.StateMachines.AzureStorage.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
+
     - name: Deploy Gtt.CodeWorks.StateMachines.AzureStorage Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
@@ -116,12 +188,28 @@ jobs:
         PROJECT_FILE_PATH: Gtt.CodeWorks.StateMachines.AzureStorage/Gtt.CodeWorks.StateMachines.AzureStorage.csproj
         TAG_FORMAT: Gtt.CodeWorks.StateMachines.AzureStorage.*
         
+    - name: Deploy Gtt.CodeWorks.Tokenizer Package Locally
+      uses: Rebel028/publish-nuget@2.6.1
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.Tokenizer/Gtt.CodeWorks.Tokenizer.csproj
+        TAG_FORMAT: Gtt.CodeWorks.Tokenizer.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
+
     - name: Deploy Gtt.CodeWorks.Tokenizer Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.Tokenizer/Gtt.CodeWorks.Tokenizer.csproj
         TAG_FORMAT: Gtt.CodeWorks.Tokenizer.*
+
+    - name: Deploy Gtt.CodeWorks.JWT Package Locally
+      uses: Rebel028/publish-nuget@2.6.1
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks.JWT/Gtt.CodeWorks.JWT.csproj
+        TAG_FORMAT: Gtt.CodeWorks.JWT.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
 
     - name: Deploy Gtt.CodeWorks.JWT Package
       uses: brandedoutcast/publish-nuget@v2.5.5
