@@ -33,7 +33,7 @@ jobs:
       run: dotnet test --no-build --verbosity normal
     
     - name: Deploy CodeWorks Package Locally
-      uses: Rebel028/publish-nuget@2.6.1
+      uses: mgattuso/publish-nuget@2.6.2
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks/Gtt.CodeWorks.csproj
@@ -48,7 +48,7 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.* 
     
     - name: Deploy CodeWorks.Serializers.TextJson Package Locally
-      uses: Rebel028/publish-nuget@2.6.1
+      uses: mgattuso/publish-nuget@2.6.2
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.Serializers.TextJson/Gtt.CodeWorks.Serializers.TextJson.csproj
@@ -63,7 +63,7 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.Serializers.TextJson.*
 
     - name: Deploy CodeWorks.Serializers.JsonNet Package Locally
-      uses: Rebel028/publish-nuget@2.6.1
+      uses: mgattuso/publish-nuget@2.6.2
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.Serializers.JsonNet/Gtt.CodeWorks.Serializers.JsonNet.csproj
@@ -78,7 +78,7 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.Serializers.JsonNet.*
     
     - name: Deploy Gtt.CodeWorks.DataAnnotations Package Locally
-      uses: Rebel028/publish-nuget@2.6.1
+      uses: mgattuso/publish-nuget@2.6.2
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.DataAnnotations/Gtt.CodeWorks.DataAnnotations.csproj
@@ -93,7 +93,7 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.DataAnnotations.*
     
     - name: Deploy Gtt.CodeWorks.EasyNetQ Package Locally
-      uses: Rebel028/publish-nuget@2.6.1
+      uses: mgattuso/publish-nuget@2.6.2
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.EasyNetQ/Gtt.CodeWorks.EasyNetQ.csproj
@@ -108,7 +108,7 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.EasyNetQ.*
         
     - name: Deploy Gtt.CodeWorks.Functions.Host Package Locally
-      uses: Rebel028/publish-nuget@2.6.1
+      uses: mgattuso/publish-nuget@2.6.2
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.Functions.Host/Gtt.CodeWorks.Functions.Host.csproj
@@ -123,7 +123,7 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.Functions.Host.*
 
     - name: Deploy Gtt.CodeWorks.Duplicator Package Locally
-      uses: Rebel028/publish-nuget@2.6.1
+      uses: mgattuso/publish-nuget@2.6.2
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.Duplicator/Gtt.CodeWorks.Duplicator.csproj
@@ -138,7 +138,7 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.Duplicator.*
 
     - name: Deploy Gtt.CodeWorks.AzureStorage Package Locally
-      uses: Rebel028/publish-nuget@2.6.1
+      uses: mgattuso/publish-nuget@2.6.2
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.AzureStorage/Gtt.CodeWorks.AzureStorage.csproj
@@ -153,7 +153,7 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.AzureStorage.*
         
     - name: Deploy Gtt.CodeWorks.StateMachines Package Locally
-      uses: Rebel028/publish-nuget@2.6.1
+      uses: mgattuso/publish-nuget@2.6.2
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.StateMachines/Gtt.CodeWorks.StateMachines.csproj
@@ -168,7 +168,7 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.StateMachines.*
         
     - name: Deploy Gtt.CodeWorks.StateMachines.AzureStorage Package Locally
-      uses: Rebel028/publish-nuget@2.6.1
+      uses: mgattuso/publish-nuget@2.6.2
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.StateMachines.AzureStorage/Gtt.CodeWorks.StateMachines.AzureStorage.csproj
@@ -183,7 +183,7 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.StateMachines.AzureStorage.*
         
     - name: Deploy Gtt.CodeWorks.Tokenizer Package Locally
-      uses: Rebel028/publish-nuget@2.6.1
+      uses: mgattuso/publish-nuget@2.6.2
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.Tokenizer/Gtt.CodeWorks.Tokenizer.csproj
@@ -198,7 +198,7 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.Tokenizer.*
 
     - name: Deploy Gtt.CodeWorks.JWT Package Locally
-      uses: Rebel028/publish-nuget@2.6.1
+      uses: mgattuso/publish-nuget@2.6.2
       with:
         NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
         PROJECT_FILE_PATH: Gtt.CodeWorks.JWT/Gtt.CodeWorks.JWT.csproj
