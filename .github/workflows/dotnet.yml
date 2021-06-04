@@ -39,8 +39,13 @@ jobs:
         PROJECT_FILE_PATH: Gtt.CodeWorks/Gtt.CodeWorks.csproj
         TAG_FORMAT: Gtt.CodeWorks.* 
         
-    - name: Deploy package locally
-      run: nuget add ./Gtt.CodeWorks.0.0.102.nupkg -s local_package
+    - name: Deploy Gtt.Recruit.Client Package Locally
+      uses: Rebel028/publish-nuget@2.6.1
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.CodeWorks/Gtt.CodeWorks.csproj
+        TAG_FORMAT: Gtt.CodeWorks.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
     
     - name: Deploy CodeWorks.Serializers.TextJson Package
       uses: brandedoutcast/publish-nuget@v2.5.5
