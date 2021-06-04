@@ -8,7 +8,7 @@
     <Product>Codeworks</Product>
     <Copyright>2020, Michael Gattuso</Copyright>
     <PackageProjectUrl>https://gtt.me/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/mgattuso/codeworks</RepositoryUrl>
+    <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
