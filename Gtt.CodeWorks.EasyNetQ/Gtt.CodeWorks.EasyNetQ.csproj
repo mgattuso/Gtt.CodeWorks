@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.0.100</Version>
+    <Version>0.0.110</Version>
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
     <Authors>Michael Gattuso</Authors>
     <Company>Michael Gattuso</Company>
@@ -11,15 +11,13 @@
     <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <Copyright>2020, Michael Gattuso</Copyright>
+    <AssemblyVersion>0.0.110.0</AssemblyVersion>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="EasyNetQ" Version="6.3.1" />
     <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks" Version="0.*" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Condition=" '$(Configuration)' == 'Debug'" Include="..\Gtt.CodeWorks\Gtt.CodeWorks.csproj" />
   </ItemGroup>
-
 </Project>
