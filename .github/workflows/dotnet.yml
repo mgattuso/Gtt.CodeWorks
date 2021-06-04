@@ -24,7 +24,7 @@ jobs:
         nuget sources add -Name "Local" -Source local_package
         
     - name: Ensure GitHub NuGet Source
-      run: dotnet nuget add source https://nuget.pkg.github.com/mgattuso/index.json -n github -u mgattuso -p ${{ secrets.GH_PAT_READ_PKG }} --store-password-in-clear-text
+      run: dotnet nuget add source https://nuget.pkg.github.com/mgattuso/index.json -n default -u mgattuso -p ${{ secrets.GH_PAT_READ_PKG }} --store-password-in-clear-text
     
     - name: List Nuget Source
       run: dotnet nuget list source
