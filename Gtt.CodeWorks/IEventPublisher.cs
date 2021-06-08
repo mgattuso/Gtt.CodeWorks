@@ -49,7 +49,7 @@ namespace Gtt.CodeWorks
             return Task.CompletedTask;
         }
 
-        public NullEventPublisher Default => new NullEventPublisher();
+        public static NullEventPublisher Default => new NullEventPublisher();
 
         
     }
