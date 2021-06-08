@@ -34,4 +34,23 @@ namespace Gtt.CodeWorks
         Delete,
         Notify
     }
+
+    public class NullEventPublisher : IEventPublisher
+    {
+        private NullEventPublisher()
+        {
+            
+        }
+
+        public Task Publish<T>(T @event, int retries = 3, int retryMs = 1000, bool exponential = true, TimeSpan? ttl = null,
+            TimeSpan? delay = null) where T : PublishedEvent
+        {
+            Console.WriteLine($@"Publishing event using the Null Event Publisher for event {@event.CorrelationId}");
+            return Task.CompletedTask;
+        }
+
+        public NullEventPublisher Default => new NullEventPublisher();
+
+        
+    }
 }
