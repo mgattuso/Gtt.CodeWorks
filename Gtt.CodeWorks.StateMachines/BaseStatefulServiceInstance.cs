@@ -151,12 +151,12 @@ namespace Gtt.CodeWorks.StateMachines
 
         }
 
-        protected virtual Task PersistDataSuccessful(StatefulIdentifier identifier, TData data, ServiceResponse<TResponse> response)
+        protected virtual Task PersistDataSuccessful(StatefulIdentifier identifier, TData data, ServiceResponse<TResponse> response, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
 
-        protected virtual Task PersistData(ServiceResult result, StatefulIdentifier identifier, TData data, ServiceResponse<TResponse> response)
+        protected virtual Task PersistData(ServiceResult result, StatefulIdentifier identifier, TData data, ServiceResponse<TResponse> response, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
@@ -312,7 +312,7 @@ namespace Gtt.CodeWorks.StateMachines
             return base.Execute(request, cancellationToken);
         }
 
-        protected sealed override async Task BeforeResponse(ServiceResponse<TResponse> response)
+        protected sealed override async Task BeforeResponse(ServiceResponse<TResponse> response, CancellationToken cancellationToken)
         {
             if (_identifiers == null)
                 throw new NullReferenceException(
@@ -337,15 +337,15 @@ namespace Gtt.CodeWorks.StateMachines
             }
 
             ModifyResponse(response);
-            await base.BeforeResponse(response);
+            await base.BeforeResponse(response, cancellationToken);
             //TODO: DETERMINE WHAT SAFETY AROUND THIS CALL WILL LOOK LIKE - EG RECOVERY FROM ERROR
 
             if (response.IsSuccessful())
             {
-                await PersistDataSuccessful(_identifiers, CurrentData, response);
+                await PersistDataSuccessful(_identifiers, CurrentData, response, cancellationToken);
             }
 
-            await PersistData(response.MetaData.Result, _identifiers, CurrentData, response);
+            await PersistData(response.MetaData.Result, _identifiers, CurrentData, response, cancellationToken);
         }
 
         protected override async Task<string> CreateDistributedLockKey(TRequest request, CancellationToken cancellationToken)

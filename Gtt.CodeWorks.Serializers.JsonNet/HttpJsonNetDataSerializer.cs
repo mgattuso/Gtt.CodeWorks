@@ -35,6 +35,7 @@ namespace Gtt.CodeWorks.Serializers.JsonNet
 
         public async Task<BaseRequest> DeserializeRequest(Type type, byte[] message, HttpDataSerializerOptions options = null)
         {
+            await Task.CompletedTask;
             var settings = JsonNetSerializerSettings.CreateJsonSerializerSettings(options, _debugMode);
 
             if (message.Length == 0)
@@ -120,6 +121,7 @@ namespace Gtt.CodeWorks.Serializers.JsonNet
 
         public async Task<T> DeserializeResponse<T>(byte[] message, HttpDataSerializerOptions options = null) where T : new()
         {
+            await Task.CompletedTask;
             var settings = JsonNetSerializerSettings.CreateJsonSerializerSettings(options, _debugMode);
 
             if (message.Length == 0)
@@ -154,6 +156,7 @@ namespace Gtt.CodeWorks.Serializers.JsonNet
 
         public async Task<ServiceResponse> DeserializeResponse(Type type, byte[] message, HttpDataSerializerOptions options = null)
         {
+            await Task.CompletedTask;
             var settings = JsonNetSerializerSettings.CreateJsonSerializerSettings(options, _debugMode);
 
             if (message.Length == 0)
