@@ -13,6 +13,110 @@ namespace Gtt.CodeWorks
         string[] GetPathSegments(string fullName);
     }
 
+    public class BetterServiceResolver : IServiceResolver
+    {
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ServiceResolverOptions _options;
+        private IDictionary<string, Type> _types = new Dictionary<string, Type>();
+
+        public BetterServiceResolver(IList<Type> serviceTypes, IServiceProvider serviceProvider, ServiceResolverOptions options = default)
+        {
+            _options = options ?? new ServiceResolverOptions();
+            _serviceProvider = serviceProvider;
+
+            foreach (var serviceType in serviceTypes)
+            {
+                var ri = _serviceProvider.GetService(serviceType);
+                if (!(ri is IServiceInstance instance)) continue;
+
+                string name = instance.Name;
+
+                if (_options.IncludeNamespaceInRegistration)
+                    name = GetRegisteredNameFromFullName(instance.FullName);
+
+                if (_options.CaseSensitive)
+                    name = name.ToUpperInvariant();
+
+                var existingEntry = _types.TryGetValue(name, out var foundType);
+                if (existingEntry)
+                {
+                    throw new Exception($"Existing entry for key {{name}} already registered with {instance.FullName}");
+                }
+                _types[name] = serviceType;
+            }
+        }
+
+        public IServiceInstance GetInstanceByName(string name)
+        {
+            if (_options.CaseSensitive)
+                name = name.ToUpperInvariant();
+
+            _types.TryGetValue(name, out var serviceInstance);
+            var instance = _serviceProvider.GetService(serviceInstance);
+            return instance as IServiceInstance;
+        }
+
+        public IServiceInstance[] GetRegistered()
+        {
+            return _types.OrderBy(x => x.Key).Select(x =>
+            {
+                var instance = _serviceProvider.GetService(x.Value);
+                return instance as IServiceInstance;
+            }).ToArray();
+        }
+
+        public string GetRegisteredNameFromFullName(string fullName)
+        {
+            string separator = _options.NamespaceSeparator ?? "";
+            string[] segments = GetRawSegments(fullName);
+            return string.Join(separator, segments);
+        }
+
+        public string[] GetPathSegments(string fullName)
+        {
+            var regName = GetRawSegments(fullName);
+            if (regName.Length == 1)
+            {
+                return new string[0];
+            }
+
+            return regName.Take(regName.Length - 1).ToArray();
+        }
+
+        public string[] GetRawSegments(string fullName)
+        {
+            if (!_options.IncludeNamespaceInRegistration)
+                throw new Exception("Cannot call this method if the options.IncludeNamespaceInRegistration is true");
+
+            if (string.IsNullOrWhiteSpace(fullName))
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(fullName));
+
+            if (_options.NamespaceDepth.HasValue)
+            {
+                string[] fn = fullName.Split('.');
+                var depth = _options.NamespaceDepth.Value + 1;
+                if (fn.Length > depth)
+                {
+                    var keep = fn.Skip(fn.Length - depth);
+                    return keep.ToArray();
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(_options.NamespacePrefixToIgnore))
+            {
+                var s = fullName.Replace(_options.NamespacePrefixToIgnore, "");
+                if (s.StartsWith("."))
+                {
+                    s = s.Substring(1, s.Length - 1);
+                }
+
+                return s.Split('.');
+            }
+
+            return fullName.Split('.');
+        }
+    }
+
     public class ServiceResolver : IServiceResolver
     {
         private readonly ServiceResolverOptions _options;

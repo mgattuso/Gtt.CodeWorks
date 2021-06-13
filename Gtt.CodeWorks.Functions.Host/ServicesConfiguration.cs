@@ -58,14 +58,16 @@ namespace Gtt.CodeWorks.Functions.Host
 
         public static IServiceCollection ConfigureServices<TServiceFromAssembly>(this IServiceCollection services, string namespacePrefixToIgnore = "") where TServiceFromAssembly : IServiceInstance
         {
+            List<Type> serviceTypes = new List<Type>();
             foreach (var svc in GetConcreteInstancesOf<IServiceInstance>(typeof(TServiceFromAssembly)))
             {
+                serviceTypes.Add(svc);
                 Console.WriteLine($"Registering Service {svc.Name}");
                 services.AddScoped(svc);
-                services.AddScoped(cfg => (IServiceInstance)cfg.GetService(svc));
-                services.AddScoped<IChainedServiceResolver, DefaultChainedServiceResolver>();
+                services.AddScoped<IServiceInstance>(cfg => (IServiceInstance)cfg.GetService(svc));
             }
-            services.AddScoped<IServiceResolver>(cfg => new ServiceResolver(cfg.GetServices<IServiceInstance>(), new ServiceResolverOptions
+            services.AddScoped<IChainedServiceResolver, DefaultChainedServiceResolver>();
+            services.AddSingleton<IServiceResolver>(cfg => new BetterServiceResolver(serviceTypes, cfg, new ServiceResolverOptions
             {
                 NamespacePrefixToIgnore = namespacePrefixToIgnore
             }));
