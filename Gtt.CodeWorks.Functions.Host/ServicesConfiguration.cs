@@ -15,13 +15,16 @@ namespace Gtt.CodeWorks.Functions.Host
     public static class ServicesConfiguration
     {
 
-        public static IServiceCollection ConfigureCodeWorksAll<TServiceFromAssembly>(this IServiceCollection services, string namespacePrefixToIgnore = "")
+        public static IServiceCollection ConfigureCodeWorksAll<TServiceFromAssembly>(
+            this IServiceCollection services, 
+            string namespacePrefixToIgnore = "",
+            bool registerServiceInstancesAsScoped = true)
             where TServiceFromAssembly : IServiceInstance
         {
             services.ConfigureLogging()
                     .ConfigureCoreDependencies()
                     .ConfigureHttp()
-                    .ConfigureServices<TServiceFromAssembly>(namespacePrefixToIgnore);
+                    .ConfigureServices<TServiceFromAssembly>(namespacePrefixToIgnore, registerServiceInstancesAsScoped);
             return services;
         }
 
@@ -56,15 +59,26 @@ namespace Gtt.CodeWorks.Functions.Host
             return services;
         }
 
-        public static IServiceCollection ConfigureServices<TServiceFromAssembly>(this IServiceCollection services, string namespacePrefixToIgnore = "") where TServiceFromAssembly : IServiceInstance
+        public static IServiceCollection ConfigureServices<TServiceFromAssembly>(
+            this IServiceCollection services, 
+            string namespacePrefixToIgnore = "",
+            bool registerServiceInstancesAsScoped = true) where TServiceFromAssembly : IServiceInstance
         {
             List<Type> serviceTypes = new List<Type>();
             foreach (var svc in GetConcreteInstancesOf<IServiceInstance>(typeof(TServiceFromAssembly)))
             {
                 serviceTypes.Add(svc);
                 Console.WriteLine($"Registering Service {svc.Name}");
-                services.AddScoped(svc);
-                services.AddScoped<IServiceInstance>(cfg => (IServiceInstance)cfg.GetService(svc));
+                if (registerServiceInstancesAsScoped)
+                {
+                    services.AddScoped(svc);
+                    services.AddScoped<IServiceInstance>(cfg => (IServiceInstance) cfg.GetService(svc));
+                }
+                else
+                {
+                    services.AddTransient(svc);
+                    services.AddTransient<IServiceInstance>(cfg => (IServiceInstance)cfg.GetService(svc));
+                }
             }
             services.AddScoped<IChainedServiceResolver, DefaultChainedServiceResolver>();
             services.AddSingleton<IServiceResolver>(cfg => new BetterServiceResolver(serviceTypes, cfg, new ServiceResolverOptions
