@@ -3,19 +3,19 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.112</Version>
+    <Version>115</Version>
     <Authors>Michael Gattuso</Authors>
     <Company>gtt.me</Company>
     <Product>Code Works</Product>
     <Copyright>2020, Michael Gattuso</Copyright>
     <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
-    <AssemblyVersion>0.0.112.0</AssemblyVersion>
+    <AssemblyVersion>115.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.WebJobs.Core" Version="3.0.27" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Core" Version="3.0.30" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Http" Version="3.0.12" />
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.17.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.15" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.18.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.19" />
     <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks" Version="0.*" />
     <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks.Serializers.TextJson" Version="0.*" />
     <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks.DataAnnotations" Version="0.*" />

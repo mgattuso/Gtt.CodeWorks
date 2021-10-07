@@ -2,14 +2,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.0.110</Version>
+    <Version>115</Version>
     <Authors>Michael Gattuso</Authors>
     <Company>gtt.me</Company>
     <Product>CodeWorks</Product>
     <Copyright>2020, Michael Gattuso</Copyright>
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
-    <AssemblyVersion>0.0.110.0</AssemblyVersion>
+    <AssemblyVersion>115.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />

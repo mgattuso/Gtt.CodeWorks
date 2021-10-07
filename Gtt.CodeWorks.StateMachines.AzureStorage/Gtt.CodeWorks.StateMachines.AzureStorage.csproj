@@ -3,14 +3,14 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.110</Version>
+    <Version>0.0.115</Version>
     <Authors>Michael Gattuso</Authors>
     <Company>gtt.me</Company>
     <Product>CodeWorks</Product>
     <Copyright>2021, Michael Gattuso</Copyright>
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
-    <AssemblyVersion>0.0.110.0</AssemblyVersion>
+    <AssemblyVersion>0.0.115.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Condition="'$(Configuration)' == 'Release'" Include="Gtt.CodeWorks.StateMachines" Version="0.*" />
