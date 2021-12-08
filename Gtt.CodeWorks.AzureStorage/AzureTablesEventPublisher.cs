@@ -1,13 +1,10 @@
-﻿using System;
+﻿using Azure.Storage.Queues;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Queue;
-using Microsoft.WindowsAzure.Storage.RetryPolicies;
 
 namespace Gtt.CodeWorks.AzureStorage
 {
@@ -15,21 +12,22 @@ namespace Gtt.CodeWorks.AzureStorage
     {
         private readonly IObjectSerializer _objectSerializer;
         private static readonly HashSet<string> InitializedQueues = new HashSet<string>();
-        private readonly CloudQueueClient _client;
+        private readonly QueueClient _client;
+        private string _connectionString;
 
         public AzureTablesEventPublisher(string connectionString, IObjectSerializer objectSerializer)
         {
+            _connectionString = connectionString;
             _objectSerializer = objectSerializer;
-            var account = CloudStorageAccount.Parse(connectionString);
-            _client = account.CreateCloudQueueClient();
+
         }
 
         public async Task Publish<T>(
             T @event,
-            int retries = 3, 
-            int retryMs = 1000, 
-            bool exponential = true, 
-            TimeSpan? ttl = null, 
+            int retries = 3,
+            int retryMs = 1000,
+            bool exponential = true,
+            TimeSpan? ttl = null,
             TimeSpan? delay = null) where T : PublishedEvent
         {
             if (delay != null && delay.Value.TotalMinutes > 7 * 24 * 60)
@@ -43,7 +41,16 @@ namespace Gtt.CodeWorks.AzureStorage
             }
 
             var queueName = GetQueueNameFromEvent(typeof(T));
-            var queue = _client.GetQueueReference(queueName);
+
+            var opts = new QueueClientOptions(QueueClientOptions.ServiceVersion.V2020_10_02);
+            if (retries > 0)
+            {
+                opts.Retry.Delay = TimeSpan.FromMilliseconds(retryMs);
+                opts.Retry.Mode = exponential ? Azure.Core.RetryMode.Exponential : Azure.Core.RetryMode.Fixed;
+                opts.Retry.MaxRetries = retries;
+            }
+
+            var queue = new QueueClient(_connectionString, queueName, opts);
             if (!InitializedQueues.Contains(queueName))
             {
                 await queue.CreateIfNotExistsAsync();
@@ -52,30 +59,10 @@ namespace Gtt.CodeWorks.AzureStorage
 
             var msg = await _objectSerializer.Serialize(@event);
 
-            IRetryPolicy retryPolicy = new NoRetry();
-            if (retries > 0)
-            {
-                if (exponential)
-                {
-                    retryPolicy = new ExponentialRetry(TimeSpan.FromMilliseconds(retryMs), retries);
-                }
-                else
-                {
-                    retryPolicy = new LinearRetry(TimeSpan.FromMilliseconds(retryMs), retries);
-                }
-            }
-
-            await queue.AddMessageAsync(
-                new CloudQueueMessage(msg),
-                ttl,
-                delay,
-                new QueueRequestOptions
-                {
-                    RetryPolicy = retryPolicy
-                }, new OperationContext
-                {
-                    ClientRequestID = @event.CorrelationId.ToString()
-                }
+            await queue.SendMessageAsync(
+                msg,
+                visibilityTimeout: delay,
+                timeToLive: ttl
             );
         }
 

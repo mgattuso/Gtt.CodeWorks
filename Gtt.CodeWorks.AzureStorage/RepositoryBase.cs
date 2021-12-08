@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
+using Azure.Data.Tables;
 
 namespace Gtt.CodeWorks.AzureStorage
 {
@@ -14,17 +13,17 @@ namespace Gtt.CodeWorks.AzureStorage
 
         private static readonly HashSet<string> InitializedTables = new HashSet<string>();
 
-        protected CloudTableClient TableClient { get; }
+        protected TableServiceClient TableClient { get; }
 
-        private static CloudTableClient CreateClient(string connectionString)
+        private static TableServiceClient CreateClient(string connectionString)
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse(connectionString);
-            return cloudStorageAccount.CreateCloudTableClient();
+            var cloudStorageAccount = new TableServiceClient(connectionString);
+            return cloudStorageAccount;
         }
 
-        protected async Task<CloudTable> GetTable(string tableName)
+        protected async Task<TableClient> GetTable(string tableName)
         {
-            var table = TableClient.GetTableReference(tableName);
+            var table = TableClient.GetTableClient(tableName);
             if (!InitializedTables.Contains(tableName))
             {
                 await table.CreateIfNotExistsAsync();
@@ -34,16 +33,14 @@ namespace Gtt.CodeWorks.AzureStorage
             return table;
         }
 
-        protected Task<TableResult> InsertDataAsync<T>(CloudTable table, T data) where T : TableEntity
+        protected Task<Azure.Response> InsertDataAsync<T>(TableClient table, T data) where T : class, ITableEntity, new()
         {
-            TableOperation insertOperation = TableOperation.Insert(data);
-            return table.ExecuteAsync(insertOperation);
+            return table.AddEntityAsync(data);
         }
 
-        protected Task<TableResult> InsertOrReplaceDataAsync<T>(CloudTable table, T data) where T : TableEntity
+        protected Task<Azure.Response> InsertOrReplaceDataAsync<T>(TableClient table, T data) where T : class, ITableEntity, new()
         {
-            TableOperation insertOperation = TableOperation.InsertOrReplace(data);
-            return table.ExecuteAsync(insertOperation);
+            return table.UpsertEntityAsync(data);
         }
     }
 }

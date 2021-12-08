@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Azure.Data.Tables;
 using Gtt.CodeWorks.AzureStorage;
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Gtt.CodeWorks.StateMachines.AzureStorage
 {
@@ -28,11 +27,12 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
         {
             var tableName = NormalizeTableName(metaData.MachineName);
             _logger.LogTrace($"Using table name {tableName}");
-            var table = await GetTable(tableName);
+            TableClient table = await GetTable(tableName);
             string partitionKey = string.IsNullOrWhiteSpace(parentIdentifier) ? metaData.Identifier : parentIdentifier;
             string rowKeyPrefix = string.IsNullOrWhiteSpace(parentIdentifier) ? "" : $"{metaData.Identifier}-";
 
-            var currentMarker = await table.GetEntity<StateDataTable>(partitionKey, rowKeyPrefix+"current");
+            var currentResponse = await table.GetEntityAsync<StateDataTable>(partitionKey, rowKeyPrefix + "current");
+            StateDataTable currentMarker = currentResponse?.Value;
 
             long sequenceNumber = currentMarker?.SequenceNumber ?? 0;
 
@@ -89,22 +89,20 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
 
             try
             {
-                TableBatchOperation batch = new TableBatchOperation
-                {
-                    TableOperation.InsertOrReplace(currentMarker)
-                };
+                List<TableTransactionAction> batch = new List<TableTransactionAction>();
+
+                batch.Add(new TableTransactionAction(TableTransactionActionType.UpsertReplace, currentMarker));
 
                 if (saveHistory)
                 {
-                    batch.Add(TableOperation.Insert(record));
+                    batch.Add(new TableTransactionAction(TableTransactionActionType.Add, record));
                 }
 
-                await table.ExecuteBatchAsync(batch);
+                await table.SubmitTransactionAsync(batch);
             }
-            catch (StorageException ex)
+            catch (Azure.Data.Tables.TableTransactionFailedException ex)
             {
-                var ri = ex.RequestInformation;
-                _logger.LogError($"StatusCode={ri.HttpStatusCode}, HttpMessage={ri.HttpStatusMessage}");
+                _logger.LogError($"StatusCode={ex.Status}, HttpMessage={ex.ErrorCode}");
                 throw;
             }
             catch (Exception ex)
@@ -140,24 +138,25 @@ namespace Gtt.CodeWorks.StateMachines.AzureStorage
 
             if (version < 0)
             {
-                var q = TableOperation.Retrieve(partitionKey, rowKeyPrefix+"current", new List<string>() { "SequenceNumber" });
-                var res = await table.ExecuteAsync(q);
-                var te = res.Result as DynamicTableEntity;
+                var res = await table.GetEntityAsync<TableEntity>(partitionKey, rowKeyPrefix + "current", new List<string>() { "SequenceNumber" });
+                var te = res.Value;
                 if (te != null)
                 {
-                    long? current = te.Properties["SequenceNumber"].Int64Value;
+                    long? current = te.GetInt64("SequenceNumber");
                     version = current.HasValue ? current + version : version;
                 }
             }
 
 
             string versionToRetrieve = rowKeyPrefix + (version?.ToString() ?? "current");
-            var data = await table.GetEntity<StateDataTable>(partitionKey, versionToRetrieve);
+            var dataResponse = await table.GetEntityAsync<StateDataTable>(partitionKey, versionToRetrieve);
 
-            if (data == null)
+            if (dataResponse.Value == null)
             {
                 return null;
             }
+
+            var data = dataResponse.Value;
 
             int rowKeySplitPoint = data.RowKey.LastIndexOf("-", StringComparison.Ordinal);
 

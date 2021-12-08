@@ -3,14 +3,14 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.115</Version>
+    <Version>0.0.600</Version>
     <Authors>Michael Gattuso</Authors>
     <Company>gtt.me</Company>
     <Product>CodeWorks</Product>
     <Copyright>2021, Michael Gattuso</Copyright>
     <PackageProjectUrl>https://gtt.me</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mgattuso/Gtt.CodeWorks</RepositoryUrl>
-    <AssemblyVersion>0.0.115.0</AssemblyVersion>
+    <AssemblyVersion>0.0.600.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Tokenize.Client" Version="0.18.0" />
