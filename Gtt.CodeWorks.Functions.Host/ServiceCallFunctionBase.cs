@@ -120,55 +120,62 @@ namespace Gtt.CodeWorks.Functions.Host
         {
             var dict = new Dictionary<string, string> { ["Service"] = service };
 
-            var serviceInstance = _serviceResolver.GetInstanceByName(service);
-            if (serviceInstance == null)
+            try
             {
-                dict["Found"] = "false";
-                _telemetryClient.TrackTrace("ListErrors", SeverityLevel.Information, dict);
-                return new HttpResponseMessage(HttpStatusCode.NotFound)
+                var serviceInstance = _serviceResolver.GetInstanceByName(service);
+                if (serviceInstance == null)
                 {
-                    Content = new StringContent($"No service found called {service}")
+                    dict["Found"] = "false";
+                    _telemetryClient.TrackTrace("ListErrors", SeverityLevel.Information, dict);
+                    return new HttpResponseMessage(HttpStatusCode.NotFound)
+                    {
+                        Content = new StringContent($"No service found called {service}")
+                    };
+                }
+
+                string json;
+
+                switch (model)
+                {
+                    case "request":
+                        switch (format)
+                        {
+                            case "schema":
+                                json = await _serializationSchema.SerializeSchema(serviceInstance.RequestType);
+                                break;
+                            case "example":
+                                json = await _serializationSchema.SerializeExample(serviceInstance.RequestType);
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException(nameof(format));
+                        }
+                        break;
+                    case "response":
+                        switch (format)
+                        {
+                            case "schema":
+                                json = await _serializationSchema.SerializeSchema(serviceInstance.ResponseType);
+                                break;
+                            case "example":
+                                json = await _serializationSchema.SerializeExample(serviceInstance.ResponseType);
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException(nameof(format));
+                        }
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(format));
+                }
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(json, _serializer.Encoding, _serializer.ContentType)
                 };
-            }
-
-            string json;
-
-            switch (model)
+            } catch (Exception ex)
             {
-                case "request":
-                    switch (format)
-                    {
-                        case "schema":
-                            json = await _serializationSchema.SerializeSchema(serviceInstance.RequestType);
-                            break;
-                        case "example":
-                            json = await _serializationSchema.SerializeExample(serviceInstance.RequestType);
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException(nameof(format));
-                    }
-                    break;
-                case "response":
-                    switch (format)
-                    {
-                        case "schema":
-                            json = await _serializationSchema.SerializeSchema(serviceInstance.ResponseType);
-                            break;
-                        case "example":
-                            json = await _serializationSchema.SerializeExample(serviceInstance.ResponseType);
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException(nameof(format));
-                    }
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(format));
+                Console.WriteLine(ex);
+                throw;
             }
-
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(json, _serializer.Encoding, _serializer.ContentType)
-            };
         }
 
         private async Task<HttpResponseMessage> ErrorsAction(string service, CancellationToken cancellationToken)

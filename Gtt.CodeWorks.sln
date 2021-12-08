@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30413.136
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks", "Gtt.CodeWorks\Gtt.CodeWorks.csproj", "{FC733458-D6F9-4577-AC82-FBD2256E3449}"
 EndProject
@@ -39,7 +39,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Implementations", "Implemen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.JWT", "Gtt.CodeWorks.JWT\Gtt.CodeWorks.JWT.csproj", "{06C0AF1E-1C0C-47A9-8C1E-925408B4CE10}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.CodeWorks.Serializers.JsonNet", "Gtt.CodeWorks.Serializers.JsonNet\Gtt.CodeWorks.Serializers.JsonNet.csproj", "{8F886C6C-5004-46AF-A945-2269B1D94A55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gtt.CodeWorks.Serializers.JsonNet", "Gtt.CodeWorks.Serializers.JsonNet\Gtt.CodeWorks.Serializers.JsonNet.csproj", "{8F886C6C-5004-46AF-A945-2269B1D94A55}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.Simple.CodeWorks", "Gtt.Simple.CodeWorks\Gtt.Simple.CodeWorks.csproj", "{B54056EE-42E2-45D9-8E8A-302A1C8D173C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.Simple.CodeWorks.Sample.Functions", "Gtt.Simple.CodeWorks.Sample.Functions\Gtt.Simple.CodeWorks.Sample.Functions.csproj", "{1C4D0F6A-F4EE-4872-B64D-A819A76D189D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gtt.Simple.CodeWorks.SampleService", "Gtt.Simple.CodeWorks.SampleService\Gtt.Simple.CodeWorks.SampleService.csproj", "{A1D05866-ADCD-46A5-B84D-0939C36BB648}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -115,6 +121,18 @@ Global
 		{8F886C6C-5004-46AF-A945-2269B1D94A55}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F886C6C-5004-46AF-A945-2269B1D94A55}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F886C6C-5004-46AF-A945-2269B1D94A55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B54056EE-42E2-45D9-8E8A-302A1C8D173C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B54056EE-42E2-45D9-8E8A-302A1C8D173C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B54056EE-42E2-45D9-8E8A-302A1C8D173C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B54056EE-42E2-45D9-8E8A-302A1C8D173C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C4D0F6A-F4EE-4872-B64D-A819A76D189D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C4D0F6A-F4EE-4872-B64D-A819A76D189D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C4D0F6A-F4EE-4872-B64D-A819A76D189D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C4D0F6A-F4EE-4872-B64D-A819A76D189D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1D05866-ADCD-46A5-B84D-0939C36BB648}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1D05866-ADCD-46A5-B84D-0939C36BB648}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1D05866-ADCD-46A5-B84D-0939C36BB648}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1D05866-ADCD-46A5-B84D-0939C36BB648}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
