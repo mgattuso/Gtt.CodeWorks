@@ -24,7 +24,7 @@ namespace Gtt.CodeWorks.Tests.Serializers.TextJsonSerializers
             var response = await serializer.DeserializeResponse<TestResponse>(message);
         }
 
-        [TestMethod, ExpectedException(typeof(ValidationErrorException))]
+        [TestMethod, ExpectedException(typeof(CodeWorksSerializationException))]
         public async Task SerializeInvalidEnumReturnsValidationError()
         {
             // ARRANGE
