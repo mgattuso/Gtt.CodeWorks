@@ -40,12 +40,27 @@ jobs:
         TAG_FORMAT: Gtt.CodeWorks.*
         NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
 
+    - name: Deploy CodeWorks Simple Package Locally
+      uses: mgattuso/publish-nuget@2.6.2
+      with:
+        NUGET_KEY: ${{ secrets.GITHUB_TOKEN }}
+        PROJECT_FILE_PATH: Gtt.Simple.CodeWorks/Gtt.Simple.CodeWorks.csproj
+        TAG_FORMAT: Gtt.Simple.CodeWorks.*
+        NUGET_SOURCE: https://nuget.pkg.github.com/mgattuso
+
     - name: Deploy CodeWorks Package
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         NUGET_KEY: ${{ secrets.nuget_key }}
         PROJECT_FILE_PATH: Gtt.CodeWorks/Gtt.CodeWorks.csproj
         TAG_FORMAT: Gtt.CodeWorks.* 
+
+    - name: Deploy CodeWorks Simple Package
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        NUGET_KEY: ${{ secrets.nuget_key }}
+        PROJECT_FILE_PATH: Gtt.Simple.CodeWorks/Gtt.Simple.CodeWorks.csproj
+        TAG_FORMAT: Gtt.Simple.CodeWorks.* 
     
     - name: Deploy CodeWorks.Serializers.TextJson Package Locally
       uses: mgattuso/publish-nuget@2.6.2
